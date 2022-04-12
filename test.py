@@ -47,10 +47,12 @@ if __name__ == "__main__":
     # import data
     original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv")
     df = original_df[ATTRIBUTES]
-    # print(df.shape)
+    # It is noted that with small samples, cannot ebtablish the edges
+    seed_df = df.sample(n = 6000).copy()
+    print(seed_df)
 
     # Learn the DAG in data using Bayesian structure learning:
-    DAG = bn.structure_learning.fit(df, root_node='AGEGROUP', methodtype='ex', scoretype='bic', verbose=0)
+    DAG = bn.structure_learning.fit(seed_df, root_node='AGEGROUP', methodtype='ex', scoretype='bic', verbose=0)
 
     # Adjacency matrix
     # print(DAG['adjmat'])
@@ -59,10 +61,10 @@ if __name__ == "__main__":
     # G = bn.plot(DAG)
 
     # Parameter learning on the user-defined DAG and input data using Bayes to estimate the CPTs
-    model = bn.parameter_learning.fit(DAG, df, methodtype='bayes', verbose=0)
+    model = bn.parameter_learning.fit(DAG, seed_df, methodtype='bayes', verbose=0)
     # bn.print_CPD(model)
 
-    sampling_df = bn.sampling(model, n=100000, verbose=0)
+    sampling_df = bn.sampling(model, n=50000, verbose=0)
 
     # print(sampling_df)
     # a = (df['SEX'] == "Male") & (df['CARLICENCE']=="No Car Licence")
