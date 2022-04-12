@@ -50,13 +50,13 @@ if __name__ == "__main__":
     original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv")
     df = original_df[ATTRIBUTES].dropna()
     # It is noted that with small samples, cannot ebtablish the edges
-    seed_df = df.sample(n = 20000).copy()
-    print(df.shape)
+    seed_df = df.sample(n = 5000).copy()
+    # print(df.shape)
     
     # Learn the DAG in data using Bayesian structure learning:
     DAG = bn.structure_learning.fit(seed_df, methodtype='hc', scoretype='bic', verbose=0)
     # Remove insignificant edges
-    DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True)
+    # DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True, verbose=0)
 
     # Adjacency matrix
     # print(DAG['adjmat'])
@@ -76,8 +76,19 @@ if __name__ == "__main__":
 
     # Using GibbsSampling, noted here it initial/seed is randon
     gibbs_chain = GibbsSampling(model['model'])
-    # sampling_df = gibbs_chain.sample(size=10, start_state=None)
-
+    sampling_df = gibbs_chain.sample(size=100000, start_state=None)
+    # This is needed as the result of Gibb is set to only int
+    sampling_df = sampling_df.astype('object')
+    for att in ATTRIBUTES:
+        try:
+            pos_ref = model['model'].get_cpds(att).state_names[att]
+            for i in sampling_df.index:
+                old_val = sampling_df.at[i, att]
+                sampling_df.at[i, att] = pos_ref[old_val]
+        except:
+            continue
+    
+    # TODO: for the missing att (they are not in the graph) they can be sampled from distribution
     # print(sampling_df)
 
-    # print(SRMSE(df, sampling_df, ATTRIBUTES))
+    print(SRMSE(df, sampling_df, ATTRIBUTES))
