@@ -23,10 +23,25 @@ def SRMSE(actual, pred, attributes):
     keys, values = zip(*full_list.items())
     combinations = [dict(zip(keys, v)) for v in itertools.product(*values)]
     
+    #calculate
     hold = 0
     for instance in combinations:
+        # the 2 would be None or not None at the same time
+        check_actual = None
+        check_pred = None
         for att in attributes:
-            NotImplemented
+            if check_actual is not None:
+                check_actual = check_actual & (actual[att] == instance[att])
+                check_pred = check_pred & (pred[att] == instance[att])
+            else:
+                check_actual = (actual[att] == instance[att])
+                check_pred = (pred[att] == instance[att])
+        # This assumes that there will always be False result
+        freq_actual = 1 - ((check_actual.value_counts()[False]) / len(check_actual))
+        freq_pred = 1 - ((check_pred.value_counts()[False]) / len(check_pred))
+        hold += (freq_actual - freq_pred)**2
+    result = sqrt(hold * total_att)
+    return result
 
 if __name__ == "__main__":
     # import data
@@ -47,7 +62,7 @@ if __name__ == "__main__":
     model = bn.parameter_learning.fit(DAG, df, methodtype='bayes', verbose=0)
     # bn.print_CPD(model)
 
-    sampling_df = bn.sampling(model, n=46562, verbose=0)
+    sampling_df = bn.sampling(model, n=100000, verbose=0)
 
     # print(sampling_df)
     # a = (df['SEX'] == "Male") & (df['CARLICENCE']=="No Car Licence")
@@ -55,4 +70,4 @@ if __name__ == "__main__":
 
     # print(df['SEX'].unique())
 
-    # print(SRMSE(df, sampling_df, ATTRIBUTES))
+    print(SRMSE(df, sampling_df, ATTRIBUTES))
