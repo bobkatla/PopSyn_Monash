@@ -3,7 +3,7 @@ from tabnanny import verbose
 import pandas as pd
 import bnlearn as bn
 from math import sqrt
-from pgmpy.sampling import GibbsSampling
+from pgmpy.sampling import GibbsSampling, BayesianModelSampling
 import itertools
 
 ATTRIBUTES = ['AGEGROUP', 'PERSINC', 'SEX', 'CARLICENCE']
@@ -40,36 +40,44 @@ def SRMSE(actual, pred, attributes):
         freq_actual = 1 - ((check_actual.value_counts()[False]) / len(check_actual))
         freq_pred = 1 - ((check_pred.value_counts()[False]) / len(check_pred))
         hold += (freq_actual - freq_pred)**2
+    
     result = sqrt(hold * total_att)
+
     return result
 
 if __name__ == "__main__":
     # import data
     original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv")
-    df = original_df[ATTRIBUTES]
+    df = original_df[ATTRIBUTES].dropna()
     # It is noted that with small samples, cannot ebtablish the edges
-    seed_df = df.sample(n = 6000).copy()
-    print(seed_df)
-
+    seed_df = df.sample(n = 20000).copy()
+    print(df.shape)
+    
     # Learn the DAG in data using Bayesian structure learning:
-    DAG = bn.structure_learning.fit(seed_df, root_node='AGEGROUP', methodtype='ex', scoretype='bic', verbose=0)
+    DAG = bn.structure_learning.fit(seed_df, methodtype='hc', scoretype='bic', verbose=0)
+    # Remove insignificant edges
+    DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True)
 
     # Adjacency matrix
     # print(DAG['adjmat'])
 
-    # Plot
+    # Plot the DAG
     # G = bn.plot(DAG)
 
     # Parameter learning on the user-defined DAG and input data using Bayes to estimate the CPTs
     model = bn.parameter_learning.fit(DAG, seed_df, methodtype='bayes', verbose=0)
     # bn.print_CPD(model)
 
-    sampling_df = bn.sampling(model, n=50000, verbose=0)
+    # Using other sampling methods
+    infer_model = BayesianModelSampling(model['model'])
+    # sampling_df = infer_model.forward_sample(size=100)
+    # sampling_df = infer_model.likelihood_weighted_sample(size=100)
+    # sampling_df = infer_model.rejection_sample(size=10)
+
+    # Using GibbsSampling, noted here it initial/seed is randon
+    gibbs_chain = GibbsSampling(model['model'])
+    # sampling_df = gibbs_chain.sample(size=10, start_state=None)
 
     # print(sampling_df)
-    # a = (df['SEX'] == "Male") & (df['CARLICENCE']=="No Car Licence")
-    # print(a.value_counts()[True])
 
-    # print(df['SEX'].unique())
-
-    print(SRMSE(df, sampling_df, ATTRIBUTES))
+    # print(SRMSE(df, sampling_df, ATTRIBUTES))
