@@ -99,6 +99,7 @@ def plot_SRMSE_bayes(orginal):
     for num in range(one_percent, N, one_percent):
         i += 1
         X.append(i)
+        print(i)
         # It is noted that with small samples, cannot ebtablish the edges
         seed_df = df.sample(n = num).copy()
         # Learn the DAG in data using Bayesian structure learning:
