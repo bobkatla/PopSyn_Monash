@@ -95,24 +95,26 @@ def plot_SRMSE_bayes(orginal):
     Y = []
 
     one_percent = int(N/100)
+    i = 0
     for num in range(one_percent, N, one_percent):
-        X.append(num)
+        i += 1
+        X.append(i)
         # It is noted that with small samples, cannot ebtablish the edges
         seed_df = df.sample(n = num).copy()
         # Learn the DAG in data using Bayesian structure learning:
         DAG = bn.structure_learning.fit(seed_df, methodtype='hc', scoretype='bic', verbose=0)
         # Remove insignificant edges
         DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True, verbose=0)
-
         # Parameter learning on the user-defined DAG and input data using Bayes to estimate the CPTs
         model = bn.parameter_learning.fit(DAG, seed_df, methodtype='bayes', verbose=0)
-
+        # Sampling
         sampling_df = sampling(model['model'], n = N*2, type = 'gibbs')
-
+        # Calculate the SRMSE
         Y.append(SRMSE(df, sampling_df))
+        # print(X, Y)
 
     plt.plot(X, Y)
-    plt.xlabel('Number of records in the seed')
+    plt.xlabel('Percentages of sampling rate')
     plt.ylabel('SRMSE')
     plt.savefig('test.jpeg')
     plt.show()
