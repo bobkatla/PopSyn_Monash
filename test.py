@@ -8,14 +8,16 @@ import itertools
 
 ATTRIBUTES = ['AGEGROUP', 'PERSINC', 'SEX', 'CARLICENCE']
 
-def SRMSE(actual, pred, attributes):
+def SRMSE(actual, pred):
     '''
     This calculate the SRMSE for 2 pandas.dataframe based on the list of their attributes
-    This assumes that both df have the same collumns/attributes
+    The actual has to have the same or more columns than pred
+    This will compare only the one that is in pred's colls
     '''
 
     total_att = 1
     full_list = {}
+    attributes = pred.columns
 
     # Get the possible values for each att
     for att in attributes:
@@ -94,7 +96,7 @@ if __name__ == "__main__":
     # Learn the DAG in data using Bayesian structure learning:
     DAG = bn.structure_learning.fit(seed_df, methodtype='hc', scoretype='bic', verbose=0)
     # Remove insignificant edges
-    # DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True, verbose=0)
+    DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True, verbose=0)
 
     # Adjacency matrix
     # print(DAG['adjmat'])
@@ -106,9 +108,9 @@ if __name__ == "__main__":
     model = bn.parameter_learning.fit(DAG, seed_df, methodtype='bayes', verbose=0)
     # bn.print_CPD(model)
 
-    sampling_df = sampling(model['model'], n = 10, type = 'gibbs')
-    print(sampling_df)
+    sampling_df = sampling(model['model'], n = 50000, type = 'gibbs')
+    # print(sampling_df)
     
-    # TODO: for the missing att (they are not in the graph) they can be sampled from distribution
+    # TODO: for the missing att (they are not in the graph) they can be sampled from distribution - I think?
 
-    # print(SRMSE(df, sampling_df, ATTRIBUTES))
+    print(SRMSE(df, sampling_df))
