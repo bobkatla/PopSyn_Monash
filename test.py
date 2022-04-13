@@ -50,7 +50,7 @@ if __name__ == "__main__":
     original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv")
     df = original_df[ATTRIBUTES].dropna()
     # It is noted that with small samples, cannot ebtablish the edges
-    seed_df = df.sample(n = 5000).copy()
+    seed_df = df.sample(n = 40000).copy()
     # print(df.shape)
     
     # Learn the DAG in data using Bayesian structure learning:
@@ -79,6 +79,7 @@ if __name__ == "__main__":
     sampling_df = gibbs_chain.sample(size=100000, start_state=None)
     # This is needed as the result of Gibb is set to only int
     sampling_df = sampling_df.astype('object')
+    # This part is updating the cardinality of Gibb with their corresponding label
     for att in ATTRIBUTES:
         try:
             pos_ref = model['model'].get_cpds(att).state_names[att]
