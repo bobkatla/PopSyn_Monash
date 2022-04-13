@@ -1,12 +1,14 @@
 from cmath import sqrt
+from re import L
 from tabnanny import verbose
 import pandas as pd
-import bnlearn as bn
-from math import sqrt
-from pgmpy.sampling import GibbsSampling, BayesianModelSampling
 import itertools
+from math import sqrt
+import matplotlib.pyplot as plt
+from pyparsing import one_of
+import bnlearn as bn
+from pgmpy.sampling import GibbsSampling, BayesianModelSampling
 
-ATTRIBUTES = ['AGEGROUP', 'PERSINC', 'SEX', 'CARLICENCE']
 
 def SRMSE(actual, pred):
     '''
@@ -51,6 +53,7 @@ def SRMSE(actual, pred):
 
     return result
 
+
 def sampling(model, n=1000, type='forward', init_state=None):
     '''
     This will define different sampling methods using the BN_network (model)
@@ -85,32 +88,43 @@ def sampling(model, n=1000, type='forward', init_state=None):
         
     return sampling_df
 
+
+def plot_SRMSE_bayes(orginal):
+    N = orginal.shape[0]
+    X = []
+    Y = []
+
+    one_percent = int(N/100)
+    for num in range(one_percent, N, one_percent):
+        X.append(num)
+        # It is noted that with small samples, cannot ebtablish the edges
+        seed_df = df.sample(n = num).copy()
+        # Learn the DAG in data using Bayesian structure learning:
+        DAG = bn.structure_learning.fit(seed_df, methodtype='hc', scoretype='bic', verbose=0)
+        # Remove insignificant edges
+        DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True, verbose=0)
+
+        # Parameter learning on the user-defined DAG and input data using Bayes to estimate the CPTs
+        model = bn.parameter_learning.fit(DAG, seed_df, methodtype='bayes', verbose=0)
+
+        sampling_df = sampling(model['model'], n = N*2, type = 'gibbs')
+
+        Y.append(SRMSE(df, sampling_df))
+
+    plt.plot(X, Y)
+    plt.xlabel('Number of records in the seed')
+    plt.ylabel('SRMSE')
+    plt.savefig('test.jpeg')
+    plt.show()
+
+
 if __name__ == "__main__":
+    ATTRIBUTES = ['AGEGROUP', 'PERSINC', 'SEX', 'CARLICENCE']
+    
     # import data
     original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv")
     df = original_df[ATTRIBUTES].dropna()
-    # It is noted that with small samples, cannot ebtablish the edges
-    seed_df = df.sample(n = 1000).copy()
-    # print(df.shape)
-    
-    # Learn the DAG in data using Bayesian structure learning:
-    DAG = bn.structure_learning.fit(seed_df, methodtype='hc', scoretype='bic', verbose=0)
-    # Remove insignificant edges
-    DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True, verbose=0)
 
-    # Adjacency matrix
-    # print(DAG['adjmat'])
-
-    # Plot the DAG
-    # G = bn.plot(DAG)
-
-    # Parameter learning on the user-defined DAG and input data using Bayes to estimate the CPTs
-    model = bn.parameter_learning.fit(DAG, seed_df, methodtype='bayes', verbose=0)
-    # bn.print_CPD(model)
-
-    sampling_df = sampling(model['model'], n = 50000, type = 'gibbs')
-    # print(sampling_df)
+    plot_SRMSE_bayes(df)
     
     # TODO: for the missing att (they are not in the graph) they can be sampled from distribution - I think?
-
-    print(SRMSE(df, sampling_df))
