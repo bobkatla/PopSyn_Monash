@@ -106,6 +106,7 @@ def plot_SRMSE_bayes(orginal):
         DAG = bn.structure_learning.fit(seed_df, methodtype='hc', scoretype='bic', verbose=0)
         # Remove insignificant edges
         DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True, verbose=0)
+        # bn.plot(DAG)
         # Parameter learning on the user-defined DAG and input data using Bayes to estimate the CPTs
         model = bn.parameter_learning.fit(DAG, seed_df, methodtype='bayes', verbose=0)
         # Sampling
