@@ -117,7 +117,7 @@ def plot_SRMSE_bayes(orginal):
     plt.plot(X, Y)
     plt.xlabel('Percentages of sampling rate')
     plt.ylabel('SRMSE')
-    plt.savefig('test.png')
+    plt.savefig('./img_data/BN_SRMSE.png')
     # plt.show()
 
 
