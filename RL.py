@@ -27,13 +27,13 @@ class Env:
                 self.policy[att][val] = 0
         
 
-    def choose_action(self, current_state_i):
-        current_state = self.order[current_state_i]
+    def choose_action(self, next_state_i):
+        next_state = self.order[next_state_i]
         # return the action (can be random) based on your curren state
-        actions_space = self.policy[current_state]
+        actions_space = self.policy[next_state]
         action = None
         if random.uniform(0, 1) < self.epsilon:
-            action = np.random.choice(actions_space.keys())
+            action = np.random.choice(list(actions_space.keys()))
         else:
             action = max(actions_space, key=actions_space.get)
         return action
@@ -60,28 +60,41 @@ class Env:
         self.seq[next_state] = action
         re = self.reward()
         done = next_state_i == (len(self.order) - 1)
-        return next_state_i, re, done
+        return re, done
         
 
-    def update_Qtable(self, current_state_i, current_value, reward, next_state_i):
+    def update_Qtable(self, current_state_i, current_value, reward):
         current_state = self.order[current_state_i]
-        next_state = self.order[next_state_i]
+        next_state = self.order[current_state_i + 1]
         predict = self.policy[current_state][current_value]
         target = reward + self.gamma * max(self.policy[next_state].values())
         self.policy[current_state][current_value] = self.policy[current_state][current_value] + self.alpha * (target - predict)
 
 
-    def RL_trainning(self, eps):
-        for _ in range(eps):
-            cur_i = 0
-            done = False
-            cur_val = 'start'
-            while not done:
-                action = self.choose_action(cur_i)
-                next_i, reward, done = self.step(cur_i, action)
-                self.update_Qtable(cur_i, cur_val, reward, next_i)
-                cur_i = next_i
-                cur_val = action
+    def RL_trainning(self, eps, max_train):
+        for j in range(eps):
+            print(f"START TRAINNING EP {j}")
+            final = False
+            l = 0
+            while not final:
+                l += 1
+                cur_i = 0
+                done = False
+                cur_val = 'start'
+                while not done:
+                    action = self.choose_action(cur_i + 1)
+                    reward, done = self.step(cur_i, action)
+                    # print(cur_val, action, reward)
+                    self.update_Qtable(cur_i, cur_val, reward)
+                    cur_i += 1
+                    cur_val = action
+                    if cur_i == len(self.order):
+                        print(f"Got seq {self.seq}")
+                        final = reward != 0
+                if l >= max_train: 
+                    print ("FINISH EARLY")
+                    break
+            print(f"FINISH TRAINING EP {j}")
         
 
 if __name__ == "__main__":
@@ -94,7 +107,8 @@ if __name__ == "__main__":
 
     env_test = Env(df, ATTRIBUTES.copy())
     
-
+    env_test.RL_trainning(2, 1000)
+    print(env_test.policy)
 
 
 '''
