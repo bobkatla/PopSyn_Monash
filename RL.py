@@ -10,27 +10,29 @@ class Env:
         # parameters of RL
         self.alpha = 0.1
         self.gamma = 0.6
-        self.epsilon = 0.9 #exploration heavy
-        self.eps = 1000
+        self.epsilon = 0.7 #exploration heavy
 
         # init 
         self.df = df
         self.order = order
         self.order.insert(0, 'start')
         self.states = df.columns
-        self.policy = {'start': {'start': 0}}
+        self.policy = {}
         self.seq = {}
-        for att in self.states:
-            possible_val = pd.unique(df[att])
-            self.policy[att] = {}
-            for val in possible_val:
-                self.policy[att][val] = 0
+        for i, state in enumerate(self.order):
+            self.policy[state] = {}
+            if i == (len(self.order) - 1):
+                self.policy[state]['finish'] = 0
+                break
+            possible_actions = pd.unique(df[self.order[i+1]])
+            for action in possible_actions:
+                self.policy[state][action] = 0
         
 
-    def choose_action(self, next_state_i):
-        next_state = self.order[next_state_i]
+    def choose_action(self, current_state_i):
+        current_state = self.order[current_state_i]
         # return the action (can be random) based on your curren state
-        actions_space = self.policy[next_state]
+        actions_space = self.policy[current_state]
         action = None
         if random.uniform(0, 1) < self.epsilon:
             action = np.random.choice(list(actions_space.keys()))
@@ -49,26 +51,25 @@ class Env:
                 check &= (self.df[att] == val)
         # This assumes that there will always be False result
         matching_num = len(check) - check.value_counts()[False]
-        return matching_num
+        return len(self.seq) * matching_num
 
 
     def step(self, current_state_i, action):
         # return the next state, reward, done (and maybe any extra)
-        current_state = self.order[current_state_i]
-        next_state_i = current_state_i + 1
-        next_state = self.order[next_state_i]
+        next_state = self.order[current_state_i + 1]
         self.seq[next_state] = action
         re = self.reward()
-        done = next_state_i == (len(self.order) - 1)
+        done = current_state_i == (len(self.order) - 2)
         return re, done
         
 
-    def update_Qtable(self, current_state_i, current_value, reward):
+    def update_Qtable(self, current_state_i, action, reward):
         current_state = self.order[current_state_i]
         next_state = self.order[current_state_i + 1]
-        predict = self.policy[current_state][current_value]
+        # print(current_state, action)
+        predict = self.policy[current_state][action]
         target = reward + self.gamma * max(self.policy[next_state].values())
-        self.policy[current_state][current_value] = self.policy[current_state][current_value] + self.alpha * (target - predict)
+        self.policy[current_state][action] += self.alpha * (target - predict)
 
 
     def RL_trainning(self, eps, max_train):
@@ -77,20 +78,20 @@ class Env:
             final = False
             l = 0
             while not final:
+                self.seq = {}
                 l += 1
                 cur_i = 0
                 done = False
-                cur_val = 'start'
                 while not done:
-                    action = self.choose_action(cur_i + 1)
+                    action = self.choose_action(cur_i)
                     reward, done = self.step(cur_i, action)
                     # print(cur_val, action, reward)
-                    self.update_Qtable(cur_i, cur_val, reward)
+                    self.update_Qtable(cur_i, action, reward)
                     cur_i += 1
-                    cur_val = action
                     if cur_i == len(self.order):
                         print(f"Got seq {self.seq}")
                         final = reward != 0
+                        if final: print("I REACH THE GOAL OF CREATING SOMETHING EXIST")
                 if l >= max_train: 
                     print ("FINISH EARLY")
                     break
@@ -107,7 +108,7 @@ if __name__ == "__main__":
 
     env_test = Env(df, ATTRIBUTES.copy())
     
-    env_test.RL_trainning(2, 1000)
+    env_test.RL_trainning(2, 5000)
     print(env_test.policy)
 
 
