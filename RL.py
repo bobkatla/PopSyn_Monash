@@ -1,3 +1,4 @@
+import random
 import pandas as pd
 import numpy as np
 
@@ -6,37 +7,82 @@ import numpy as np
 
 class Env:
     def __init__(self, df, order):
+        # parameters of RL
+        self.alpha = 0.1
+        self.gamma = 0.6
+        self.epsilon = 0.9 #exploration heavy
+        self.eps = 1000
+
+        # init 
+        self.df = df
+        self.order = order
+        self.order.insert(0, 'start')
         self.states = df.columns
-        width = len(self.states)
-        max_length = 0
-        self.actions = {}
+        self.policy = {'start': {'start': 0}}
+        self.seq = {}
         for att in self.states:
             possible_val = pd.unique(df[att])
-            if len(possible_val) > max_length: max_length = len(possible_val) 
-            self.actions[att] = possible_val
-        self.env = np.zeros((max_length, width))
+            self.policy[att] = {}
+            for val in possible_val:
+                self.policy[att][val] = 0
+        
 
-    def choose_action(current_state):
+    def choose_action(self, current_state_i):
+        current_state = self.order[current_state_i]
         # return the action (can be random) based on your curren state
-        NotImplemented
+        actions_space = self.policy[current_state]
+        action = None
+        if random.uniform(0, 1) < self.epsilon:
+            action = np.random.choice(actions_space.keys())
+        else:
+            action = max(actions_space, key=actions_space.get)
+        return action
 
 
-    def state_transition(current_state, action):
-        # base on the current state and action, return the next state
-        NotImplemented
+    def reward(self):
+        check = None
+        for att in self.seq:
+            val = self.seq[att]
+            if check is None:
+                check = (self.df[att] == val)
+            else:
+                check &= (self.df[att] == val)
+        # This assumes that there will always be False result
+        matching_num = len(check) - check.value_counts()[False]
+        return matching_num
 
 
-    def reward(new_state):
-        # return the reward based on the new state
-        NotImplemented
-
-    def step(action):
+    def step(self, current_state_i, action):
         # return the next state, reward, done (and maybe any extra)
-        NotImplemented
+        current_state = self.order[current_state_i]
+        next_state_i = current_state_i + 1
+        next_state = self.order[next_state_i]
+        self.seq[next_state] = action
+        re = self.reward()
+        done = next_state_i == (len(self.order) - 1)
+        return next_state_i, re, done
+        
 
-    def update_Qtable(current_state, action, reward, next_state):
-        NotImplemented
+    def update_Qtable(self, current_state_i, current_value, reward, next_state_i):
+        current_state = self.order[current_state_i]
+        next_state = self.order[next_state_i]
+        predict = self.policy[current_state][current_value]
+        target = reward + self.gamma * max(self.policy[next_state].values())
+        self.policy[current_state][current_value] = self.policy[current_state][current_value] + self.alpha * (target - predict)
 
+
+    def RL_trainning(self, eps):
+        for _ in range(eps):
+            cur_i = 0
+            done = False
+            cur_val = 'start'
+            while not done:
+                action = self.choose_action(cur_i)
+                next_i, reward, done = self.step(cur_i, action)
+                self.update_Qtable(cur_i, cur_val, reward, next_i)
+                cur_i = next_i
+                cur_val = action
+        
 
 if __name__ == "__main__":
     ATTRIBUTES = ['AGEGROUP', 'PERSINC', 'CARLICENCE', 'SEX']
@@ -46,16 +92,9 @@ if __name__ == "__main__":
     df = original_df[ATTRIBUTES].dropna()
     # seed_df = df.sample(n = 10).copy()
 
-    # parameters
-    alpha = 0.1
-    gamma = 0.6
-    epsilon = 0.9 #exploration heavy
-    eps = 1000
+    env_test = Env(df, ATTRIBUTES.copy())
+    
 
-    env_test = Env(df, [])
-    print(env_test.actions)
-    print(env_test.env)
-    print(env_test.states)
 
 
 '''
