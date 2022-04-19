@@ -169,7 +169,13 @@ if __name__ == "__main__":
     for p in hold_p:
         p.join()
 
-    print(results[:])
+    fin = results[:]
+    print(fin)
+
+    txt_file = open("RL_results.txt", "w")
+    for ele in fin:
+        txt_file.write(str(ele) + ", ")
+    txt_file.close()
 
     
 
