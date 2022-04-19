@@ -1,6 +1,9 @@
 import random
+from matplotlib.cbook import ls_mapper
 import pandas as pd
 import numpy as np
+from pyparsing import col
+from scipy.fft import next_fast_len
 
 
 # thinking of creating an env object so it better to control, creating new env will be like initialize again
@@ -96,7 +99,34 @@ class Env:
                     print ("FINISH EARLY")
                     break
             print(f"FINISH TRAINING EP {j}")
-        
+
+
+    def sampling(self, n):
+        hold = {}
+        for i, state in enumerate(self.order):
+            if i == (len(self.order) - 1):
+                break
+            next_state = self.order[i+1]
+            hold[next_state] = ([], [])
+            for action in self.policy[state]:
+                hold[next_state][0].append(action)
+                hold[next_state][1].append(self.policy[state][action])
+            ls_values = hold[next_state][1]
+            sum_val = sum(ls_values)
+            for i, val in enumerate(ls_values):
+                ls_values[i] = val / sum_val
+
+        # picking time
+        ls_samples = []
+        for _ in range(n):
+            ls_pick = {}
+            for att in hold:
+                ls_pick[att] = [np.random.choice(a=hold[att][0], p=hold[att][1])]
+            new_sample = pd.DataFrame(ls_pick)
+            ls_samples.append(new_sample)
+        result = pd.concat(ls_samples)
+        return result
+
 
 if __name__ == "__main__":
     ATTRIBUTES = ['AGEGROUP', 'PERSINC', 'CARLICENCE', 'SEX']
@@ -107,9 +137,10 @@ if __name__ == "__main__":
     # seed_df = df.sample(n = 10).copy()
 
     env_test = Env(df, ATTRIBUTES.copy())
-    
-    env_test.RL_trainning(2, 5000)
-    print(env_test.policy)
+    env_test.RL_trainning(2, 100)
+    a = env_test.sampling(100000)
+    print(a)
+    # print(env_test.policy)
 
 
 '''
