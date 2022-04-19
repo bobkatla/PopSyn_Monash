@@ -1,6 +1,7 @@
 import random
 import pandas as pd
 import numpy as np
+from multiprocessing import Process, Lock, Array
 from BN import SRMSE
 
 
@@ -126,18 +127,50 @@ class Env:
         return result
 
 
+def calculate_SRMSE_given_rate(sample_rate, df, order):
+    N = df.shape[0]
+    seed_df = df.sample(n = (int(N/100)*sample_rate)).copy()
+    e = Env(seed_df, order.copy())
+    e.RL_trainning(2, 100)
+    predict_df = e.sampling(1000)
+    return SRMSE(df, predict_df)
+
+
+def multithreading_func(l, i, df, order, results_arr):
+    print(f"START PROCESS {i}")
+    err_cal = calculate_SRMSE_given_rate(i+1, df, order)
+    l.acquire()
+    try:
+        results_arr[i] = err_cal
+    finally:
+        l.release()
+
+
 if __name__ == "__main__":
     ATTRIBUTES = ['AGEGROUP', 'PERSINC', 'CARLICENCE', 'SEX']
     
     # import data
     original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv")
     df = original_df[ATTRIBUTES].dropna()
-    seed_df = df.sample(n = 20000).copy()
+    # print(df.shape)
 
-    env_test = Env(seed_df, ATTRIBUTES.copy())
-    env_test.RL_trainning(100, 10000)
-    predict_df = env_test.sampling(100000)
-    print(SRMSE(df, predict_df))
+    # try to do multi threading now
+    max_num_percen = 3
+    results = Array('d', range(max_num_percen))
+    lock = Lock()
+    hold_p = []
+
+    for num in range(max_num_percen):
+        p = Process(target=multithreading_func, args=(lock, num, df, ATTRIBUTES, results))
+        p.start()
+        hold_p.append(p)
+
+    for p in hold_p:
+        p.join()
+
+    print(results[:])
+
+    
 
 
 '''
