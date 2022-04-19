@@ -137,11 +137,12 @@ def calculate_SRMSE_given_rate(sample_rate, df, order):
 
 
 def multithreading_func(l, i, df, order, results_arr):
-    print(f"START PROCESS {i}")
+    print(f"START {i}")
     err_cal = calculate_SRMSE_given_rate(i+1, df, order)
     l.acquire()
     try:
         results_arr[i] = err_cal
+        print(f"DONE {i}")
     finally:
         l.release()
 
