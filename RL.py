@@ -1,9 +1,7 @@
 import random
-from matplotlib.cbook import ls_mapper
 import pandas as pd
 import numpy as np
-from pyparsing import col
-from scipy.fft import next_fast_len
+from BN import SRMSE
 
 
 # thinking of creating an env object so it better to control, creating new env will be like initialize again
@@ -134,13 +132,12 @@ if __name__ == "__main__":
     # import data
     original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv")
     df = original_df[ATTRIBUTES].dropna()
-    # seed_df = df.sample(n = 10).copy()
+    seed_df = df.sample(n = 20000).copy()
 
-    env_test = Env(df, ATTRIBUTES.copy())
-    env_test.RL_trainning(2, 100)
-    a = env_test.sampling(100000)
-    print(a)
-    # print(env_test.policy)
+    env_test = Env(seed_df, ATTRIBUTES.copy())
+    env_test.RL_trainning(100, 10000)
+    predict_df = env_test.sampling(100000)
+    print(SRMSE(df, predict_df))
 
 
 '''
