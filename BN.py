@@ -89,28 +89,35 @@ def sampling(model, n=1000, type='forward', init_state=None):
     return sampling_df
 
 
+def BN_training(df, sample_rate, sampling=True):
+    N = df.shape[0]
+    one_percent = int(N/100)
+    # It is noted that with small samples, cannot ebtablish the edges
+    seed_df = df.sample(n = sample_rate * one_percent).copy()
+    # Learn the DAG in data using Bayesian structure learning:
+    DAG = bn.structure_learning.fit(seed_df, methodtype='hc', scoretype='bic', verbose=0)
+    # Remove insignificant edges
+    DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True, verbose=0)
+    bn.plot(DAG)
+    # Parameter learning on the user-defined DAG and input data using Bayes to estimate the CPTs
+    model = bn.parameter_learning.fit(DAG, seed_df, methodtype='bayes', verbose=0)
+    if sampling:
+        # Sampling
+        sampling_df = sampling(model['model'], n = N*2, type = 'gibbs')
+        return sampling_df
+    else: return None
+
+
 def plot_SRMSE_bayes(orginal):
     N = orginal.shape[0]
     X = []
     Y = []
 
-    one_percent = int(N/100)
-    i = 0
-    for num in range(one_percent, N, one_percent):
-        i += 1
+    for i in range(1, 100):
         X.append(i)
-        print(i)
-        # It is noted that with small samples, cannot ebtablish the edges
-        seed_df = df.sample(n = num).copy()
-        # Learn the DAG in data using Bayesian structure learning:
-        DAG = bn.structure_learning.fit(seed_df, methodtype='hc', scoretype='bic', verbose=0)
-        # Remove insignificant edges
-        DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True, verbose=0)
-        # bn.plot(DAG)
-        # Parameter learning on the user-defined DAG and input data using Bayes to estimate the CPTs
-        model = bn.parameter_learning.fit(DAG, seed_df, methodtype='bayes', verbose=0)
-        # Sampling
-        sampling_df = sampling(model['model'], n = N*2, type = 'gibbs')
+
+        sampling_df = BN_training(orginal, i)
+        
         # Calculate the SRMSE
         Y.append(SRMSE(df, sampling_df))
         # print(X, Y)
@@ -122,13 +129,19 @@ def plot_SRMSE_bayes(orginal):
     # plt.show()
 
 
+def create_df_for_Sun_paper():
+    NotImplemented
+
+
 if __name__ == "__main__":
-    ATTRIBUTES = ['AGEGROUP', 'PERSINC', 'SEX', 'CARLICENCE']
+    ATTRIBUTES = ['AGEGROUP', 'PERSINC', 'SEX', 'CARLICENCE', 'RELATIONSHIP', 'YEAROFBIRTH']
     
     # import data
     original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv")
     df = original_df[ATTRIBUTES].dropna()
 
-    plot_SRMSE_bayes(df)
+    BN_training(df, 5, sampling=False)
+
+    # plot_SRMSE_bayes(df)
     
     # TODO: for the missing att (they are not in the graph) they can be sampled from distribution - I think?

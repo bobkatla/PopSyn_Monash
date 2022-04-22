@@ -76,7 +76,7 @@ class Env:
 
     def RL_trainning(self, eps, max_train):
         for j in range(eps):
-            # print(f"START TRAINNING EP {j}")
+            print(f"START TRAINNING EP {j}")
             final = False
             l = 0
             while not final:
@@ -95,9 +95,9 @@ class Env:
                         final = reward != 0
                         if final: print("I REACH THE GOAL OF CREATING SOMETHING EXIST")
                 if l >= max_train: 
-                    # print ("FINISH EARLY")
+                    print ("FINISH EARLY")
                     break
-            # print(f"FINISH TRAINING EP {j}")
+            print(f"FINISH TRAINING EP {j}")
 
 
     def sampling(self, n):
@@ -131,7 +131,7 @@ def calculate_SRMSE_given_rate(sample_rate, df, order):
     N = df.shape[0]
     seed_df = df.sample(n = (int(N/100)*sample_rate)).copy()
     e = Env(seed_df, order.copy())
-    e.RL_trainning(1000, 50000)
+    e.RL_trainning(100, 5000)
     predict_df = e.sampling(100000)
     return SRMSE(df, predict_df)
 
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     lock = Lock()
     hold_p = []
 
-    for num in range(max_num_percen):
+    for num in range(99, max_num_percen):
         p = Process(target=multithreading_func, args=(lock, num, df, ATTRIBUTES, results))
         p.start()
         hold_p.append(p)
