@@ -76,7 +76,7 @@ class Env:
 
     def RL_trainning(self, eps, max_train):
         for j in range(eps):
-            print(f"START TRAINNING EP {j}")
+            # print(f"START TRAINNING EP {j}")
             final = False
             l = 0
             while not final:
@@ -93,11 +93,11 @@ class Env:
                     if cur_i == (len(self.order)-1):
                         # print(f"Got seq {self.seq}")
                         final = reward != 0
-                        if final: print("I REACH THE GOAL")
+                        if final: print(f"I REACH THE GOAL at step {l}")
                 if l >= max_train: 
                     print ("FINISH EARLY")
                     break
-            print(f"FINISH TRAINING EP {j}")
+            # print(f"FINISH TRAINING EP {j}")
 
 
     def sampling(self, n):
@@ -128,7 +128,7 @@ class Env:
 
 
 def calculate_SRMSE_given_rate(sample_rate, df, order):
-    num_train = 1000
+    num_train = 8000
     max_step = 5000
     N = df.shape[0]
     seed_df = df.sample(n = (int(N/100)*sample_rate)).copy()
@@ -150,7 +150,7 @@ def multithreading_func(l, i, df, order, results_arr):
 
 
 if __name__ == "__main__":
-    ATTRIBUTES = ['AGEGROUP', 'CARLICENCE']
+    ATTRIBUTES = ['AGEGROUP', 'CARLICENCE', 'SEX']
     
     # import data
     original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv")
@@ -158,12 +158,13 @@ if __name__ == "__main__":
     # print(df.shape)
 
     # try to do multi threading now
-    max_num_percen = 10
+    min_num_percen = 0
+    max_num_percen = 5
     results = Array('d', range(max_num_percen))
     lock = Lock()
     hold_p = []
 
-    for num in range(max_num_percen):
+    for num in range(min_num_percen, max_num_percen):
         p = Process(target=multithreading_func, args=(lock, num, df, ATTRIBUTES, results))
         p.start()
         hold_p.append(p)

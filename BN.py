@@ -1,57 +1,8 @@
-from cmath import sqrt
-from re import L
-from tabnanny import verbose
 import pandas as pd
-import itertools
-from math import sqrt
 import matplotlib.pyplot as plt
-from pyparsing import one_of
 import bnlearn as bn
 from pgmpy.sampling import GibbsSampling, BayesianModelSampling
-
-
-def SRMSE(actual, pred):
-    '''
-    This calculate the SRMSE for 2 pandas.dataframe based on the list of their attributes
-    The actual has to have the same or more columns than pred
-    This will compare only the one that is in pred's colls
-    '''
-
-    total_att = 1
-    full_list = {}
-    attributes = pred.columns
-
-    # Get the possible values for each att
-    for att in attributes:
-        possible_values = actual[att].unique()
-        total_att *= len(possible_values)
-        full_list[att] = possible_values
-
-    # Generate all the possible combinations
-    keys, values = zip(*full_list.items())
-    combinations = [dict(zip(keys, v)) for v in itertools.product(*values)]
-    
-    #calculate
-    hold = 0
-    for instance in combinations:
-        # the 2 would be None or not None at the same time
-        check_actual = None
-        check_pred = None
-        for att in attributes:
-            if check_actual is not None:
-                check_actual &= (actual[att] == instance[att])
-                check_pred &= (pred[att] == instance[att])
-            else:
-                check_actual = (actual[att] == instance[att])
-                check_pred = (pred[att] == instance[att])
-        # This assumes that there will always be False result
-        freq_actual = 1 - ((check_actual.value_counts()[False]) / len(check_actual))
-        freq_pred = 1 - ((check_pred.value_counts()[False]) / len(check_pred))
-        hold += (freq_actual - freq_pred)**2
-    
-    result = sqrt(hold * total_att)
-
-    return result
+from checker import SRMSE
 
 
 def sampling(model, n=1000, type='forward', init_state=None):
@@ -97,7 +48,7 @@ def BN_training(df, sample_rate, sample=True):
     # Learn the DAG in data using Bayesian structure learning:
     DAG = bn.structure_learning.fit(seed_df, methodtype='hc', scoretype='bic', verbose=0)
     # Remove insignificant edges
-    DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True, verbose=0)
+    # DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True, verbose=0)
     bn.plot(DAG)
     # Parameter learning on the user-defined DAG and input data using Bayes to estimate the CPTs
     model = bn.parameter_learning.fit(DAG, seed_df, methodtype='bayes', verbose=0)
@@ -129,20 +80,23 @@ def plot_SRMSE_bayes(orginal):
     # plt.show()
 
 
-def create_df_for_Sun_paper():
-    # HH would be: DWELLTYPE TOTALVEHS
-    NotImplemented
-
-
 if __name__ == "__main__":
-    ATTRIBUTES = ['AGEGROUP', 'CARLICENCE', 'SEX', 'PERSINC']
+    ATTRIBUTES = ['AGEGROUP', 'CARLICENCE', 'SEX', 'PERSINC', 'DWELLTYPE', 'TOTALVEHS']
     
     # import data
-    original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv")
-    df = original_df[ATTRIBUTES].dropna()
+    p_original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv")
+    # Only have record of the main person (the person that did the survey)
+    p_self_df = p_original_df[p_original_df['RELATIONSHIP']=='Self']
+    h_original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/H_VISTA12_16_SA1_V1.csv")
 
-    sampling_df = BN_training(df, sample_rate=10)
+    orignal_df = pd.merge(p_self_df, h_original_df, on=['HHID'])
+    df = orignal_df[ATTRIBUTES].dropna()
+
+    # TODO: change the grouping to match the paper
+
+    sampling_df = BN_training(df, sample_rate=99)
     print(SRMSE(df, sampling_df))
+
     # plot_SRMSE_bayes(df)
-    
+
     # TODO: for the missing att (they are not in the graph) they can be sampled from distribution - I think?
