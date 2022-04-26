@@ -89,7 +89,7 @@ def sampling(model, n=1000, type='forward', init_state=None):
     return sampling_df
 
 
-def BN_training(df, sample_rate, sampling=True):
+def BN_training(df, sample_rate, sample=True):
     N = df.shape[0]
     one_percent = int(N/100)
     # It is noted that with small samples, cannot ebtablish the edges
@@ -101,7 +101,7 @@ def BN_training(df, sample_rate, sampling=True):
     bn.plot(DAG)
     # Parameter learning on the user-defined DAG and input data using Bayes to estimate the CPTs
     model = bn.parameter_learning.fit(DAG, seed_df, methodtype='bayes', verbose=0)
-    if sampling:
+    if sample:
         # Sampling
         sampling_df = sampling(model['model'], n = N*2, type = 'gibbs')
         return sampling_df
@@ -130,18 +130,19 @@ def plot_SRMSE_bayes(orginal):
 
 
 def create_df_for_Sun_paper():
+    # HH would be: DWELLTYPE TOTALVEHS
     NotImplemented
 
 
 if __name__ == "__main__":
-    ATTRIBUTES = ['AGEGROUP', 'PERSINC', 'SEX', 'CARLICENCE', 'RELATIONSHIP', 'YEAROFBIRTH']
+    ATTRIBUTES = ['AGEGROUP', 'CARLICENCE', 'SEX', 'PERSINC']
     
     # import data
     original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv")
     df = original_df[ATTRIBUTES].dropna()
 
-    BN_training(df, 5, sampling=False)
-
+    sampling_df = BN_training(df, sample_rate=10)
+    print(SRMSE(df, sampling_df))
     # plot_SRMSE_bayes(df)
     
     # TODO: for the missing att (they are not in the graph) they can be sampled from distribution - I think?

@@ -12,7 +12,7 @@ class Env:
         # parameters of RL
         self.alpha = 0.1
         self.gamma = 0.6
-        self.epsilon = 0.7 #exploration heavy
+        self.epsilon = 0.8 #exploration heavy
 
         # init 
         self.df = df
@@ -90,10 +90,10 @@ class Env:
                     # print(cur_val, action, reward)
                     self.update_Qtable(cur_i, action, reward)
                     cur_i += 1
-                    if cur_i == len(self.order):
+                    if cur_i == (len(self.order)-1):
                         # print(f"Got seq {self.seq}")
                         final = reward != 0
-                        if final: print("I REACH THE GOAL OF CREATING SOMETHING EXIST")
+                        if final: print("I REACH THE GOAL")
                 if l >= max_train: 
                     print ("FINISH EARLY")
                     break
@@ -128,11 +128,13 @@ class Env:
 
 
 def calculate_SRMSE_given_rate(sample_rate, df, order):
+    num_train = 1000
+    max_step = 5000
     N = df.shape[0]
     seed_df = df.sample(n = (int(N/100)*sample_rate)).copy()
     e = Env(seed_df, order.copy())
-    e.RL_trainning(100, 5000)
-    predict_df = e.sampling(100000)
+    e.RL_trainning(num_train, max_step)
+    predict_df = e.sampling(N*2)
     return SRMSE(df, predict_df)
 
 
@@ -148,7 +150,7 @@ def multithreading_func(l, i, df, order, results_arr):
 
 
 if __name__ == "__main__":
-    ATTRIBUTES = ['AGEGROUP', 'PERSINC', 'CARLICENCE', 'SEX']
+    ATTRIBUTES = ['AGEGROUP', 'CARLICENCE']
     
     # import data
     original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv")
@@ -156,12 +158,12 @@ if __name__ == "__main__":
     # print(df.shape)
 
     # try to do multi threading now
-    max_num_percen = 100
+    max_num_percen = 10
     results = Array('d', range(max_num_percen))
     lock = Lock()
     hold_p = []
 
-    for num in range(99, max_num_percen):
+    for num in range(max_num_percen):
         p = Process(target=multithreading_func, args=(lock, num, df, ATTRIBUTES, results))
         p.start()
         hold_p.append(p)
@@ -176,6 +178,8 @@ if __name__ == "__main__":
     for ele in fin:
         txt_file.write(str(ele) + ", ")
     txt_file.close()
+
+    print("DONEEEE")
 
     
 
