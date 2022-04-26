@@ -2,7 +2,7 @@ import random
 import pandas as pd
 import numpy as np
 from multiprocessing import Process, Lock, Array
-from BN import SRMSE
+from checker import SRMSE
 
 
 # thinking of creating an env object so it better to control, creating new env will be like initialize again
