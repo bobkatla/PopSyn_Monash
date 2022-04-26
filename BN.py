@@ -92,9 +92,15 @@ if __name__ == "__main__":
     orignal_df = pd.merge(p_self_df, h_original_df, on=['HHID'])
     df = orignal_df[ATTRIBUTES].dropna()
 
-    # TODO: change the grouping to match the paper
+    make_like_paper = True
+    if make_like_paper:
+        df.loc[df['TOTALVEHS'] == 0, 'TOTALVEHS'] = 'NO'
+        df.loc[df['TOTALVEHS'] != 'NO', 'TOTALVEHS'] = 'YES'
 
-    sampling_df = BN_training(df, sample_rate=99)
+        df.loc[df['CARLICENCE'] == 'No Car Licence', 'CARLICENCE'] = 'NO'
+        df.loc[df['CARLICENCE'] != 'NO', 'CARLICENCE'] = 'YES'
+
+    sampling_df = BN_training(df, sample_rate=50)
     print(SRMSE(df, sampling_df))
 
     # plot_SRMSE_bayes(df)

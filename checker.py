@@ -47,7 +47,7 @@ def SRMSE(actual, pred):
     
     #calculate
     hold = 0
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+    with concurrent.futures.ThreadPoolExecutor() as executor:
         for instance in combinations:
             future = executor.submit(thread_f, instance, actual, pred, attributes)
             hold += future.result()

@@ -150,16 +150,20 @@ def multithreading_func(l, i, df, order, results_arr):
 
 
 if __name__ == "__main__":
-    ATTRIBUTES = ['AGEGROUP', 'CARLICENCE', 'SEX']
+    ATTRIBUTES = ['AGEGROUP', 'CARLICENCE', 'SEX', 'PERSINC', 'DWELLTYPE', 'TOTALVEHS']
     
     # import data
-    original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv")
-    df = original_df[ATTRIBUTES].dropna()
-    # print(df.shape)
+    p_original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv")
+    # Only have record of the main person (the person that did the survey)
+    p_self_df = p_original_df[p_original_df['RELATIONSHIP']=='Self']
+    h_original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/H_VISTA12_16_SA1_V1.csv")
+
+    orignal_df = pd.merge(p_self_df, h_original_df, on=['HHID'])
+    df = orignal_df[ATTRIBUTES].dropna()
 
     # try to do multi threading now
-    min_num_percen = 0
-    max_num_percen = 5
+    min_num_percen = 97
+    max_num_percen = 100
     results = Array('d', range(max_num_percen))
     lock = Lock()
     hold_p = []
@@ -175,7 +179,7 @@ if __name__ == "__main__":
     fin = results[:]
     print(fin)
 
-    txt_file = open("RL_results.txt", "w")
+    txt_file = open("RL_results_last.txt", "w")
     for ele in fin:
         txt_file.write(str(ele) + ", ")
     txt_file.close()
