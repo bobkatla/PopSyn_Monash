@@ -54,7 +54,7 @@ def BN_training(df, sample_rate, sample=True):
     model = bn.parameter_learning.fit(DAG, seed_df, methodtype='bayes', verbose=0)
     if sample:
         # Sampling
-        sampling_df = sampling(model['model'], n = N*2, type = 'gibbs')
+        sampling_df = sampling(model['model'], n = N*2, type = 'forward')
         return sampling_df
     else: return None
 
@@ -81,7 +81,7 @@ def plot_SRMSE_bayes(orginal):
 
 
 if __name__ == "__main__":
-    ATTRIBUTES = ['AGEGROUP', 'CARLICENCE', 'SEX', 'PERSINC', 'DWELLTYPE', 'TOTALVEHS']
+    ATTRIBUTES = ['AGEGROUP', 'CARLICENCE']
     
     # import data
     p_original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv")
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     orignal_df = pd.merge(p_self_df, h_original_df, on=['HHID'])
     df = orignal_df[ATTRIBUTES].dropna()
 
-    make_like_paper = True
+    make_like_paper = False
     if make_like_paper:
         df.loc[df['TOTALVEHS'] == 0, 'TOTALVEHS'] = 'NO'
         df.loc[df['TOTALVEHS'] != 'NO', 'TOTALVEHS'] = 'YES'
@@ -100,9 +100,9 @@ if __name__ == "__main__":
         df.loc[df['CARLICENCE'] == 'No Car Licence', 'CARLICENCE'] = 'NO'
         df.loc[df['CARLICENCE'] != 'NO', 'CARLICENCE'] = 'YES'
 
-    sampling_df = BN_training(df, sample_rate=50)
-    print(SRMSE(df, sampling_df))
-
+    sampling_df = BN_training(df, sample_rate=99, sample=False)
+    print("Done")
+    # print(SRMSE(df, sampling_df))
     # plot_SRMSE_bayes(df)
 
     # TODO: for the missing att (they are not in the graph) they can be sampled from distribution - I think?

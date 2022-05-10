@@ -128,8 +128,8 @@ class Env:
 
 
 def calculate_SRMSE_given_rate(sample_rate, df, order):
-    num_train = 8000
-    max_step = 5000
+    num_train = 5000
+    max_step = 1000
     N = df.shape[0]
     seed_df = df.sample(n = (int(N/100)*sample_rate)).copy()
     e = Env(seed_df, order.copy())
@@ -161,14 +161,22 @@ if __name__ == "__main__":
     orignal_df = pd.merge(p_self_df, h_original_df, on=['HHID'])
     df = orignal_df[ATTRIBUTES].dropna()
 
+    make_like_paper = False
+    if make_like_paper:
+        df.loc[df['TOTALVEHS'] == 0, 'TOTALVEHS'] = 'NO'
+        df.loc[df['TOTALVEHS'] != 'NO', 'TOTALVEHS'] = 'YES'
+
+        df.loc[df['CARLICENCE'] == 'No Car Licence', 'CARLICENCE'] = 'NO'
+        df.loc[df['CARLICENCE'] != 'NO', 'CARLICENCE'] = 'YES'
+
     # try to do multi threading now
-    min_num_percen = 97
-    max_num_percen = 100
+    min_num_percen = 1
+    max_num_percen = 5
     results = Array('d', range(max_num_percen))
     lock = Lock()
     hold_p = []
 
-    for num in range(min_num_percen, max_num_percen):
+    for num in range(min_num_percen-1, max_num_percen):
         p = Process(target=multithreading_func, args=(lock, num, df, ATTRIBUTES, results))
         p.start()
         hold_p.append(p)
