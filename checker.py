@@ -1,4 +1,3 @@
-import threading
 from math import sqrt
 import itertools
 import time

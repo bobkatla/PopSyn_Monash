@@ -46,6 +46,7 @@ def BN_training(df, sample_rate, sample=True):
     # It is noted that with small samples, cannot ebtablish the edges
     seed_df = df.sample(n = sample_rate * one_percent).copy()
     # Learn the DAG in data using Bayesian structure learning:
+    # DAG = bn.structure_learning.fit(seed_df, methodtype='cl', root_node='AGEGROUP', verbose=0)
     DAG = bn.structure_learning.fit(seed_df, methodtype='hc', scoretype='bic', verbose=0)
     # Remove insignificant edges
     DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True, verbose=0)
@@ -81,7 +82,7 @@ def plot_SRMSE_bayes(orginal):
 
 
 if __name__ == "__main__":
-    ATTRIBUTES = ['AGEGROUP', 'CARLICENCE']
+    ATTRIBUTES = ['AGEGROUP', 'CARLICENCE', 'SEX', 'PERSINC', 'DWELLTYPE', 'TOTALVEHS']
     
     # import data
     p_original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv")
@@ -92,7 +93,7 @@ if __name__ == "__main__":
     orignal_df = pd.merge(p_self_df, h_original_df, on=['HHID'])
     df = orignal_df[ATTRIBUTES].dropna()
 
-    make_like_paper = False
+    make_like_paper = True
     if make_like_paper:
         df.loc[df['TOTALVEHS'] == 0, 'TOTALVEHS'] = 'NO'
         df.loc[df['TOTALVEHS'] != 'NO', 'TOTALVEHS'] = 'YES'
