@@ -35,27 +35,27 @@ def sampling(model, n=1000, type='forward', init_state=None):
             case 'likelihood':
                 sampling_df = infer_model.likelihood_weighted_sample(size=n)
             case _:
-                print("Wrong type name")
+                print("Wrong sampling type name")
         
     return sampling_df
 
 
-def BN_training(df, sample_rate, sample=True):
+def BN_training(df, sample_rate, sample=True, plotting=False, sampling_type='forward', struct_method='hc', para_method='bayes'):
     N = df.shape[0]
     one_percent = int(N/100)
     # It is noted that with small samples, cannot ebtablish the edges
     seed_df = df.sample(n = sample_rate * one_percent).copy()
     # Learn the DAG in data using Bayesian structure learning:
     # DAG = bn.structure_learning.fit(seed_df, methodtype='cl', root_node='AGEGROUP', verbose=0)
-    DAG = bn.structure_learning.fit(seed_df, methodtype='hc', scoretype='bic', verbose=0)
+    DAG = bn.structure_learning.fit(seed_df, methodtype=struct_method, scoretype='bic', verbose=0)
     # Remove insignificant edges
     DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True, verbose=0)
-    bn.plot(DAG)
+    if plotting: bn.plot(DAG)
     # Parameter learning on the user-defined DAG and input data using Bayes to estimate the CPTs
-    model = bn.parameter_learning.fit(DAG, seed_df, methodtype='bayes', verbose=0)
+    model = bn.parameter_learning.fit(DAG, seed_df, methodtype=para_method, verbose=0)
     if sample:
         # Sampling
-        sampling_df = sampling(model['model'], n = N*2, type = 'forward')
+        sampling_df = sampling(model['model'], n = N*2, type = sampling_type)
         return sampling_df
     else: return None
 
@@ -101,9 +101,9 @@ if __name__ == "__main__":
         df.loc[df['CARLICENCE'] == 'No Car Licence', 'CARLICENCE'] = 'NO'
         df.loc[df['CARLICENCE'] != 'NO', 'CARLICENCE'] = 'YES'
 
-    sampling_df = BN_training(df, sample_rate=99, sample=False)
+    sampling_df = BN_training(df, sample_rate=10, sample=True, plotting=True, sampling_type='gibbs')
     print("Done")
-    # print(SRMSE(df, sampling_df))
+    print(SRMSE(df, sampling_df))
     # plot_SRMSE_bayes(df)
 
     # TODO: for the missing att (they are not in the graph) they can be sampled from distribution - I think?
