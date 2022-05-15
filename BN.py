@@ -1,8 +1,10 @@
+from unittest import result
 import pandas as pd
 import matplotlib.pyplot as plt
 import bnlearn as bn
 from pgmpy.sampling import GibbsSampling, BayesianModelSampling
 from checker import SRMSE
+from multiprocessing import Process, Lock, Array
 
 
 def sampling(model, n=1000, type='forward', init_state=None):
@@ -59,26 +61,44 @@ def BN_training(df, sample_rate, sample=True, plotting=False, sampling_type='for
         return sampling_df
     else: return None
 
+def multi_thread_f(df, s_rate, re_arr, l):
+    print(f"START THREAD FOR SAMPLE RATE {s_rate}")
+    sampling_df = BN_training(df=df, sample_rate=s_rate, sampling_type='gibbs')
+    re = SRMSE(df, sampling_df)
+    # Calculate the SRMSE
+    l.acquire()
+    try:
+        # NOTE: this is depends on the range we put the array, it should be same size but accessing the index is diff
+        re_arr[s_rate-1] = re
+        print(f"DONE {s_rate}")
+    finally:
+        l.release()
 
-def plot_SRMSE_bayes(orginal):
-    N = orginal.shape[0]
-    X = []
-    Y = []
 
-    for i in range(1, 100):
-        X.append(i)
+def plot_SRMSE_bayes(original):
+    X = range(1, 100)
 
-        sampling_df = BN_training(orginal, i)
-        
-        # Calculate the SRMSE
-        Y.append(SRMSE(df, sampling_df))
-        # print(X, Y)
+    results = Array('d', X)
+    a = results[:]
+    print(len(a), a)
+    lock = Lock()
+    hold_p = []
+
+    print("START THE PROCESS OF PLOTTING SRMSE")
+
+    for i in X:
+        p = Process(target=multi_thread_f, args=(original, i, results, lock))
+        p.start()
+        hold_p.append(p)
+    for p in hold_p: p.join()
+
+    Y = results[:]
 
     plt.plot(X, Y)
     plt.xlabel('Percentages of sampling rate')
     plt.ylabel('SRMSE')
-    plt.savefig('./img_data/BN_SRMSE.png')
-    # plt.show()
+    plt.savefig('./img_data/BN_SRMSE_gibbs.png')
+    plt.show()
 
 
 if __name__ == "__main__":
@@ -101,9 +121,8 @@ if __name__ == "__main__":
         df.loc[df['CARLICENCE'] == 'No Car Licence', 'CARLICENCE'] = 'NO'
         df.loc[df['CARLICENCE'] != 'NO', 'CARLICENCE'] = 'YES'
 
-    sampling_df = BN_training(df, sample_rate=10, sample=True, plotting=True, sampling_type='gibbs')
-    print("Done")
-    print(SRMSE(df, sampling_df))
-    # plot_SRMSE_bayes(df)
+    # sampling_df = BN_training(df, sample_rate=10, sample=True, plotting=True, sampling_type='gibbs')
+    # print(SRMSE(df, sampling_df))
+    plot_SRMSE_bayes(df)
 
     # TODO: for the missing att (they are not in the graph) they can be sampled from distribution - I think?
