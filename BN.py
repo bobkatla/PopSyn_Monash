@@ -76,24 +76,22 @@ def multi_thread_f(df, s_rate, re_arr, l):
 
 
 def plot_SRMSE_bayes(original):
+    # Maybe will not make this fixed like this
     X = range(1, 100)
 
     results = Array('d', X)
-    a = results[:]
-    print(len(a), a)
     lock = Lock()
     hold_p = []
 
     print("START THE PROCESS OF PLOTTING SRMSE")
-
     for i in X:
         p = Process(target=multi_thread_f, args=(original, i, results, lock))
         p.start()
         hold_p.append(p)
     for p in hold_p: p.join()
 
+    print("DONE ALL, PLOTTING NOW")
     Y = results[:]
-
     plt.plot(X, Y)
     plt.xlabel('Percentages of sampling rate')
     plt.ylabel('SRMSE')
