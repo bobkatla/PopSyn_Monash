@@ -66,9 +66,9 @@ def BN_training(df, sample_rate, sample=True, plotting=False, sampling_type='for
         return sampling_df
     else: return None
 
-def multi_thread_f(df, s_rate, re_arr, l):
+def multi_thread_f(df, s_rate, re_arr, l, bl):
     print(f"START THREAD FOR SAMPLE RATE {s_rate}")
-    sampling_df = BN_training(df=df, sample_rate=s_rate, sampling_type='gibbs')
+    sampling_df = BN_training(df=df, sample_rate=s_rate, sampling_type='gibbs', black_ls=bl)
     re = SRMSE(df, sampling_df)
     # Calculate the SRMSE
     l.acquire()
@@ -80,7 +80,12 @@ def multi_thread_f(df, s_rate, re_arr, l):
         l.release()
 
 
-def plot_SRMSE_bayes(original):
+def plot_SRMSE_bayes(original, root_node = None):
+    bl = None
+    if root_node:
+        atts = original.columns
+        bl = make_black_list_for_root(atts, root_node)
+        
     # Maybe will not make this fixed like this
     X = range(1, 100)
 
@@ -90,7 +95,7 @@ def plot_SRMSE_bayes(original):
 
     print("START THE PROCESS OF PLOTTING SRMSE")
     for i in X:
-        p = Process(target=multi_thread_f, args=(original, i, results, lock))
+        p = Process(target=multi_thread_f, args=(original, i, results, lock, bl))
         p.start()
         hold_p.append(p)
     for p in hold_p: p.join()
@@ -126,8 +131,8 @@ if __name__ == "__main__":
 
     # sampling_df = BN_training(df, sample_rate=10, sample=True, plotting=True, sampling_type='gibbs')
     # print(SRMSE(df, sampling_df))
-    # plot_SRMSE_bayes(df)
-    b_ls = make_black_list_for_root(ATTRIBUTES, root_att='AGEGROUP')
-    BN_training(df, sample_rate=50, sample=False, plotting=True, sampling_type='gibbs', black_ls=b_ls)
+    plot_SRMSE_bayes(df)
+    # b_ls = make_black_list_for_root(ATTRIBUTES, root_att='AGEGROUP')
+    # BN_training(df, sample_rate=50, sample=False, plotting=True, sampling_type='gibbs', black_ls=b_ls)
 
     # TODO: for the missing att (they are not in the graph) they can be sampled from distribution - I think?

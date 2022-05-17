@@ -27,7 +27,10 @@ def SRMSE(actual, pred):
     This calculate the SRMSE for 2 pandas.dataframe based on the list of their attributes
     The actual has to have the same or more columns than pred
     This will compare only the one that is in pred's colls
+    BUT now I make it return -1 if they are not match (at least in length)
     '''
+    if len(actual.columns) != len(pred.columns):
+        return -1
     start_time = time.time()
 
     total_att = 1
