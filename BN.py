@@ -42,14 +42,19 @@ def sampling(model, n=1000, type='forward', init_state=None):
     return sampling_df
 
 
-def BN_training(df, sample_rate, sample=True, plotting=False, sampling_type='forward', struct_method='hc', para_method='bayes'):
+def make_black_list_for_root(ls_atts, root_att):
+    # Return the list of edges for black list to set up root node
+    return [(att, root_att) for att in ls_atts if att != root_att]
+
+
+def BN_training(df, sample_rate, sample=True, plotting=False, sampling_type='forward', struct_method='hc', para_method='bayes', black_ls = None):
     N = df.shape[0]
     one_percent = int(N/100)
     # It is noted that with small samples, cannot ebtablish the edges
     seed_df = df.sample(n = sample_rate * one_percent).copy()
     # Learn the DAG in data using Bayesian structure learning:
     # DAG = bn.structure_learning.fit(seed_df, methodtype='cl', root_node='AGEGROUP', verbose=0)
-    DAG = bn.structure_learning.fit(seed_df, methodtype=struct_method, scoretype='bic', verbose=0)
+    DAG = bn.structure_learning.fit(seed_df, methodtype=struct_method, scoretype='bic', verbose=0, black_list=black_ls, bw_list_method='edges')
     # Remove insignificant edges
     DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True, verbose=0)
     if plotting: bn.plot(DAG)
@@ -95,7 +100,7 @@ def plot_SRMSE_bayes(original):
     plt.plot(X, Y)
     plt.xlabel('Percentages of sampling rate')
     plt.ylabel('SRMSE')
-    plt.savefig('./img_data/BN_SRMSE_gibbs.png')
+    plt.savefig('./img_data/BN_SRMSE_gibbs_root.png')
     plt.show()
 
 
@@ -121,6 +126,8 @@ if __name__ == "__main__":
 
     # sampling_df = BN_training(df, sample_rate=10, sample=True, plotting=True, sampling_type='gibbs')
     # print(SRMSE(df, sampling_df))
-    plot_SRMSE_bayes(df)
+    # plot_SRMSE_bayes(df)
+    b_ls = make_black_list_for_root(ATTRIBUTES, root_att='AGEGROUP')
+    BN_training(df, sample_rate=50, sample=False, plotting=True, sampling_type='gibbs', black_ls=b_ls)
 
     # TODO: for the missing att (they are not in the graph) they can be sampled from distribution - I think?
