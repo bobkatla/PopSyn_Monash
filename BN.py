@@ -47,16 +47,26 @@ def make_black_list_for_root(ls_atts, root_att):
     return [(att, root_att) for att in ls_atts if att != root_att]
 
 
-def BN_training(df, sample_rate, sample=True, plotting=False, sampling_type='forward', struct_method='hc', para_method='bayes', black_ls = None):
+def BN_training(df, sample_rate, ite_check=50,sample=True, plotting=False, sampling_type='forward', struct_method='hc', para_method='bayes', black_ls = None):
     N = df.shape[0]
     one_percent = int(N/100)
     # It is noted that with small samples, cannot ebtablish the edges
     seed_df = df.sample(n = sample_rate * one_percent).copy()
-    # Learn the DAG in data using Bayesian structure learning:
-    # DAG = bn.structure_learning.fit(seed_df, methodtype='cl', root_node='AGEGROUP', verbose=0)
-    DAG = bn.structure_learning.fit(seed_df, methodtype=struct_method, scoretype='bic', verbose=0, black_list=black_ls, bw_list_method='edges')
-    # Remove insignificant edges
-    DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True, verbose=0)
+
+    cannot_create_DAG = True
+    for _ in range(ite_check):
+        # Learn the DAG in data using Bayesian structure learning:
+        # DAG = bn.structure_learning.fit(seed_df, methodtype='cl', root_node='AGEGROUP', verbose=0)
+        DAG = bn.structure_learning.fit(seed_df, methodtype=struct_method, scoretype='bic', verbose=0, black_list=black_ls, bw_list_method='edges')
+        # Remove insignificant edges
+        DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True, verbose=0)
+        # WRONG NEED TO FIND A WAY
+        if len(DAG['adjmat']) == len(df.columns):
+            cannot_create_DAG = False
+            break
+    if cannot_create_DAG:
+        print(f"After {ite_check} try, cannot create the DAG for {len(df.columns)} nodes")
+        return None
     if plotting: bn.plot(DAG)
     # Parameter learning on the user-defined DAG and input data using Bayes to estimate the CPTs
     model = bn.parameter_learning.fit(DAG, seed_df, methodtype=para_method, verbose=0)
@@ -131,8 +141,8 @@ if __name__ == "__main__":
 
     # sampling_df = BN_training(df, sample_rate=10, sample=True, plotting=True, sampling_type='gibbs')
     # print(SRMSE(df, sampling_df))
-    plot_SRMSE_bayes(df)
-    # b_ls = make_black_list_for_root(ATTRIBUTES, root_att='AGEGROUP')
-    # BN_training(df, sample_rate=50, sample=False, plotting=True, sampling_type='gibbs', black_ls=b_ls)
+    # plot_SRMSE_bayes(df, root_node='AGEGROUP')
+    b_ls = make_black_list_for_root(ATTRIBUTES, root_att='AGEGROUP')
+    BN_training(df, sample_rate=2, sample=False, plotting=True, sampling_type='gibbs', black_ls=b_ls)
 
     # TODO: for the missing att (they are not in the graph) they can be sampled from distribution - I think?
