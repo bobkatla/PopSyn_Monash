@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from checker import SRMSE
+from multiprocessing import Process, Lock, Array
 
 
 def IPF_sampling(constraints):
@@ -59,19 +60,40 @@ def IPF_training(df, sample_rate):
     # print(iterations)
 
 
+def multi_thread_f(df, s_rate, re_arr, l):
+    print(f"START THREAD FOR SAMPLE RATE {s_rate}")
+    sampling_df = IPF_training(df, s_rate)
+    re = SRMSE(df, sampling_df)
+    # Calculate the SRMSE
+    l.acquire()
+    try:
+        # NOTE: this is depends on the range we put the array, it should be same size but accessing the index is diff
+        re_arr[s_rate-1] = re
+        print(f"DONE {s_rate}")
+    finally:
+        l.release()
+
+
 def plot_SRMSE_IPF(original):
     # Maybe will not make this fixed like this
-    X = range(1, 3)
-    Y = []
+    X = range(1, 100)
+
+    results = Array('d', X)
+    lock = Lock()
+    hold_p = []
+
     for i in X:
-        result_sample = IPF_training(df, i)
-        Y.append(SRMSE(original, result_sample))
+        p = Process(target=multi_thread_f, args=(original, i, results, lock))
+        p.start()
+        hold_p.append(p)
+    for p in hold_p: p.join()
 
     print("DONE ALL, PLOTTING NOW")
+    Y = results[:]
     plt.plot(X, Y)
     plt.xlabel('Percentages of sampling rate')
     plt.ylabel('SRMSE')
-    # plt.savefig('./img_data/IPF_SRMSE.png')
+    plt.savefig('./img_data/IPF_SRMSE.png')
     plt.show()
 
     
