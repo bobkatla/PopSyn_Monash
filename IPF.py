@@ -1,11 +1,19 @@
 from random import sample
 import synthpop.ipf.ipf as ipf
 import pandas as pd
+import numpy as np
 from checker import SRMSE
 
 def IPF_sampling(constraints):
     # constraints.to_csv('./Joint_dist_result_IPF.csv')
-    return constraints
+    ls = None
+    for i in constraints.index:
+        if constraints[i]: 
+            # TODO: instead of just rounding like this, use the papers method of int rounding
+            ls_repeat = np.repeat([i], int(constraints[i]), axis=0)
+            if ls is None: ls = ls_repeat
+            else: ls = np.concatenate((ls, ls_repeat), axis=0)
+    return pd.DataFrame(ls, columns=constraints.index.names)
 
 
 def IPF_training(df, sample_rate):
@@ -69,6 +77,6 @@ if __name__ == "__main__":
         df.loc[df['CARLICENCE'] == 'No Car Licence', 'CARLICENCE'] = 'NO'
         df.loc[df['CARLICENCE'] != 'NO', 'CARLICENCE'] = 'YES'
 
-    result_sample = IPF_training(df, 10)
-    # print(SRMSE(df, result_sample))
-    print(result_sample)
+    result_sample = IPF_training(df, 90)
+    print(SRMSE(df, result_sample))
+    # print(result_sample)
