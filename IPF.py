@@ -2,7 +2,9 @@ from random import sample
 import synthpop.ipf.ipf as ipf
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from checker import SRMSE
+
 
 def IPF_sampling(constraints):
     # constraints.to_csv('./Joint_dist_result_IPF.csv')
@@ -57,6 +59,22 @@ def IPF_training(df, sample_rate):
     # print(iterations)
 
 
+def plot_SRMSE_IPF(original):
+    # Maybe will not make this fixed like this
+    X = range(1, 3)
+    Y = []
+    for i in X:
+        result_sample = IPF_training(df, i)
+        Y.append(SRMSE(original, result_sample))
+
+    print("DONE ALL, PLOTTING NOW")
+    plt.plot(X, Y)
+    plt.xlabel('Percentages of sampling rate')
+    plt.ylabel('SRMSE')
+    # plt.savefig('./img_data/IPF_SRMSE.png')
+    plt.show()
+
+    
 if __name__ == "__main__":
     ATTRIBUTES = ['AGEGROUP', 'CARLICENCE', 'SEX', 'PERSINC', 'DWELLTYPE', 'TOTALVEHS']
     
@@ -77,6 +95,7 @@ if __name__ == "__main__":
         df.loc[df['CARLICENCE'] == 'No Car Licence', 'CARLICENCE'] = 'NO'
         df.loc[df['CARLICENCE'] != 'NO', 'CARLICENCE'] = 'YES'
 
-    result_sample = IPF_training(df, 90)
-    print(SRMSE(df, result_sample))
+    # result_sample = IPF_training(df, 90)
+    # print(SRMSE(df, result_sample))
     # print(result_sample)
+    plot_SRMSE_IPF(df)
