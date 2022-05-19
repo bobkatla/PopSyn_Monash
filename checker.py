@@ -30,7 +30,7 @@ def SRMSE(actual, pred):
     BUT now I make it return -1 if they are not match (at least in length)
     '''
     if len(actual.columns) != len(pred.columns):
-        return -1
+        return None
     start_time = time.time()
 
     total_att = 1

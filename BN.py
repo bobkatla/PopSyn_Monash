@@ -87,8 +87,14 @@ def BN_training(df, sample_rate, ite_check=50,sample=True, plotting=False, sampl
 
 def multi_thread_f(df, s_rate, re_arr, l, bl):
     print(f"START THREAD FOR SAMPLE RATE {s_rate}")
-    sampling_df = BN_training(df=df, sample_rate=s_rate, sampling_type='gibbs', black_ls=bl, show_progress=False)
-    re = SRMSE(df, sampling_df) if sampling_df else -1
+    check_time = 10
+    re = 0
+    for _ in range(check_time):
+        sampling_df = BN_training(df=df, sample_rate=s_rate, sampling_type='rejection', black_ls=bl, show_progress=False)
+        er_score = SRMSE(df, sampling_df) if sampling_df else None
+        if er_score is None: check_time -= 1
+        else: re += er_score
+    re = -1 if check_time <= 0 else re/check_time
     # Calculate the SRMSE
     l.acquire()
     try:
@@ -124,7 +130,7 @@ def plot_SRMSE_bayes(original, root_node = None):
     plt.plot(X, Y)
     plt.xlabel('Percentages of sampling rate')
     plt.ylabel('SRMSE')
-    plt.savefig('./img_data/BN_SRMSE_gibbs_final.png')
+    plt.savefig('./img_data/BN_SRMSE_reject_final.png')
     plt.show()
 
 
