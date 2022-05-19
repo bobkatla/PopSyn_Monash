@@ -7,7 +7,7 @@ from checker import SRMSE
 from multiprocessing import Process, Lock, Array
 
 
-def sampling(model, n=1000, type='forward', init_state=None):
+def sampling(model, n=1000, type='forward', init_state=None, show_progress=True):
     '''
     This will define different sampling methods using the BN_network (model)
     The network is pgmpy.model.BayesianNetwork
@@ -17,6 +17,7 @@ def sampling(model, n=1000, type='forward', init_state=None):
     if type == 'gibbs':
         # Using GibbsSampling, noted here it initial/seed is random by default
         gibbs_chain = GibbsSampling(model)
+        # For Gibbs, always show progress, cannot change this
         sampling_df = gibbs_chain.sample(size=n, start_state=init_state)
 
         # This is needed as the result of Gibb is set to only int
@@ -31,11 +32,11 @@ def sampling(model, n=1000, type='forward', init_state=None):
         infer_model = BayesianModelSampling(model)
         match type:
             case 'forward':
-                sampling_df = infer_model.forward_sample(size=n)
+                sampling_df = infer_model.forward_sample(size=n, show_progress=show_progress)
             case 'rejection':
-                sampling_df = infer_model.rejection_sample(size=n)
+                sampling_df = infer_model.rejection_sample(size=n, show_progress=show_progress)
             case 'likelihood':
-                sampling_df = infer_model.likelihood_weighted_sample(size=n)
+                sampling_df = infer_model.likelihood_weighted_sample(size=n, show_progress=show_progress)
             case _:
                 print("Wrong sampling type name")
         
@@ -56,7 +57,7 @@ def contain_all_nodes(DAG):
     return True
 
 
-def BN_training(df, sample_rate, ite_check=50,sample=True, plotting=False, sampling_type='forward', struct_method='hc', para_method='bayes', black_ls = None):
+def BN_training(df, sample_rate, ite_check=50,sample=True, plotting=False, sampling_type='forward', struct_method='hc', para_method='bayes', black_ls = None, show_progress=True):
     N = df.shape[0]
     one_percent = int(N/100)
     # It is noted that with small samples, cannot ebtablish the edges
@@ -73,20 +74,20 @@ def BN_training(df, sample_rate, ite_check=50,sample=True, plotting=False, sampl
             cannot_create_DAG = False
             break
     if cannot_create_DAG:
-        print(f"After {ite_check} tries, cannot create the DAG for {len(df.columns)} nodes")
+        print(f"After {ite_check} tries, cannot create the DAG of {len(df.columns)} nodes for the sample rate of {sample_rate}")
         return None
     if plotting: bn.plot(DAG)
     # Parameter learning on the user-defined DAG and input data using Bayes to estimate the CPTs
     model = bn.parameter_learning.fit(DAG, seed_df, methodtype=para_method, verbose=0)
     if sample:
         # Sampling
-        sampling_df = sampling(model['model'], n = N*2, type = sampling_type)
+        sampling_df = sampling(model['model'], n = N*2, type = sampling_type, show_progress=show_progress)
         return sampling_df
     else: return None
 
 def multi_thread_f(df, s_rate, re_arr, l, bl):
     print(f"START THREAD FOR SAMPLE RATE {s_rate}")
-    sampling_df = BN_training(df=df, sample_rate=s_rate, sampling_type='gibbs', black_ls=bl)
+    sampling_df = BN_training(df=df, sample_rate=s_rate, sampling_type='gibbs', black_ls=bl, show_progress=False)
     re = SRMSE(df, sampling_df) if sampling_df else -1
     # Calculate the SRMSE
     l.acquire()
@@ -123,7 +124,7 @@ def plot_SRMSE_bayes(original, root_node = None):
     plt.plot(X, Y)
     plt.xlabel('Percentages of sampling rate')
     plt.ylabel('SRMSE')
-    plt.savefig('./img_data/BN_SRMSE_gibbs_root.png')
+    plt.savefig('./img_data/BN_SRMSE_gibbs_final.png')
     plt.show()
 
 
@@ -149,6 +150,6 @@ if __name__ == "__main__":
 
     # sampling_df = BN_training(df, sample_rate=10, sample=True, plotting=True, sampling_type='gibbs')
     # print(SRMSE(df, sampling_df))
-    # plot_SRMSE_bayes(df, root_node='AGEGROUP')
-    b_ls = make_black_list_for_root(ATTRIBUTES, root_att='AGEGROUP')
-    BN_training(df, sample_rate=20, sample=False, plotting=True, sampling_type='gibbs', black_ls=b_ls)
+    plot_SRMSE_bayes(df, root_node='AGEGROUP')
+    # b_ls = make_black_list_for_root(ATTRIBUTES, root_att='AGEGROUP')
+    # BN_training(df, sample_rate=15, sample=False, plotting=True, sampling_type='gibbs', black_ls=b_ls, show_progress=False)
