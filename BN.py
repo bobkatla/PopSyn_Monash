@@ -46,6 +46,15 @@ def make_black_list_for_root(ls_atts, root_att):
     # Return the list of edges for black list to set up root node
     return [(att, root_att) for att in ls_atts if att != root_att]
 
+def contain_all_nodes(DAG):
+    adjmat = DAG['adjmat']
+    for att in adjmat:
+        ls_target = list(adjmat.T[att])
+        ls_source = list(adjmat[att])
+        if True not in ls_target and True not in ls_source:
+            return False
+    return True
+
 
 def BN_training(df, sample_rate, ite_check=50,sample=True, plotting=False, sampling_type='forward', struct_method='hc', para_method='bayes', black_ls = None):
     N = df.shape[0]
@@ -60,12 +69,11 @@ def BN_training(df, sample_rate, ite_check=50,sample=True, plotting=False, sampl
         DAG = bn.structure_learning.fit(seed_df, methodtype=struct_method, scoretype='bic', verbose=0, black_list=black_ls, bw_list_method='edges')
         # Remove insignificant edges
         DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True, verbose=0)
-        # WRONG NEED TO FIND A WAY
-        if len(DAG['adjmat']) == len(df.columns):
+        if contain_all_nodes(DAG):
             cannot_create_DAG = False
             break
     if cannot_create_DAG:
-        print(f"After {ite_check} try, cannot create the DAG for {len(df.columns)} nodes")
+        print(f"After {ite_check} tries, cannot create the DAG for {len(df.columns)} nodes")
         return None
     if plotting: bn.plot(DAG)
     # Parameter learning on the user-defined DAG and input data using Bayes to estimate the CPTs
@@ -79,7 +87,7 @@ def BN_training(df, sample_rate, ite_check=50,sample=True, plotting=False, sampl
 def multi_thread_f(df, s_rate, re_arr, l, bl):
     print(f"START THREAD FOR SAMPLE RATE {s_rate}")
     sampling_df = BN_training(df=df, sample_rate=s_rate, sampling_type='gibbs', black_ls=bl)
-    re = SRMSE(df, sampling_df)
+    re = SRMSE(df, sampling_df) if sampling_df else -1
     # Calculate the SRMSE
     l.acquire()
     try:
@@ -143,6 +151,4 @@ if __name__ == "__main__":
     # print(SRMSE(df, sampling_df))
     # plot_SRMSE_bayes(df, root_node='AGEGROUP')
     b_ls = make_black_list_for_root(ATTRIBUTES, root_att='AGEGROUP')
-    BN_training(df, sample_rate=2, sample=False, plotting=True, sampling_type='gibbs', black_ls=b_ls)
-
-    # TODO: for the missing att (they are not in the graph) they can be sampled from distribution - I think?
+    BN_training(df, sample_rate=20, sample=False, plotting=True, sampling_type='gibbs', black_ls=b_ls)
