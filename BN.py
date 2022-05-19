@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import bnlearn as bn
 from pgmpy.sampling import GibbsSampling, BayesianModelSampling
-from checker import SRMSE
+from checker import SRMSE, update_SRMSE
 from multiprocessing import Process, Lock, Array
 
 
@@ -93,7 +93,7 @@ def multi_thread_f(df, s_rate, re_arr, l, bl):
     for _ in range(check_time):
         # NOTE: change the para for BN here, putting rejection now cause' don't wanna see the progress bar
         sampling_df = BN_training(df=df, sample_rate=s_rate, sampling_type='rejection', black_ls=bl, show_progress=False)
-        er_score = SRMSE(df, sampling_df) if sampling_df else None
+        er_score = SRMSE(df, sampling_df) if sampling_df is not None else None
         if er_score is None: check_time -= 1
         else: re += er_score
     re = -1 if check_time <= 0 else re/check_time
@@ -156,8 +156,8 @@ if __name__ == "__main__":
         df.loc[df['CARLICENCE'] == 'No Car Licence', 'CARLICENCE'] = 'NO'
         df.loc[df['CARLICENCE'] != 'NO', 'CARLICENCE'] = 'YES'
 
-    # sampling_df = BN_training(df, sample_rate=10, sample=True, plotting=True, sampling_type='gibbs')
-    # print(SRMSE(df, sampling_df))
-    plot_SRMSE_bayes(df, root_node='AGEGROUP')
+    sampling_df = BN_training(df, sample_rate=20, sample=True, plotting=True, sampling_type='gibbs')
+    print(update_SRMSE(df, sampling_df))
+    # plot_SRMSE_bayes(df, root_node='AGEGROUP')
     # b_ls = make_black_list_for_root(ATTRIBUTES, root_att='AGEGROUP')
-    # BN_training(df, sample_rate=15, sample=False, plotting=True, sampling_type='gibbs', black_ls=b_ls, show_progress=False)
+    # BN_training(df, sample_rate=15, sample=False, plotting=False, sampling_type='gibbs', black_ls=b_ls, show_progress=False)

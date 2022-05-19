@@ -60,3 +60,18 @@ def SRMSE(actual, pred):
     print(f"Calculating the SRMSE for {len(attributes)} atts in {duration} seconds")
 
     return result
+
+def update_SRMSE(actual, pred):
+    start_time = time.time()
+    actual_vals = actual.value_counts()
+    pred_vals = pred.value_counts()
+    hold = 0
+    for com in actual_vals.index:
+        count_in_pred = pred_vals[com] if com in pred_vals.index else 0
+        actual_freq = actual_vals[com] / actual.shape[0]
+        pred_freq = count_in_pred / pred.shape[0]
+        hold += (actual_freq - pred_freq) ** 2
+    result = sqrt(hold * pred_vals.shape[0])
+    duration = time.time() - start_time
+    print(f"Calculating the SRMSE for {len(pred.columns)} atts in {duration} seconds")
+    return result
