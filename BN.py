@@ -87,9 +87,11 @@ def BN_training(df, sample_rate, ite_check=50,sample=True, plotting=False, sampl
 
 def multi_thread_f(df, s_rate, re_arr, l, bl):
     print(f"START THREAD FOR SAMPLE RATE {s_rate}")
+    # NOTE: this can be increased for more objective results
     check_time = 10
     re = 0
     for _ in range(check_time):
+        # NOTE: change the para for BN here, putting rejection now cause' don't wanna see the progress bar
         sampling_df = BN_training(df=df, sample_rate=s_rate, sampling_type='rejection', black_ls=bl, show_progress=False)
         er_score = SRMSE(df, sampling_df) if sampling_df else None
         if er_score is None: check_time -= 1
