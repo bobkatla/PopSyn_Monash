@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import bnlearn as bn
 from pgmpy.sampling import GibbsSampling, BayesianModelSampling
-from checker import update_SRMSE
+from checker import update_SRMSE, SRMSE
 from multiprocessing import Process, Lock, Array
 
 
@@ -156,8 +156,9 @@ if __name__ == "__main__":
         df.loc[df['CARLICENCE'] == 'No Car Licence', 'CARLICENCE'] = 'NO'
         df.loc[df['CARLICENCE'] != 'NO', 'CARLICENCE'] = 'YES'
 
-    # sampling_df = BN_training(df, sample_rate=20, sample=True, plotting=True, sampling_type='gibbs')
-    # print(update_SRMSE(df, sampling_df))
-    plot_SRMSE_bayes(df, root_node='AGEGROUP')
-    # b_ls = make_black_list_for_root(ATTRIBUTES, root_att='AGEGROUP')
+    # plot_SRMSE_bayes(df, root_node='AGEGROUP')
+    b_ls = make_black_list_for_root(ATTRIBUTES, root_att='AGEGROUP')
     # BN_training(df, sample_rate=15, sample=False, plotting=False, sampling_type='gibbs', black_ls=b_ls, show_progress=False)
+    sampling_df = BN_training(df, sample_rate=99, sample=True, plotting=True, sampling_type='gibbs', black_ls=b_ls)
+    print(update_SRMSE(df, sampling_df))
+    print(SRMSE(df, sampling_df))
