@@ -57,7 +57,7 @@ def contain_all_nodes(DAG):
     return True
 
 
-def BN_training(df, sample_rate, ite_check=50,sample=True, plotting=False, sampling_type='forward', struct_method='hc', para_method='bayes', black_ls = None, show_progress=True):
+def BN_training(df, sample_rate, ite_check=100,sample=True, plotting=False, sampling_type='forward', struct_method='hc', para_method='bayes', black_ls = None, show_progress=True):
     N = df.shape[0]
     one_percent = int(N/100)
     # It is noted that with small samples, cannot ebtablish the edges
@@ -93,7 +93,7 @@ def multi_thread_f(df, s_rate, re_arr, l, bl):
     for _ in range(check_time):
         # NOTE: change the para for BN here, putting rejection now cause' don't wanna see the progress bar
         sampling_df = BN_training(df=df, sample_rate=s_rate, sampling_type='rejection', black_ls=bl, show_progress=False)
-        er_score = update_SRMSE(df, sampling_df) if sampling_df is not None else None
+        er_score = SRMSE(df, sampling_df) if sampling_df is not None else None
         if er_score is None: check_time -= 1
         else: re += er_score
     re = -1 if check_time <= 0 else re/check_time
@@ -160,5 +160,6 @@ if __name__ == "__main__":
     b_ls = make_black_list_for_root(ATTRIBUTES, root_att='AGEGROUP')
     # BN_training(df, sample_rate=15, sample=False, plotting=False, sampling_type='gibbs', black_ls=b_ls, show_progress=False)
     sampling_df = BN_training(df, sample_rate=99, sample=True, plotting=True, sampling_type='gibbs', black_ls=b_ls)
+    # seed_df = df.sample(n = 500).copy()
     print(update_SRMSE(df, sampling_df))
     print(SRMSE(df, sampling_df))

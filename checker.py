@@ -1,25 +1,7 @@
 from math import sqrt
 import itertools
 import time
-import concurrent.futures
-
-
-def thread_f(instance, actual, pred, attributes):
-    # the 2 would be None or not None at the same time
-    check_actual = None
-    check_pred = None
-    for att in attributes:
-        if check_actual is not None:
-            check_actual &= (actual[att] == instance[att])
-            check_pred &= (pred[att] == instance[att])
-        else:
-            check_actual = (actual[att] == instance[att])
-            check_pred = (pred[att] == instance[att])
-    # This assumes that there will always be False result
-    freq_actual = 1 - ((check_actual.value_counts()[False]) / len(check_actual))
-    freq_pred = 1 - ((check_pred.value_counts()[False]) / len(check_pred))
-    
-    return (freq_actual - freq_pred)**2
+import pandas as pd
 
 
 def SRMSE(actual, pred):
@@ -49,10 +31,20 @@ def SRMSE(actual, pred):
     
     #calculate
     hold = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        for instance in combinations:
-            future = executor.submit(thread_f, instance, actual, pred, attributes)
-            hold += future.result()
+    for instance in combinations:
+        check_actual = None
+        check_pred = None
+        for att in attributes:
+            if check_actual is not None:
+                check_actual &= (actual[att] == instance[att])
+                check_pred &= (pred[att] == instance[att])
+            else:
+                check_actual = (actual[att] == instance[att])
+                check_pred = (pred[att] == instance[att])
+        # This assumes that there will always be False result
+        freq_actual = 1 - ((check_actual.value_counts()[False]) / len(check_actual))
+        freq_pred = 1 - ((check_pred.value_counts()[False]) / len(check_pred))
+        hold += (freq_actual - freq_pred)**2
 
     result = sqrt(hold * total_att)
 
@@ -62,16 +54,29 @@ def SRMSE(actual, pred):
     return result
 
 def update_SRMSE(actual, pred):
+    if len(actual.columns) != len(pred.columns):
+        return None
+    
     start_time = time.time()
-    actual_vals = actual.value_counts()
-    pred_vals = pred.value_counts()
+    actual_vals = actual.value_counts(normalize=True)
+    pred_vals = pred.value_counts(normalize=True)
+
+    attributes = pred.columns
+    ls_pos_vals = []
+    # Get the possible values for each att
+    for att in attributes:
+        possible_values = actual[att].unique()
+        ls_pos_vals.append(set(possible_values))
+
+    # Try another one, same as above, loop through whole
     hold = 0
-    for com in actual_vals.index:
-        count_in_pred = pred_vals[com] if com in pred_vals.index else 0
-        actual_freq = actual_vals[com] / actual.shape[0]
-        pred_freq = count_in_pred / pred.shape[0]
-        hold += (actual_freq - pred_freq) ** 2
-    result = sqrt(hold * pred_vals.shape[0])
+    all_com = pd.MultiIndex.from_product(ls_pos_vals, names=attributes)
+    for com in all_com:
+        actual_freq = actual_vals[com] if com in actual_vals else 0
+        pred_freq = pred_vals[com] if com in pred_vals else 0
+        hold += (actual_freq - pred_freq)**2
+            
+    result = sqrt(hold * len(all_com))
     duration = time.time() - start_time
-    print(f"Calculating the SRMSE for {len(pred.columns)} atts in {duration} seconds")
+    print(f"Calculating the SRMSE for {len(attributes)} atts in {duration} seconds")
     return result

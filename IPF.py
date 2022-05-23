@@ -3,7 +3,7 @@ import synthpop.ipf.ipf as ipf
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from checker import SRMSE
+from checker import SRMSE, update_SRMSE
 from multiprocessing import Process, Lock, Array
 
 
@@ -63,7 +63,7 @@ def IPF_training(df, sample_rate):
 def multi_thread_f(df, s_rate, re_arr, l):
     print(f"START THREAD FOR SAMPLE RATE {s_rate}")
     sampling_df = IPF_training(df, s_rate)
-    re = SRMSE(df, sampling_df)
+    re = update_SRMSE(df, sampling_df)
     # Calculate the SRMSE
     l.acquire()
     try:
@@ -93,7 +93,7 @@ def plot_SRMSE_IPF(original):
     plt.plot(X, Y)
     plt.xlabel('Percentages of sampling rate')
     plt.ylabel('SRMSE')
-    plt.savefig('./img_data/IPF_SRMSE.png')
+    plt.savefig('./img_data/IPF_SRMSE_2.png')
     plt.show()
 
     
@@ -117,7 +117,8 @@ if __name__ == "__main__":
         df.loc[df['CARLICENCE'] == 'No Car Licence', 'CARLICENCE'] = 'NO'
         df.loc[df['CARLICENCE'] != 'NO', 'CARLICENCE'] = 'YES'
 
-    # result_sample = IPF_training(df, 90)
+    result_sample = IPF_training(df, 20)
+    print(update_SRMSE(df, result_sample))
     # print(SRMSE(df, result_sample))
     # print(result_sample)
-    plot_SRMSE_IPF(df)
+    # plot_SRMSE_IPF(df)
