@@ -61,8 +61,9 @@ def update_SRMSE(actual, pred):
         return None
     
     start_time = time.time()
-    attributes = actual.columns
-    pred = pred[attributes]
+    attributes = pred.columns
+    # key step: we need to organize the cols for 2 df to match so the val count later is correct
+    actual = actual[attributes]
     actual_vals = actual.value_counts(normalize=True)
     pred_vals = pred.value_counts(normalize=True)
 

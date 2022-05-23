@@ -57,7 +57,7 @@ def contain_all_nodes(DAG):
     return True
 
 
-def BN_training(df, sample_rate, ite_check=100,sample=True, plotting=False, sampling_type='forward', struct_method='hc', para_method='bayes', black_ls = None, show_progress=True):
+def BN_training(df, sample_rate, ite_check=200,sample=True, plotting=False, sampling_type='forward', struct_method='hc', para_method='bayes', black_ls = None, show_progress=True):
     N = df.shape[0]
     one_percent = int(N/100)
     # It is noted that with small samples, cannot ebtablish the edges
@@ -88,11 +88,11 @@ def BN_training(df, sample_rate, ite_check=100,sample=True, plotting=False, samp
 def multi_thread_f(df, s_rate, re_arr, l, bl):
     print(f"START THREAD FOR SAMPLE RATE {s_rate}")
     # NOTE: this can be increased for more objective results
-    check_time = 10
+    check_time = 20
     re = 0
     for _ in range(check_time):
         # NOTE: change the para for BN here, putting rejection now cause' don't wanna see the progress bar
-        sampling_df = BN_training(df=df, sample_rate=s_rate, sampling_type='rejection', black_ls=bl, show_progress=False)
+        sampling_df = BN_training(df=df, sample_rate=s_rate, sampling_type='gibbs', black_ls=bl, show_progress=False)
         er_score = SRMSE(df, sampling_df) if sampling_df is not None else None
         if er_score is None: check_time -= 1
         else: re += er_score
@@ -132,7 +132,7 @@ def plot_SRMSE_bayes(original, root_node = None):
     plt.plot(X, Y)
     plt.xlabel('Percentages of sampling rate')
     plt.ylabel('SRMSE')
-    plt.savefig('./img_data/BN_SRMSE_reject_final.png')
+    plt.savefig('./img_data/BN_SRMSE_gibbs_final.png')
     plt.show()
 
 
@@ -156,10 +156,8 @@ if __name__ == "__main__":
         df.loc[df['CARLICENCE'] == 'No Car Licence', 'CARLICENCE'] = 'NO'
         df.loc[df['CARLICENCE'] != 'NO', 'CARLICENCE'] = 'YES'
 
-    # plot_SRMSE_bayes(df, root_node='AGEGROUP')
-    b_ls = make_black_list_for_root(ATTRIBUTES, root_att='AGEGROUP')
+    plot_SRMSE_bayes(df, root_node='AGEGROUP')
+    # b_ls = make_black_list_for_root(ATTRIBUTES, root_att='AGEGROUP')
     # BN_training(df, sample_rate=15, sample=False, plotting=False, sampling_type='gibbs', black_ls=b_ls, show_progress=False)
-    sampling_df = BN_training(df, sample_rate=99, sample=True, plotting=True, sampling_type='gibbs', black_ls=b_ls)
-    # seed_df = df.sample(n = 500).copy()
-    print(update_SRMSE(df, sampling_df))
-    # print(SRMSE(df, sampling_df))
+    # sampling_df = BN_training(df, sample_rate=25, sample=True, plotting=True, sampling_type='gibbs', black_ls=b_ls)
+    # print(update_SRMSE(df, sampling_df))
