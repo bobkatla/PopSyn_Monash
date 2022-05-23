@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import bnlearn as bn
 from pgmpy.sampling import GibbsSampling, BayesianModelSampling
-from checker import update_SRMSE, SRMSE
+from checker import update_SRMSE
 from multiprocessing import Process, Lock, Array
 
 
@@ -57,7 +57,7 @@ def contain_all_nodes(DAG):
     return True
 
 
-def BN_training(df, sample_rate, ite_check=200,sample=True, plotting=False, sampling_type='forward', struct_method='hc', para_method='bayes', black_ls = None, show_progress=True):
+def BN_training(df, sample_rate, ite_check=100,sample=True, plotting=False, sampling_type='forward', struct_method='hc', para_method='bayes', black_ls = None, show_progress=True):
     N = df.shape[0]
     one_percent = int(N/100)
     # It is noted that with small samples, cannot ebtablish the edges
@@ -88,14 +88,14 @@ def BN_training(df, sample_rate, ite_check=200,sample=True, plotting=False, samp
 def multi_thread_f(df, s_rate, re_arr, l, bl):
     print(f"START THREAD FOR SAMPLE RATE {s_rate}")
     # NOTE: this can be increased for more objective results
-    check_time = 20
+    check_time = 10
     re = 0
-    for _ in range(check_time):
-        # NOTE: change the para for BN here, putting rejection now cause' don't wanna see the progress bar
+    for i in range(check_time):
         sampling_df = BN_training(df=df, sample_rate=s_rate, sampling_type='gibbs', black_ls=bl, show_progress=False)
-        er_score = SRMSE(df, sampling_df) if sampling_df is not None else None
+        er_score = update_SRMSE(df, sampling_df) if sampling_df is not None else None
         if er_score is None: check_time -= 1
         else: re += er_score
+        print(f"Finish run {i} of sample rate {s_rate}")
     re = -1 if check_time <= 0 else re/check_time
     # Calculate the SRMSE
     l.acquire()
@@ -114,7 +114,9 @@ def plot_SRMSE_bayes(original, root_node = None):
         bl = make_black_list_for_root(atts, root_node)
         
     # Maybe will not make this fixed like this
-    X = range(1, 100)
+    max_r = 100
+    min_r = 1
+    X = range(min_r, max_r)
 
     results = Array('d', X)
     lock = Lock()
@@ -122,7 +124,7 @@ def plot_SRMSE_bayes(original, root_node = None):
 
     print("START THE PROCESS OF PLOTTING SRMSE")
     for i in X:
-        p = Process(target=multi_thread_f, args=(original, i, results, lock, bl))
+        p = Process(target=multi_thread_f, args=(original, max_r - i, results, lock, bl))
         p.start()
         hold_p.append(p)
     for p in hold_p: p.join()

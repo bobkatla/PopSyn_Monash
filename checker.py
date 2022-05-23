@@ -82,5 +82,5 @@ def update_SRMSE(actual, pred):
             
     result = sqrt(hold * len(all_com))
     duration = time.time() - start_time
-    print(f"Calculating the SRMSE for {len(attributes)} atts in {duration} seconds")
+    print(f"Calculated the SRMSE for {len(attributes)} atts in {duration} seconds")
     return result
