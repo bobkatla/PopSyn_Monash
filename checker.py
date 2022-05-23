@@ -31,10 +31,13 @@ def SRMSE(actual, pred):
     
     #calculate
     hold = 0
+
     for instance in combinations:
         check_actual = None
         check_pred = None
+        to_ttext = []
         for att in attributes:
+            to_ttext.append(instance[att])
             if check_actual is not None:
                 check_actual &= (actual[att] == instance[att])
                 check_pred &= (pred[att] == instance[att])
@@ -58,17 +61,17 @@ def update_SRMSE(actual, pred):
         return None
     
     start_time = time.time()
+    attributes = actual.columns
+    pred = pred[attributes]
     actual_vals = actual.value_counts(normalize=True)
     pred_vals = pred.value_counts(normalize=True)
 
-    attributes = pred.columns
     ls_pos_vals = []
     # Get the possible values for each att
     for att in attributes:
         possible_values = actual[att].unique()
         ls_pos_vals.append(set(possible_values))
-
-    # Try another one, same as above, loop through whole
+    
     hold = 0
     all_com = pd.MultiIndex.from_product(ls_pos_vals, names=attributes)
     for com in all_com:

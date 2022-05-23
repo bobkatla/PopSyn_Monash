@@ -162,4 +162,4 @@ if __name__ == "__main__":
     sampling_df = BN_training(df, sample_rate=99, sample=True, plotting=True, sampling_type='gibbs', black_ls=b_ls)
     # seed_df = df.sample(n = 500).copy()
     print(update_SRMSE(df, sampling_df))
-    print(SRMSE(df, sampling_df))
+    # print(SRMSE(df, sampling_df))
