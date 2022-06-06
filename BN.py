@@ -1,4 +1,3 @@
-from unittest import result
 import pandas as pd
 import matplotlib.pyplot as plt
 import bnlearn as bn
@@ -57,7 +56,7 @@ def contain_all_nodes(DAG):
     return True
 
 
-def BN_training(df, sample_rate, ite_check=100,sample=True, plotting=False, sampling_type='forward', struct_method='hc', para_method='bayes', black_ls = None, show_progress=True):
+def BN_training(df, sample_rate, ite_check=200,sample=True, plotting=False, sampling_type='forward', struct_method='hc', para_method='bayes', black_ls = None, show_progress=True):
     N = df.shape[0]
     one_percent = int(N/100)
     # It is noted that with small samples, cannot ebtablish the edges
@@ -69,7 +68,7 @@ def BN_training(df, sample_rate, ite_check=100,sample=True, plotting=False, samp
         # DAG = bn.structure_learning.fit(seed_df, methodtype='cl', root_node='AGEGROUP', verbose=0)
         DAG = bn.structure_learning.fit(seed_df, methodtype=struct_method, scoretype='bic', verbose=0, black_list=black_ls, bw_list_method='edges')
         # Remove insignificant edges
-        DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True, verbose=0)
+        # DAG = bn.independence_test(DAG, seed_df, alpha=0.05, prune=True, verbose=0)
         if contain_all_nodes(DAG):
             cannot_create_DAG = False
             break
@@ -91,11 +90,11 @@ def multi_thread_f(df, s_rate, re_arr, l, bl):
     check_time = 10
     re = 0
     for i in range(check_time):
+        if i == int(check_time/2): print(f"50% done for sample rate {s_rate}")
         sampling_df = BN_training(df=df, sample_rate=s_rate, sampling_type='gibbs', black_ls=bl, show_progress=False)
         er_score = update_SRMSE(df, sampling_df) if sampling_df is not None else None
         if er_score is None: check_time -= 1
         else: re += er_score
-        print(f"Finish run {i} of sample rate {s_rate}")
     re = -1 if check_time <= 0 else re/check_time
     # Calculate the SRMSE
     l.acquire()
@@ -114,9 +113,9 @@ def plot_SRMSE_bayes(original, root_node = None):
         bl = make_black_list_for_root(atts, root_node)
         
     # Maybe will not make this fixed like this
-    max_r = 100
+    max_r = 99
     min_r = 1
-    X = range(min_r, max_r)
+    X = range(min_r, max_r+1)
 
     results = Array('d', X)
     lock = Lock()
@@ -124,13 +123,49 @@ def plot_SRMSE_bayes(original, root_node = None):
 
     print("START THE PROCESS OF PLOTTING SRMSE")
     for i in X:
-        p = Process(target=multi_thread_f, args=(original, max_r - i, results, lock, bl))
+        # Note that instead of cal from min, I cal from max, this may help computation for multi threading
+        p = Process(target=multi_thread_f, args=(original, max_r - i + min_r, results, lock, bl))
         p.start()
         hold_p.append(p)
     for p in hold_p: p.join()
 
     print("DONE ALL, PLOTTING NOW")
     Y = results[:]
+    plt.plot(X, Y)
+    plt.xlabel('Percentages of sampling rate')
+    plt.ylabel('SRMSE')
+    plt.savefig('./img_data/BN_SRMSE_gibbs_final.png')
+    plt.show()
+
+
+def plot_SRMSE_sequential(original, check_time = 20, max_r = 99, min_r = 1, root_node = None):
+    bl = None
+    if root_node:
+        atts = original.columns
+        bl = make_black_list_for_root(atts, root_node)
+        
+    # Maybe will not make this fixed like this
+    X = range(min_r, max_r+1)
+    results = []
+
+    print("START THE PROCESS OF PLOTTING SRMSE")
+    for i in X:
+        re = 0
+        hold_check_time = check_time
+        for j in range(hold_check_time):
+            sampling_df = BN_training(df=original, sample_rate=i, sampling_type='gibbs', black_ls=bl, show_progress=False)
+            er_score = update_SRMSE(df, sampling_df) if sampling_df is not None else None
+            if er_score is None: 
+                print(f"for run {j} of sample rate {i}, fail")
+                hold_check_time -= 1
+            else: 
+                print(f"for run {j} of sample rate {i}, got the score")
+                re += er_score
+        re = -1 if hold_check_time <= 0 else re/hold_check_time
+        results.append(re)
+
+    print("DONE ALL, PLOTTING NOW")
+    Y = results
     plt.plot(X, Y)
     plt.xlabel('Percentages of sampling rate')
     plt.ylabel('SRMSE')
@@ -158,7 +193,7 @@ if __name__ == "__main__":
         df.loc[df['CARLICENCE'] == 'No Car Licence', 'CARLICENCE'] = 'NO'
         df.loc[df['CARLICENCE'] != 'NO', 'CARLICENCE'] = 'YES'
 
-    plot_SRMSE_bayes(df, root_node='AGEGROUP')
+    plot_SRMSE_sequential(df, root_node='AGEGROUP')
     # b_ls = make_black_list_for_root(ATTRIBUTES, root_att='AGEGROUP')
     # BN_training(df, sample_rate=15, sample=False, plotting=False, sampling_type='gibbs', black_ls=b_ls, show_progress=False)
     # sampling_df = BN_training(df, sample_rate=25, sample=True, plotting=True, sampling_type='gibbs', black_ls=b_ls)
