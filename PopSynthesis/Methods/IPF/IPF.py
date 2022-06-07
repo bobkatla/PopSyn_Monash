@@ -3,7 +3,7 @@ import synthpop.ipf.ipf as ipf
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from checker import SRMSE, update_SRMSE
+from PopSynthesis.Benchmark.checker import update_SRMSE
 from multiprocessing import Process, Lock, Array
 
 
@@ -121,8 +121,8 @@ if __name__ == "__main__":
         df.loc[df['CARLICENCE'] == 'No Car Licence', 'CARLICENCE'] = 'NO'
         df.loc[df['CARLICENCE'] != 'NO', 'CARLICENCE'] = 'YES'
 
-    # result_sample = IPF_training(df, 20)
-    # print(update_SRMSE(df, result_sample))
+    result_sample = IPF_training(df, 20)
+    print(update_SRMSE(df, result_sample))
     # print(SRMSE(df, result_sample))
     # print(result_sample)
-    plot_SRMSE_IPF(df)
+    # plot_SRMSE_IPF(df)
