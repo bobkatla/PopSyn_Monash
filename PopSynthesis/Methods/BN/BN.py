@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import bnlearn as bn
 from pgmpy.sampling import GibbsSampling, BayesianModelSampling
-from checker import update_SRMSE
+from PopSynthesis.Benchmark.checker import update_SRMSE
 from multiprocessing import Process, Lock, Array
 
 
@@ -29,15 +29,14 @@ def sampling(model, n=1000, type='forward', init_state=None, show_progress=True)
     else:
         # Using other sampling methods
         infer_model = BayesianModelSampling(model)
-        match type:
-            case 'forward':
-                sampling_df = infer_model.forward_sample(size=n, show_progress=show_progress)
-            case 'rejection':
-                sampling_df = infer_model.rejection_sample(size=n, show_progress=show_progress)
-            case 'likelihood':
-                sampling_df = infer_model.likelihood_weighted_sample(size=n, show_progress=show_progress)
-            case _:
-                print("Wrong sampling type name")
+        if type == 'forward':
+            sampling_df = infer_model.forward_sample(size=n, show_progress=show_progress)
+        elif type == 'rejection':
+            sampling_df = infer_model.rejection_sample(size=n, show_progress=show_progress)
+        elif type == 'likelihood':
+            sampling_df = infer_model.likelihood_weighted_sample(size=n, show_progress=show_progress)
+        else:
+            print("Wrong sampling type name")
         
     return sampling_df
 

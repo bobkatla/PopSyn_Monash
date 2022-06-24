@@ -1,0 +1,11 @@
+activitysim==1.0.4
+bnlearn==0.7.3
+matplotlib==3.5.1
+networkx==2.7.1
+numpy==1.21.5
+pandas==1.4.2
+pgmpy==0.1.18
+populationsim==0.5.1
+pybbn==3.2.1
+setuptools==61.2.0
+synthpop==0.1.1
