@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2022-07-11T05:02:28.054Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36" etag="NsEeRp3OuN5jcPxMn1Nf" version="20.0.4" type="github">
+<mxfile host="app.diagrams.net" modified="2022-07-12T11:04:24.990Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36" etag="IzH9CFG4VPvKHoXkDKU0" version="20.0.4" type="github">
   <diagram id="niMGvg3uXuLtMgdhvWrS" name="Page-1">
-    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="782" dy="434" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -158,6 +158,9 @@
         </mxCell>
         <mxCell id="2_Vsr7ODEx59oDxRcPSc-74" value="Power grid model &lt;br&gt;(before EV)" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="180" y="920" width="141" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="2_Vsr7ODEx59oDxRcPSc-75" value="Behaviours/ Traits" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="410" y="730" width="120" height="20" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
