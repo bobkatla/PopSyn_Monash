@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2022-10-18T23:12:41.094Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36" etag="qaQ6vO0BcWgzONK7Tw7R" version="20.4.0" type="github" pages="4">
+<mxfile host="app.diagrams.net" modified="2022-11-09T07:28:14.232Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36" etag="5WjdkkZhZlAKlU9kHxhB" version="20.4.1" type="github" pages="4">
   <diagram id="FNK8iaZ5DBjKdUpcAFrB" name="Page-1">
-    <mxGraphModel dx="1480" dy="802" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1493" dy="1496" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -8,100 +8,112 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-1" value="Households generation" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="90" y="200" width="120" height="60" as="geometry" />
+          <mxGeometry x="-367" y="308" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="TVRkaX55-N1PjVb6RJJF-2" target="TVRkaX55-N1PjVb6RJJF-3" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-2" value="Persons generation" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="90" y="500" width="120" height="60" as="geometry" />
+          <mxGeometry x="-367" y="513" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-35" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="TVRkaX55-N1PjVb6RJJF-3" target="TVRkaX55-N1PjVb6RJJF-2" edge="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="50" y="750" />
-              <mxPoint x="50" y="530" />
+              <mxPoint x="-407" y="763" />
+              <mxPoint x="-407" y="543" />
             </Array>
           </mxGeometry>
         </mxCell>
+        <mxCell id="YO9ZZh99iOmGWYp_lecW-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;dashPattern=1 2;" edge="1" parent="1" source="TVRkaX55-N1PjVb6RJJF-3" target="TVRkaX55-N1PjVb6RJJF-1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-367" y="858" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="-367" y="761" />
+              <mxPoint x="-447" y="761" />
+              <mxPoint x="-447" y="338" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="YO9ZZh99iOmGWYp_lecW-2" value="Maybe?" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="YO9ZZh99iOmGWYp_lecW-1">
+          <mxGeometry x="0.088" y="-2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-3" value="Connect households and persons" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="90" y="720" width="120" height="60" as="geometry" />
+          <mxGeometry x="-367" y="733" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="TVRkaX55-N1PjVb6RJJF-4" target="TVRkaX55-N1PjVb6RJJF-6" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-4" value="Struct learning" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="290" y="20" width="140" height="60" as="geometry" />
+          <mxGeometry x="280" y="-570" width="140" height="60" as="geometry" />
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="TVRkaX55-N1PjVb6RJJF-6" target="TVRkaX55-N1PjVb6RJJF-21" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-6" value="Para learning" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="290" y="110" width="140" height="60" as="geometry" />
+          <mxGeometry x="280" y="-480" width="140" height="60" as="geometry" />
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="TVRkaX55-N1PjVb6RJJF-7" target="TVRkaX55-N1PjVb6RJJF-8" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.014;entryY=0.389;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="TVRkaX55-N1PjVb6RJJF-7" target="TVRkaX55-N1PjVb6RJJF-21" edge="1">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="260" y="230" as="targetPoint" />
+            <mxPoint x="250" y="-360" as="targetPoint" />
             <Array as="points">
-              <mxPoint x="270" y="320" />
-              <mxPoint x="270" y="230" />
-              <mxPoint x="292" y="230" />
+              <mxPoint x="260" y="-270" />
+              <mxPoint x="260" y="-360" />
+              <mxPoint x="282" y="-360" />
             </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-7" value="Removing impossible" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="290" y="290" width="140" height="60" as="geometry" />
+          <mxGeometry x="280" y="-300" width="140" height="60" as="geometry" />
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="TVRkaX55-N1PjVb6RJJF-8" target="TVRkaX55-N1PjVb6RJJF-21" edge="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="250" y="410" />
-              <mxPoint x="250" y="230" />
+              <mxPoint x="240" y="-180" />
+              <mxPoint x="240" y="-360" />
             </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="TVRkaX55-N1PjVb6RJJF-8" target="TVRkaX55-N1PjVb6RJJF-6" edge="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="230" y="410" />
-              <mxPoint x="230" y="140" />
+              <mxPoint x="220" y="-180" />
+              <mxPoint x="220" y="-450" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="TVRkaX55-N1PjVb6RJJF-31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="TVRkaX55-N1PjVb6RJJF-8" target="TVRkaX55-N1PjVb6RJJF-30" edge="1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-8" value="Match with total" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="290" y="380" width="140" height="60" as="geometry" />
+          <mxGeometry x="280" y="-210" width="140" height="60" as="geometry" />
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-9" value="Structure learning general (use all), OR, domain knowledge" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="430" y="50" width="200" height="30" as="geometry" />
+          <mxGeometry x="420" y="-540" width="200" height="30" as="geometry" />
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-10" value="Parameters learning individually (zonal), can combine with weights" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="420" y="150" width="210" height="30" as="geometry" />
+          <mxGeometry x="410" y="-440" width="210" height="30" as="geometry" />
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-11" value="Removing data that does not exist in seed data, OR, domain knowledge" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="430" y="330" width="220" height="30" as="geometry" />
+          <mxGeometry x="420" y="-260" width="220" height="30" as="geometry" />
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-12" value="Checking with control (total) data to see the differences" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="440" y="420" width="220" height="30" as="geometry" />
+          <mxGeometry x="430" y="-170" width="220" height="30" as="geometry" />
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="TVRkaX55-N1PjVb6RJJF-21" target="TVRkaX55-N1PjVb6RJJF-7" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-21" value="Generate data" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="290" y="200" width="140" height="60" as="geometry" />
+          <mxGeometry x="280" y="-390" width="140" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="TVRkaX55-N1PjVb6RJJF-22" value="Using the number of households to generate data" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="440" y="240" width="180" height="30" as="geometry" />
+        <mxCell id="TVRkaX55-N1PjVb6RJJF-22" value="Using the total number to generate data" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="430" y="-350" width="180" height="30" as="geometry" />
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-44" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="TVRkaX55-N1PjVb6RJJF-30" target="TVRkaX55-N1PjVb6RJJF-36" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="TVRkaX55-N1PjVb6RJJF-30" value="Same as above" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="TVRkaX55-N1PjVb6RJJF-30" value="Persons and/or households generation" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="300" y="490" width="120" height="80" as="geometry" />
         </mxCell>
         <mxCell id="TVRkaX55-N1PjVb6RJJF-45" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="TVRkaX55-N1PjVb6RJJF-36" target="TVRkaX55-N1PjVb6RJJF-38" edge="1">
@@ -130,14 +142,29 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="TVRkaX55-N1PjVb6RJJF-41" value="Generate again" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="TVRkaX55-N1PjVb6RJJF-41" value="Matching" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="290" y="820" width="140" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="TVRkaX55-N1PjVb6RJJF-42" value="Run similar steps as households with BN learning and generation" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+        <mxCell id="TVRkaX55-N1PjVb6RJJF-42" value="Update the parameters of the households/ persons BN(s)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="430" y="550" width="220" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="TVRkaX55-N1PjVb6RJJF-47" value="If something (a threshold) is not correct, will run the persons generation again to replace/add new persons" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+        <mxCell id="TVRkaX55-N1PjVb6RJJF-47" value="If something (a threshold) is not correct, will run the persons/ households generation again to replace/add new persons" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="440" y="860" width="210" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="YO9ZZh99iOmGWYp_lecW-4" value="" style="whiteSpace=wrap;html=1;aspect=fixed;fillStyle=hatch;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="260" y="-580" width="170" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="YO9ZZh99iOmGWYp_lecW-5" value="BN Learning" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="170" y="-520" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="YO9ZZh99iOmGWYp_lecW-6" value="BN 1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;dashed=1;fillStyle=hatch;" vertex="1" parent="1">
+          <mxGeometry x="-285" y="380" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="YO9ZZh99iOmGWYp_lecW-8" value="BN 2" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;dashed=1;fillStyle=hatch;" vertex="1" parent="1">
+          <mxGeometry x="-280" y="587" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="YO9ZZh99iOmGWYp_lecW-9" value="BN 3" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;dashed=1;fillStyle=hatch;" vertex="1" parent="1">
+          <mxGeometry x="-280" y="808" width="60" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
