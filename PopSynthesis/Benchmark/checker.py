@@ -2,6 +2,7 @@ from math import sqrt
 import itertools
 import time
 import pandas as pd
+import math
 
 
 def SRMSE(actual, pred):
@@ -56,6 +57,7 @@ def SRMSE(actual, pred):
 
     return result
 
+
 def update_SRMSE(actual, pred):
     if len(actual.columns) != len(pred.columns):
         return None
@@ -84,3 +86,26 @@ def update_SRMSE(actual, pred):
     duration = time.time() - start_time
     print(f"Calculated the SRMSE for {len(attributes)} atts in {duration} seconds")
     return result
+
+
+def total_RMSE_flat(synthetic_df, tot_df, df_controls, skip_ls=[]):
+    flat_table = synthetic_df
+
+    hold = 0
+    ite = 0
+    for tot_name, exp in zip(df_controls['tot_name'],  df_controls['expression']):
+        if tot_name in skip_ls: continue
+        filtered_df = flat_table[eval(exp)]
+        syn_num = len(filtered_df)
+        expected_num = int(tot_df[tot_name].iloc[0])
+        hold += (expected_num - syn_num) ** 2
+        ite += 1
+    return math.sqrt(hold / ite)
+
+
+def test():
+    NotImplemented
+
+
+if __name__ == "__main__":
+    test()
