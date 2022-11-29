@@ -137,13 +137,23 @@ def compare_dist(model, data, pri_counts):
     return cpds
 
 
-def dirichlet_loop_BN(model, prior_counts, n, con_df, tot_df, actual_df, ite=20, plot=False):
+def dirichlet_loop_BN(model, prior_counts, n, con_df, tot_df, actual_df, ite=20, plot=False, selecting=True, select_ite=10):
     Y1, Y2 = [], []
     from PopSynthesis.Benchmark.checker import total_RMSE_flat, update_SRMSE
 
     for _ in range(ite):
         inference = BayesianModelSampling(model)
-        syn_data = inference.forward_sample(size=n)
+
+        # simple selection
+        syn_data = None
+        if selecting:
+            possible_pop = {}
+            for _ in range(select_ite):
+                syn = inference.forward_sample(size=n)
+                possible_pop[total_RMSE_flat(syn, tot_df, con_df)] = syn
+            syn_data = possible_pop[min(possible_pop)]
+        else: syn_data = inference.forward_sample(size=n)
+        
         Y1.append(total_RMSE_flat(syn_data, tot_df, con_df))
         Y2.append(update_SRMSE(actual_df, syn_data))
         cpds = compare_dist(model, syn_data, prior_counts)
@@ -151,7 +161,7 @@ def dirichlet_loop_BN(model, prior_counts, n, con_df, tot_df, actual_df, ite=20,
             c.normalize()
             model.add_cpds(c)
     if plot:
-        X = list(range(1, len(Y)+1))
+        X = list(range(1, len(Y1)+1))
         plt.plot(X, Y1, label = "from total")
         plt.plot(X, Y2, label = "from compare")
         plt.xlabel('Iteration')
