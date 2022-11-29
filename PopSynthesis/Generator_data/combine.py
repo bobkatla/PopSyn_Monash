@@ -27,7 +27,7 @@ def flatten_data_self_generate(ls_atts, make_like_paper=False, to_csv=False, csv
     return df
 
 
-def generate_control_files_from_population(pop_df, to_csv=False, csv_name_control='flat_tot.csv', csv_name_marg='flat_marg.csv'):
+def generate_control_files_from_population(pop_df, to_csv=False, csv_name_control='flat_con.csv', csv_name_marg='flat_marg.csv'):
     # NOTE: this is mainly use in case we have a whole population data, or testing using the seed data
     d_marg = {
         'total': len(pop_df)
