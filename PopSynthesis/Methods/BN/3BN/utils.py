@@ -1,7 +1,9 @@
 import pandas as pd
 from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator
+from pgmpy.factors.discrete.CPD import TabularCPD
 from pgmpy.sampling import BayesianModelSampling
 from pgmpy.models import BayesianNetwork
+import numpy as np
 import networkx as nx
 import pylab as plt
 
@@ -41,7 +43,7 @@ def cal_count_states(con_df, tot_df):
             'card': len(ls_states),
             'states': ls_states,
             'count': ls_count,
-            'prob': ls_prob
+            'probs': ls_prob
         }
     return final_count
 
@@ -59,7 +61,9 @@ def learn_struct_BN_score(df, state_names=None, show_struct=False, method=HillCl
 def multiply_ls_arr(ls_arr):
     # NOTE: order matters, list of 1d arr, return 1 1d arr
     l_re = 1
-    for arr in ls_arr: l_re *= len(arr)
+    for i, arr in enumerate(ls_arr): 
+        if len(arr) == 0: ls_arr.pop(i)
+        else: l_re *= len(arr)
 
     re = [1 for _ in range(l_re)]
     mod_num = 1
@@ -81,9 +85,32 @@ def get_prior(raw_model, con_df, tot_df):
     cpds = []
 
     final_counts = cal_count_states(con_df, tot_df)
+    total = tot_df['total'].iloc[0]
+
     for att in final_counts:
-        vals_matrix = []
         pa = raw_model.get_parents(att)
+        att_probs = final_counts[att]['probs']
+        vals_2d_matrix = []
+        for prob in att_probs:
+            ls_vals_states = [[prob]]
+            for p in pa: ls_vals_states.append(final_counts[p]['probs'])
+            final_vals = multiply_ls_arr(ls_vals_states)
+            vals_2d_matrix.append(final_vals)
+        
+        pri_counts[att] = np.array(vals_2d_matrix) * total
+
+        if pa: evidence_card = [final_counts[p]['card'] for p in pa]
+        else: pa, evidence_card = None, None
+        cpd_att = TabularCPD(
+            att,
+            final_counts[att]['card'],
+            np.array(vals_2d_matrix),
+            evidence=pa,
+            evidence_card=evidence_card
+        )
+        cpds.append(cpd_att)
+    
+    return pri_counts, cpds
 
 
 def main():
@@ -95,7 +122,7 @@ def main():
     print(state_names.keys())
 
     model = learn_struct_BN_score(seed_data, state_names=state_names, show_struct=False)
-    get_prior(model, con_df, tot_df)
+    prior_counts, prior_cpds = get_prior(model, con_df, tot_df)
     # para_learn = BayesianEstimator(
     #     model=model,
     #     data=seed_data,
@@ -103,7 +130,7 @@ def main():
     # )
     # ls_CPDs = para_learn.get_parameters()
     # print(ls_CPDs)
-    # model.add_cpds(*ls_CPDs)
+    model.add_cpds(*prior_cpds)
 
     # for att in state_names:
     #     print(model.get_parents(att))
