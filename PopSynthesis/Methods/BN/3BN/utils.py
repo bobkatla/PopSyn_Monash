@@ -6,6 +6,7 @@ from pgmpy.models import BayesianNetwork
 import numpy as np
 import networkx as nx
 import pylab as plt
+from itertools import chain
 
 data_location = "../../../Generator_data/data/data_processed_here/"
 
@@ -81,6 +82,7 @@ def multiply_ls_arr(ls_arr):
 
 def get_prior(raw_model, con_df, tot_df):
     # return the list of prior counts and cpds, based on the census
+    state_names = get_state_names(con_df)
     pri_counts = {}
     cpds = []
 
@@ -99,13 +101,16 @@ def get_prior(raw_model, con_df, tot_df):
         
         pri_counts[att] = np.array(vals_2d_matrix) * total
 
-        if pa: evidence_card = [final_counts[p]['card'] for p in pa]
-        else: pa, evidence_card = None, None
+        evidence, evidence_card = None, None
+        if pa: 
+            evidence = pa
+            evidence_card = [final_counts[p]['card'] for p in pa]
         cpd_att = TabularCPD(
             att,
             final_counts[att]['card'],
             np.array(vals_2d_matrix),
-            evidence=pa,
+            state_names={var: state_names[var] for var in chain([att], pa)},
+            evidence=evidence,
             evidence_card=evidence_card
         )
         cpd_att.normalize()
@@ -132,30 +137,66 @@ def compare_dist(model, data, pri_counts):
     return cpds
 
 
-def dirichlet_loop_BN(model, prior_counts, n, ite=20):
+def dirichlet_loop_BN(model, prior_counts, n, con_df, tot_df, actual_df, ite=20, plot=False):
+    Y1, Y2 = [], []
+    from PopSynthesis.Benchmark.checker import total_RMSE_flat, update_SRMSE
+
     for _ in range(ite):
         inference = BayesianModelSampling(model)
         syn_data = inference.forward_sample(size=n)
+        Y1.append(total_RMSE_flat(syn_data, tot_df, con_df))
+        Y2.append(update_SRMSE(actual_df, syn_data))
         cpds = compare_dist(model, syn_data, prior_counts)
         for c in cpds:
             c.normalize()
             model.add_cpds(c)
+    if plot:
+        X = list(range(1, len(Y)+1))
+        plt.plot(X, Y1, label = "from total")
+        plt.plot(X, Y2, label = "from compare")
+        plt.xlabel('Iteration')
+        plt.ylabel('err')
+        plt.show()
     return model
 
 
 def test():
     con_df = pd.read_csv(data_location + "flat_con.csv")
     tot_df = pd.read_csv(data_location + "flat_marg.csv")
-    seed_data = pd.read_csv(data_location + "flatten_seed_data.csv").astype(str)
+    ori_data = pd.read_csv(data_location + "flatten_seed_data.csv").astype(str)
+    seed_data = ori_data.sample(n=int(len(ori_data)/5))
 
     state_names = get_state_names(con_df)
-    print(state_names.keys())
 
-    model = learn_struct_BN_score(seed_data, state_names=state_names, scoring_method='bdeuscore', show_struct=False)
+    model = learn_struct_BN_score(
+        seed_data, 
+        state_names=state_names, 
+        scoring_method='bdeuscore', 
+        show_struct=False
+        )
     prior_counts, prior_cpds = get_prior(model, con_df, tot_df)
-    model.add_cpds(*prior_cpds)
 
-    final_model = dirichlet_loop_BN(model, prior_counts, tot_df['total'].iloc[0])
+    para_learn = BayesianEstimator(
+        model=model,
+        data=seed_data,
+        state_names=state_names
+    )
+    ls_CPDs = para_learn.get_parameters(
+        prior_type='dirichlet',
+        pseudo_counts = prior_counts
+    )
+    model.add_cpds(*ls_CPDs)
+    # model.add_cpds(*prior_cpds)
+
+    final_model = dirichlet_loop_BN(
+        model, 
+        prior_counts, 
+        tot_df['total'].iloc[0], 
+        con_df, 
+        tot_df, 
+        ori_data,
+        plot=True
+        )
 
 
 if __name__ == '__main__':
