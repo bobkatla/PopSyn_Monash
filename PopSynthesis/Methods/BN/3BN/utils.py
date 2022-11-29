@@ -1,5 +1,5 @@
 import pandas as pd
-from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator
+from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator, MaximumLikelihoodEstimator
 from pgmpy.factors.discrete.CPD import TabularCPD
 from pgmpy.sampling import BayesianModelSampling
 from pgmpy.models import BayesianNetwork
@@ -91,7 +91,7 @@ def get_prior(raw_model, con_df, tot_df):
     total = tot_df['total'].iloc[0]
 
     for att in final_counts:
-        pa = raw_model.get_parents(att)
+        pa = sorted(raw_model.get_parents(att))
         att_probs = final_counts[att]['probs']
         vals_2d_matrix = []
         for prob in att_probs:
@@ -189,17 +189,20 @@ def loop_to_test(con_df, tot_df, ori_data, step=5, plot=False):
             )
         prior_counts, prior_cpds = get_prior(model, con_df, tot_df)
 
-        para_learn = BayesianEstimator(
-            model=model,
-            data=seed_data,
-            state_names=state_names
-        )
-        ls_CPDs = para_learn.get_parameters(
-            prior_type='dirichlet',
-            pseudo_counts = prior_counts
-        )
-        model.add_cpds(*ls_CPDs)
-        # model.add_cpds(*prior_cpds)
+        # para_learn = MaximumLikelihoodEstimator(model, seed_data)
+        # ls_CPDs = para_learn.get_parameters()
+
+        # para_learn = BayesianEstimator(
+        #     model=model,
+        #     data=seed_data,
+        #     state_names=state_names
+        # )
+        # ls_CPDs = para_learn.get_parameters(
+        #     prior_type='dirichlet',
+        #     pseudo_counts = prior_counts
+        # )
+        # model.add_cpds(*ls_CPDs)
+        model.add_cpds(*prior_cpds)
 
         final_model = dirichlet_loop_BN(
             model, 
@@ -213,7 +216,7 @@ def loop_to_test(con_df, tot_df, ori_data, step=5, plot=False):
             plot=False
             )
 
-        inference = BayesianModelSampling(final_model)
+        inference = BayesianModelSampling(model)
         final_syn = inference.forward_sample(size=N)
         Y1.append(total_RMSE_flat(final_syn, tot_df, con_df))
         Y2.append(update_SRMSE(ori_data, final_syn))
