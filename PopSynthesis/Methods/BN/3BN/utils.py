@@ -108,12 +108,42 @@ def get_prior(raw_model, con_df, tot_df):
             evidence=pa,
             evidence_card=evidence_card
         )
+        cpd_att.normalize()
         cpds.append(cpd_att)
     
     return pri_counts, cpds
 
+def compare_dist(model, data, pri_counts):
+    # All  the vars list and the corresponding totol control field
+    # DAG to get the parents of each nodes and then we get the cardinality of each to calculate the shape
+    # Maybe need to fix this with state setting so we have the correct probability (tempo fix, divide it)
+    pseudo_counts = {}
+    for var in model.nodes():
+        # pseudo_counts[var] = (model.get_cpds(var).get_values() * 68732) - pri_counts[var]
+        pseudo_counts[var] = pri_counts[var]
+    state_names = {}
+    for var in model.nodes():
+        state_names.update(model.get_cpds(var).state_names)
 
-def main():
+    _est = BayesianEstimator(model, data, state_names=state_names)
+    cpds = _est.get_parameters(
+            prior_type="dirichlet", pseudo_counts=pseudo_counts
+        )
+    return cpds
+
+
+def dirichlet_loop_BN(model, prior_counts, n, ite=20):
+    for _ in range(ite):
+        inference = BayesianModelSampling(model)
+        syn_data = inference.forward_sample(size=n)
+        cpds = compare_dist(model, syn_data, prior_counts)
+        for c in cpds:
+            c.normalize()
+            model.add_cpds(c)
+    return model
+
+
+def test():
     con_df = pd.read_csv(data_location + "flat_con.csv")
     tot_df = pd.read_csv(data_location + "flat_marg.csv")
     seed_data = pd.read_csv(data_location + "flatten_seed_data.csv").astype(str)
@@ -125,6 +155,8 @@ def main():
     prior_counts, prior_cpds = get_prior(model, con_df, tot_df)
     model.add_cpds(*prior_cpds)
 
+    final_model = dirichlet_loop_BN(model, prior_counts, tot_df['total'].iloc[0])
+
 
 if __name__ == '__main__':
-    main()
+    test()
