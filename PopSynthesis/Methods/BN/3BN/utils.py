@@ -121,23 +121,9 @@ def main():
     state_names = get_state_names(con_df)
     print(state_names.keys())
 
-    model = learn_struct_BN_score(seed_data, state_names=state_names, show_struct=False)
+    model = learn_struct_BN_score(seed_data, state_names=state_names, scoring_method='bdeuscore', show_struct=False)
     prior_counts, prior_cpds = get_prior(model, con_df, tot_df)
-    # para_learn = BayesianEstimator(
-    #     model=model,
-    #     data=seed_data,
-    #     state_names=state_names
-    # )
-    # ls_CPDs = para_learn.get_parameters()
-    # print(ls_CPDs)
     model.add_cpds(*prior_cpds)
-
-    # for att in state_names:
-    #     print(model.get_parents(att))
-    #     print(model.get_cpds(att).state_names)
-    #     print(model.get_cpds(att))
-    #     # print(model.get_cpds(att).get_values())
-    # print(model.nodes())
 
 
 if __name__ == '__main__':
