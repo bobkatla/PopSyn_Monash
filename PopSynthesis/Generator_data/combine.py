@@ -29,11 +29,34 @@ def flatten_data_self_generate(ls_atts, make_like_paper=False, to_csv=False, csv
 
 def generate_control_files_from_population(pop_df, to_csv=False, csv_name_control='flat_tot.csv', csv_name_marg='flat_marg.csv'):
     # NOTE: this is mainly use in case we have a whole population data, or testing using the seed data
-    # generate the marginal 
-    # generate the control 
-    NotImplemented
+    d_marg = {}
+    d_con = {
+        'seed_table': [],
+        'att': [],
+        'tot_name': [],
+        'expression': [],
+    }
+    for att in pop_df.columns:
+        data_seri = pop_df[att]
+        att_freq = data_seri.value_counts()
+        for val in att_freq.index: 
+            tot_name = f'{att}__{val}'
+            d_marg[tot_name] = att_freq[val]
+            
+            d_con['seed_table'].append('flat_table')
+            d_con['att'].append(att)
+            d_con['tot_name'].append(tot_name)
+            d_con['expression'].append(f"flat_table.{att} == '{val}'")
+    df_marg = pd.DataFrame(data=d_marg, index=[0])
+    df_con = pd.DataFrame(data=d_con)
+
+    if to_csv:
+        df_marg.to_csv(f'./data/data_processed_here/{csv_name_marg}', index=False)
+        df_con.to_csv(f'./data/data_processed_here/{csv_name_control}', index=False)
+
+    return df_marg, df_con
 
 
 if __name__ == "__main__":
     flatten_df = flatten_data_self_generate(ATTRIBUTES, to_csv=True)
-    generate_control_files_from_population(flatten_df)
+    a = generate_control_files_from_population(flatten_df, to_csv=True)
