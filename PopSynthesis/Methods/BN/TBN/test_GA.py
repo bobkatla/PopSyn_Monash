@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import math
 
 from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator, MaximumLikelihoodEstimator
@@ -60,7 +61,16 @@ def eval_func(indi, tot_df, con_df):
     return score
 
 
+def softmax(arr_prob):
+    exps = np.exp(arr_prob - np.max(arr_prob))
+    return exps / np.sum(exps)
+
+
 def cross_entropy(dist_target, dist_check):
+    # Note that they will be processed using softmax, the reason is to solve the 0 value from syn_pop
+    # dist_target = softmax(dist_target)
+    # dist_check = softmax(dist_check)
+
     # H(target, approx/check)
     # H(P, Q) = – sum x in X P(x) * log(Q(x))
 
@@ -73,6 +83,27 @@ def cross_entropy(dist_target, dist_check):
     for i in range(len(dist_target)):
         result += dist_target[i] * math.log(dist_check[i], 2) # in bits, change to e if want nats
     return -result
+
+
+def get_dist_syn_pop(syn_pop_seri, ls_states):
+    val_count = syn_pop_seri.value_counts(normalize=True)
+    # order matters, has to match with others, that is why there is the ls_states
+    re = []
+    assert len(ls_states) >= len(val_count)
+    for state in ls_states:
+        re.append(val_count[state] if state in val_count else 0)
+    return re
+    
+
+def best_fit_atts(syn_pop, con_df, tot_df, num_att=1):
+    att_char = cal_count_states(con_df, tot_df)
+    final_re = {}
+    for att in att_char:
+        census_dist = att_char[att]['probs']
+        syn_dist = get_dist_syn_pop(syn_pop[att], ls_states=att_char[att]['states'])
+        # Have to make the syn_dist as target cause' it may have 0, if we swap there will be err as log(0) is undefined
+        final_re[att] = cross_entropy(syn_dist, census_dist)
+    print(sorted(final_re.items(), key=lambda item: item[1]))
 
 
 def mutation(indi, BN_model, partition_rate=0.25, num_keep_atts=3, num_child=5):
@@ -117,11 +148,8 @@ def main():
     con_df = pd.read_csv(data_location + "flat_con.csv")
     tot_df = pd.read_csv(data_location + "flat_marg.csv")
     ori_data = pd.read_csv(data_location + "flatten_seed_data.csv").astype(str)
-
-    a = cal_count_states(con_df, tot_df)
-    target = a['SEX']['probs']
-    check = [0.3, 0.7]
-    print(cross_entropy(target, check))
+    seed_data = ori_data.sample(n=100)
+    a = best_fit_atts(seed_data, con_df, tot_df)
 
 
 if __name__ == "__main__":
