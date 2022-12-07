@@ -162,29 +162,59 @@ def crossover(pa1, pa2, partition_rate=0.4):
     return [offspring1, offspring2]
 
 
-def eval_loop(first_gen):
-    # Select the individuals for the operations (the criteria is unknown)
-    # Producing offsprings (reproduction/ crossover)
-    # Mutate offspring
-    # Eval each of individual with the eval func
-    # Select the "best" for next round (or replacement)
+def eval_ls_solutions(n=1):
+    # Should return the list of best solutions
     NotImplemented
 
 
-def EvoProg():
+def EvoProg(seed_data, con_df, tot_df, num_pop=10, num_gen=1000, err_converg=math.inf):
     # Initial solutions/ population
+    N = tot_df['total'].iloc[0]
+    model = learn_BN_diriclet(seed_data, con_df, tot_df) # NOTE: this model is quite good as it does incorporate census data
+    initial_pop = sample_BN(model, n=N)
+
     # Run loop
-    # Pick the final solution
-    NotImplemented
+    solutions = [initial_pop]
+    counter = 0
+    err_score = math.inf
+    while counter < num_gen and err_score >= err_converg:
+        # pick the best solution
+        best_sol = eval_ls_solutions(solutions)[0]
+        # Mutate offspring
+        mutation_offsp = mutation(
+            indi=best_sol,
+            BN_model=model,
+            con_df=con_df,
+            tot_df=tot_df,
+            partition_rate=0.2,
+            num_keep_atts=2,
+            num_child=5
+        )
+        solutions.extend(mutation_offsp)
+
+        # Producing offsprings (reproduction/ crossover)
+        best_pa_sol = eval_ls_solutions(solutions, n=2)
+        cross_offsp = crossover(
+            pa1=best_pa_sol[0],
+            pa2=best_pa_sol[1],
+            partition_rate=0.4
+        )
+        solutions.extend(cross_offsp)
+        # # Select the "best" for next round (or replacement)
+        solutions = eval_ls_solutions(solutions, n=num_pop)
+    # Pick the final solution, can create BN as well
+    result = eval_ls_solutions(solutions)[0]
+    return result
 
 
 data_location = "../../../Generator_data/data/data_processed_here/"
 
 
 def main():
+    ori_data = pd.read_csv(data_location + "flatten_seed_data.csv").astype(str)
     con_df = pd.read_csv(data_location + "flat_con.csv")
     tot_df = pd.read_csv(data_location + "flat_marg.csv")
-    ori_data = pd.read_csv(data_location + "flatten_seed_data.csv").astype(str)
+    a = EvoProg(ori_data, con_df, tot_df)
 
 
 if __name__ == "__main__":
