@@ -240,10 +240,9 @@ def main():
     ori_data = pd.read_csv(data_location + "flatten_seed_data.csv").astype(str)
     con_df = pd.read_csv(data_location + "flat_con.csv")
     tot_df = pd.read_csv(data_location + "flat_marg.csv")
-    seed_data = ori_data.sample(n=5000, ignore_index=True)
-    a = EvoProg(seed_data, con_df, tot_df, num_gen=3)
-    print(a)
-    a.to_csv("GA.csv")
+    seed_data = ori_data.sample(n=1000, ignore_index=True)
+    a = EvoProg(seed_data, con_df, tot_df, num_gen=20)
+    a.to_csv("GA.csv", index=False)
 
 
 if __name__ == "__main__":
