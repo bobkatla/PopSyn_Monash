@@ -54,13 +54,13 @@ def sample_BN(model, n, typeOf='forward', evidence=None):
         if evidence: print("Using forward sampling, the evidence you provided would not have any effect")
         syn = inference.forward_sample(size=n)
     elif typeOf == 'rejection':
-        syn = inference.rejection_sample(evidence=evidence, size=n)
+        syn = inference.rejection_sample(evidence=evidence, size=n, show_progress=False)
     else:
         print("ERRORRRRR, not sure what type of sampling is that")
     return syn
 
 
-def eval_func(indi, tot_df, con_df):
+def eval_func(indi, con_df, tot_df):
     score = total_RMSE_flat(indi, tot_df, con_df)
     return score
 
@@ -136,6 +136,7 @@ def mutation(indi, BN_model, con_df, tot_df, partition_rate=0.25, num_keep_atts=
 
         mut_part = mut_part.to_numpy() # convert for better performance
         for record in mut_part:
+            # TODO: This is costing a lot of time, need to optimise this part
             # create evidence
             evidence = [State(ls_atts[i], record[i]) for i in index_best_atts]
             new_rec = sample_BN(
@@ -157,14 +158,23 @@ def crossover(pa1, pa2, partition_rate=0.4):
     # partition randomly based on the ratio for pa2
     swap_pa2, keep_pa2 = partition_df(pa2, frac=partition_rate)
     # swap
-    offspring1 = pd.concat(keep_pa1, swap_pa2)
-    offspring2 = pd.concat(keep_pa2, swap_pa1)
+    offspring1 = pd.concat([keep_pa1, swap_pa2])
+    offspring2 = pd.concat([keep_pa2, swap_pa1])
     return [offspring1, offspring2]
 
 
-def eval_ls_solutions(n=1):
+def eval_ls_solutions(ls_sol, con_df, tot_df, n=1):
     # Should return the list of best solutions
-    NotImplemented
+    check = []
+    for sol in ls_sol:
+        re = eval_func(
+            indi=sol,
+            con_df=con_df,
+            tot_df=tot_df
+        )
+        check.append((sol, re))
+    sort_result = sorted(check, key=lambda indi: indi[1])
+    return [sort_result[i][0] for i in range(n)]
 
 
 def EvoProg(seed_data, con_df, tot_df, num_pop=10, num_gen=1000, err_converg=math.inf):
@@ -177,9 +187,11 @@ def EvoProg(seed_data, con_df, tot_df, num_pop=10, num_gen=1000, err_converg=mat
     solutions = [initial_pop]
     counter = 0
     err_score = math.inf
+    check=[]
     while counter < num_gen and err_score >= err_converg:
         # pick the best solution
-        best_sol = eval_ls_solutions(solutions)[0]
+        best_sol = eval_ls_solutions(solutions, con_df, tot_df)[0]
+        check.append(eval_func(best_sol, con_df=con_df, tot_df=tot_df))
         # Mutate offspring
         mutation_offsp = mutation(
             indi=best_sol,
@@ -193,17 +205,20 @@ def EvoProg(seed_data, con_df, tot_df, num_pop=10, num_gen=1000, err_converg=mat
         solutions.extend(mutation_offsp)
 
         # Producing offsprings (reproduction/ crossover)
-        best_pa_sol = eval_ls_solutions(solutions, n=2)
+        best_pa_sol = eval_ls_solutions(solutions, con_df, tot_df, n=2)
         cross_offsp = crossover(
             pa1=best_pa_sol[0],
             pa2=best_pa_sol[1],
             partition_rate=0.4
         )
         solutions.extend(cross_offsp)
-        # # Select the "best" for next round (or replacement)
-        solutions = eval_ls_solutions(solutions, n=num_pop)
+        # Select the "best" for next round (or replacement)
+        solutions = eval_ls_solutions(solutions, con_df, tot_df, n=num_pop)
+        # select the "best" only 1 for BN learning
+        model = learn_BN_diriclet(solutions[0], con_df, tot_df)
     # Pick the final solution, can create BN as well
-    result = eval_ls_solutions(solutions)[0]
+    result = eval_ls_solutions(solutions, con_df, tot_df)[0]
+    print(check)
     return result
 
 
@@ -214,7 +229,9 @@ def main():
     ori_data = pd.read_csv(data_location + "flatten_seed_data.csv").astype(str)
     con_df = pd.read_csv(data_location + "flat_con.csv")
     tot_df = pd.read_csv(data_location + "flat_marg.csv")
-    a = EvoProg(ori_data, con_df, tot_df)
+    seed_data = ori_data.sample(n=5000)
+    a = EvoProg(seed_data, con_df, tot_df, num_gen=100)
+    print(a)
 
 
 if __name__ == "__main__":
