@@ -124,7 +124,6 @@ def mutation(indi, BN_model, con_df, tot_df, partition_rate=0.25, num_keep_atts=
     # find the best fit atts
     ls_best_atts = best_fit_atts(indi, con_df, tot_df, num_att=num_keep_atts)
     ls_atts = list(indi.columns)
-    index_best_atts = [ls_atts.index(att) for att in ls_best_atts]
 
     # create children from mutation
     for _ in range(num_child):
@@ -134,14 +133,14 @@ def mutation(indi, BN_model, con_df, tot_df, partition_rate=0.25, num_keep_atts=
         # create new df based on mutation part
         final_list_df = [rest_part]
 
-        mut_part = mut_part.to_numpy() # convert for better performance
-        for record in mut_part:
-            # TODO: This is costing a lot of time, need to optimise this part
+        count_combine_best_att = mut_part.groupby(ls_best_atts)[ls_atts[0]].count()
+        for state_combine in count_combine_best_att.index:
             # create evidence
-            evidence = [State(ls_atts[i], record[i]) for i in index_best_atts]
+            evidence = [State(att, state) for att, state in zip(ls_best_atts,state_combine)]
+            num_to_sample = count_combine_best_att[state_combine]
             new_rec = sample_BN(
                 model=BN_model, 
-                n=1, # NOTE: can try further test of instead of having only 1, we can create more and select the best of mutation (maybe most different one?)
+                n=num_to_sample, # NOTE: can try further test of instead of having only 1, we can create more and select the best of mutation (maybe most different one?)
                 typeOf='rejection',
                 evidence=evidence)
             final_list_df.append(new_rec)
@@ -158,12 +157,13 @@ def crossover(pa1, pa2, partition_rate=0.4):
     # partition randomly based on the ratio for pa2
     swap_pa2, keep_pa2 = partition_df(pa2, frac=partition_rate)
     # swap
-    offspring1 = pd.concat([keep_pa1, swap_pa2])
-    offspring2 = pd.concat([keep_pa2, swap_pa1])
+    offspring1 = pd.concat([keep_pa1, swap_pa2], ignore_index=True)
+    offspring2 = pd.concat([keep_pa2, swap_pa1], ignore_index=True)
     return [offspring1, offspring2]
 
 
 def eval_ls_solutions(ls_sol, con_df, tot_df, n=1):
+    assert n <= len(ls_sol)
     # Should return the list of best solutions
     check = []
     for sol in ls_sol:
@@ -187,11 +187,18 @@ def EvoProg(seed_data, con_df, tot_df, num_pop=10, num_gen=1000, err_converg=mat
     solutions = [initial_pop]
     counter = 0
     err_score = math.inf
-    check=[]
+    ######
+    check=[] 
+    ########
     while counter < num_gen and err_score >= err_converg:
+        print(f"RUNNING FOR GEN {counter}")
         # pick the best solution
         best_sol = eval_ls_solutions(solutions, con_df, tot_df)[0]
-        check.append(eval_func(best_sol, con_df=con_df, tot_df=tot_df))
+        #########
+        test_score = eval_func(best_sol, con_df=con_df, tot_df=tot_df)
+        print("best at the moment", test_score)
+        check.append(test_score)
+        ##########
         # Mutate offspring
         mutation_offsp = mutation(
             indi=best_sol,
@@ -200,7 +207,7 @@ def EvoProg(seed_data, con_df, tot_df, num_pop=10, num_gen=1000, err_converg=mat
             tot_df=tot_df,
             partition_rate=0.2,
             num_keep_atts=2,
-            num_child=5
+            num_child=num_pop # this is to make sure that the population size is correct
         )
         solutions.extend(mutation_offsp)
 
@@ -216,9 +223,13 @@ def EvoProg(seed_data, con_df, tot_df, num_pop=10, num_gen=1000, err_converg=mat
         solutions = eval_ls_solutions(solutions, con_df, tot_df, n=num_pop)
         # select the "best" only 1 for BN learning
         model = learn_BN_diriclet(solutions[0], con_df, tot_df)
+        counter += 1
     # Pick the final solution, can create BN as well
     result = eval_ls_solutions(solutions, con_df, tot_df)[0]
-    print(check)
+    ######
+    print(check) 
+    np.save('GA_results', np.array(check))
+    #######
     return result
 
 
@@ -229,9 +240,10 @@ def main():
     ori_data = pd.read_csv(data_location + "flatten_seed_data.csv").astype(str)
     con_df = pd.read_csv(data_location + "flat_con.csv")
     tot_df = pd.read_csv(data_location + "flat_marg.csv")
-    seed_data = ori_data.sample(n=5000)
-    a = EvoProg(seed_data, con_df, tot_df, num_gen=100)
+    seed_data = ori_data.sample(n=5000, ignore_index=True)
+    a = EvoProg(seed_data, con_df, tot_df, num_gen=3)
     print(a)
+    a.to_csv("GA.csv")
 
 
 if __name__ == "__main__":
