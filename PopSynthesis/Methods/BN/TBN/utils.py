@@ -13,11 +13,7 @@ data_location = "../../../Generator_data/data/data_processed_here/"
 
 
 def convert_to_prob(d1_arr):
-    new_arr = []
-    sum_arr = sum(d1_arr)
-    for val in d1_arr:
-        new_arr.append(val / sum_arr)
-    return new_arr
+    return [float(i)/sum(d1_arr) for i in d1_arr]
 
 
 def get_state_names(con_df):
