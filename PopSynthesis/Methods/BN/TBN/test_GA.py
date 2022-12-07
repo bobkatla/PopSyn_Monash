@@ -103,7 +103,9 @@ def best_fit_atts(syn_pop, con_df, tot_df, num_att=1):
         syn_dist = get_dist_syn_pop(syn_pop[att], ls_states=att_char[att]['states'])
         # Have to make the syn_dist as target cause' it may have 0, if we swap there will be err as log(0) is undefined
         final_re[att] = cross_entropy(syn_dist, census_dist)
-    print(sorted(final_re.items(), key=lambda item: item[1]))
+    sort_result = sorted(final_re.items(), key=lambda item: item[1])
+    assert num_att <= len(sort_result)
+    return [sort_result[i][0] for i in range(num_att)]
 
 
 def mutation(indi, BN_model, partition_rate=0.25, num_keep_atts=3, num_child=5):
@@ -149,7 +151,8 @@ def main():
     tot_df = pd.read_csv(data_location + "flat_marg.csv")
     ori_data = pd.read_csv(data_location + "flatten_seed_data.csv").astype(str)
     seed_data = ori_data.sample(n=100)
-    a = best_fit_atts(seed_data, con_df, tot_df)
+    a = best_fit_atts(seed_data, con_df, tot_df, num_att=3)
+    print(a)
 
 
 if __name__ == "__main__":
