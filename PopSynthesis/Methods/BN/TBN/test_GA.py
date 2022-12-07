@@ -1,9 +1,12 @@
 import pandas as pd
+import math
+
 from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator, MaximumLikelihoodEstimator
 from pgmpy.factors.discrete.CPD import TabularCPD
 from pgmpy.sampling import BayesianModelSampling
 from pgmpy.models import BayesianNetwork
-from PopSynthesis.Methods.BN.TBN.utils import learn_struct_BN_score, compare_dist, get_prior, get_state_names
+
+from PopSynthesis.Methods.BN.TBN.utils import learn_struct_BN_score, compare_dist, get_prior, get_state_names, cal_count_states
 from PopSynthesis.Benchmark.checker import total_RMSE_flat, update_SRMSE
 
 """
@@ -57,8 +60,19 @@ def eval_func(indi, tot_df, con_df):
     return score
 
 
-def cross_entropy(dist1, dist2):
-    NotImplemented
+def cross_entropy(dist_target, dist_check):
+    # H(target, approx/check)
+    # H(P, Q) = – sum x in X P(x) * log(Q(x))
+
+    assert len(dist_target) == len(dist_check)
+
+    # They will be 2 same size array for the same atts, 
+    # The order matters, assuming that for the same position is the same event/state
+
+    result = 0
+    for i in range(len(dist_target)):
+        result += dist_target[i] * math.log(dist_check[i], 2) # in bits, change to e if want nats
+    return -result
 
 
 def mutation(indi, BN_model, partition_rate=0.25, num_keep_atts=3, num_child=5):
@@ -95,10 +109,19 @@ def EvoProg():
     # Pick the final solution
     NotImplemented
 
-def main():
-    # Our problem would need
 
-    NotImplemented
+data_location = "../../../Generator_data/data/data_processed_here/"
+
+
+def main():
+    con_df = pd.read_csv(data_location + "flat_con.csv")
+    tot_df = pd.read_csv(data_location + "flat_marg.csv")
+    ori_data = pd.read_csv(data_location + "flatten_seed_data.csv").astype(str)
+
+    a = cal_count_states(con_df, tot_df)
+    target = a['SEX']['probs']
+    check = [0.3, 0.7]
+    print(cross_entropy(target, check))
 
 
 if __name__ == "__main__":
