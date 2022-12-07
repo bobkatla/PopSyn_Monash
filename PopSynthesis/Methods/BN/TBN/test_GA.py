@@ -152,11 +152,14 @@ def mutation(indi, BN_model, con_df, tot_df, partition_rate=0.25, num_keep_atts=
 
 
 def crossover(pa1, pa2, partition_rate=0.4):
-    offspring = []
     # partition randomly based on the ratio for pa1
+    swap_pa1, keep_pa1 = partition_df(pa1, frac=partition_rate)
     # partition randomly based on the ratio for pa2
+    swap_pa2, keep_pa2 = partition_df(pa2, frac=partition_rate)
     # swap
-    return offspring
+    offspring1 = pd.concat(keep_pa1, swap_pa2)
+    offspring2 = pd.concat(keep_pa2, swap_pa1)
+    return [offspring1, offspring2]
 
 
 def eval_loop(first_gen):
