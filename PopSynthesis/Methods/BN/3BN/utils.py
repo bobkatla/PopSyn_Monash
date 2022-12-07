@@ -91,7 +91,7 @@ def get_prior(raw_model, con_df, tot_df):
     total = tot_df['total'].iloc[0]
 
     for att in final_counts:
-        pa = sorted(raw_model.get_parents(att))
+        pa = sorted(raw_model.get_parents(att)) # DO this to match with the way they do it in pgmpy, dunno why they sort
         att_probs = final_counts[att]['probs']
         vals_2d_matrix = []
         for prob in att_probs:
