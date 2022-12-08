@@ -186,7 +186,7 @@ def eval_ls_solutions(ls_sol, con_df, tot_df, n=1):
     return [sort_result[i][0] for i in range(n)]
 
 
-def EvoProg(seed_data, con_df, tot_df, num_pop=10, num_gen=1000, err_converg=math.inf):
+def EvoProg(seed_data, ori_data, con_df, tot_df, num_pop=10, num_gen=1000, err_converg=math.inf):
     # Initial solutions/ population
     N = tot_df['total'].iloc[0]
     model = learn_BN_diriclet(seed_data, con_df, tot_df) # NOTE: this model is quite good as it does incorporate census data
@@ -196,25 +196,31 @@ def EvoProg(seed_data, con_df, tot_df, num_pop=10, num_gen=1000, err_converg=mat
     prior_counts, prior_cpds = get_prior(model, con_df, tot_df)
 
     initial_pop = sample_BN(model, n=N)
+
+    ###### TEST
     nx.draw_circular(model ,with_labels=True)
     plt.show()
+    
+    check_RMSD=[] 
+    check_SRMSE=[]
+    ######## TEST
 
     # Run loop
     solutions = [initial_pop]
     counter = 0
     err_score = math.inf
-    ######
-    check=[] 
-    ########
     while counter < num_gen and err_score >= err_converg:
         print(f"RUNNING FOR GEN {counter}")
         # pick the best solution
         best_sol = eval_ls_solutions(solutions, con_df, tot_df)[0]
-        #########
+
+        ######### TEST
         test_score = eval_func(best_sol, con_df=con_df, tot_df=tot_df)
         print("best at the moment", test_score)
-        check.append(test_score)
-        ##########
+        check_RMSD.append(test_score)
+        check_SRMSE.append(update_SRMSE(ori_data, best_sol))
+        ########## TEST
+
         # Mutate offspring
         mutation_offsp = mutation(
             indi=best_sol,
@@ -244,10 +250,14 @@ def EvoProg(seed_data, con_df, tot_df, num_pop=10, num_gen=1000, err_converg=mat
     result = eval_ls_solutions(solutions, con_df, tot_df)[0]
     nx.draw_circular(model ,with_labels=True)
     plt.show()
-    ######
-    print(check) 
-    np.save('GA_results', np.array(check))
-    #######
+
+    ###### TEST
+    print(check_RMSD) 
+    print(check_SRMSE)
+    np.save('GA_results_RMSD', np.array(check_RMSD))
+    np.save('GA_results_SRMSE', np.array(check_SRMSE))
+    ####### TEST
+    
     return result
 
 
@@ -260,7 +270,7 @@ def main():
     tot_df = pd.read_csv(data_location + "flat_marg.csv")
     seed_data = ori_data.sample(n=1000, ignore_index=True)
     start = time.time()
-    a = EvoProg(seed_data, con_df, tot_df, num_gen=50)
+    a = EvoProg(seed_data, ori_data, con_df, tot_df, num_gen=50)
     end = time.time()
     print("elapsed time in second", end - start)
     a.to_csv("GA.csv", index=False)

@@ -3,9 +3,14 @@ import matplotlib.pyplot as plt
 
 
 if __name__ == "__main__":
-    GA_result = np.load('GA_results.npy')
-    X = range(1, len(GA_result) + 1)
-    plt.plot(X, GA_result)
-    plt.xlabel('Iteration/ Gen')
-    plt.ylabel('RMSD')
-    plt.show()
+    SRMSE_result = np.load('GA_results_SRMSE.npy')
+    RMSD_result = np.load('GA_results_RMSD.npy')
+    fig, axs = plt.subplots(2)
+    X = list(range(1, len(SRMSE_result)+1))
+    axs[0].plot(X, SRMSE_result)
+    axs[1].plot(X, RMSD_result)
+    plt.xlabel('Iteration')
+    axs[0].set_ylabel('SRMSE')
+    axs[1].set_ylabel('RMSD')
+    plt.show()    
+    
