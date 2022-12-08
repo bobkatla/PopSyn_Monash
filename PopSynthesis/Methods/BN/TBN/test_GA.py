@@ -1,6 +1,10 @@
+import math
+import time
+
 import pandas as pd
 import numpy as np
-import math
+import networkx as nx
+import pylab as plt
 
 from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator, MaximumLikelihoodEstimator
 from pgmpy.factors.discrete.CPD import TabularCPD
@@ -21,6 +25,19 @@ from PopSynthesis.Benchmark.checker import total_RMSE_flat, update_SRMSE
     - Heuristic approach, how? 
 """
 
+def learn_para_BN_dirichlet(model, data_df, state_names, prior_counts):
+    para_learn = BayesianEstimator(
+            model=model,
+            data=data_df,
+            state_names=state_names
+        )
+    ls_CPDs = para_learn.get_parameters(
+        prior_type='dirichlet',
+        pseudo_counts = prior_counts
+    )
+    model.add_cpds(*ls_CPDs)
+    return model
+
 
 def learn_BN_diriclet(data_df, con_df, tot_df):
     # this will learn the whole thing in one
@@ -34,16 +51,8 @@ def learn_BN_diriclet(data_df, con_df, tot_df):
             )
     prior_counts, prior_cpds = get_prior(model, con_df, tot_df)
     # parameter learning
-    para_learn = BayesianEstimator(
-            model=model,
-            data=data_df,
-            state_names=state_names
-        )
-    ls_CPDs = para_learn.get_parameters(
-        prior_type='dirichlet',
-        pseudo_counts = prior_counts
-    )
-    model.add_cpds(*ls_CPDs)
+    model = learn_para_BN_dirichlet(model, data_df, state_names, prior_counts)
+    
     return model
 
 
@@ -181,7 +190,14 @@ def EvoProg(seed_data, con_df, tot_df, num_pop=10, num_gen=1000, err_converg=mat
     # Initial solutions/ population
     N = tot_df['total'].iloc[0]
     model = learn_BN_diriclet(seed_data, con_df, tot_df) # NOTE: this model is quite good as it does incorporate census data
+
+    # This is because I want to test only para update
+    state_names = get_state_names(con_df)
+    prior_counts, prior_cpds = get_prior(model, con_df, tot_df)
+
     initial_pop = sample_BN(model, n=N)
+    nx.draw_circular(model ,with_labels=True)
+    plt.show()
 
     # Run loop
     solutions = [initial_pop]
@@ -222,10 +238,12 @@ def EvoProg(seed_data, con_df, tot_df, num_pop=10, num_gen=1000, err_converg=mat
         # Select the "best" for next round (or replacement)
         solutions = eval_ls_solutions(solutions, con_df, tot_df, n=num_pop)
         # select the "best" only 1 for BN learning
-        model = learn_BN_diriclet(solutions[0], con_df, tot_df)
+        model = learn_para_BN_dirichlet(model, solutions[0], state_names, prior_counts)
         counter += 1
     # Pick the final solution, can create BN as well
     result = eval_ls_solutions(solutions, con_df, tot_df)[0]
+    nx.draw_circular(model ,with_labels=True)
+    plt.show()
     ######
     print(check) 
     np.save('GA_results', np.array(check))
@@ -241,7 +259,10 @@ def main():
     con_df = pd.read_csv(data_location + "flat_con.csv")
     tot_df = pd.read_csv(data_location + "flat_marg.csv")
     seed_data = ori_data.sample(n=1000, ignore_index=True)
-    a = EvoProg(seed_data, con_df, tot_df, num_gen=20)
+    start = time.time()
+    a = EvoProg(seed_data, con_df, tot_df, num_gen=50)
+    end = time.time()
+    print("elapsed time in second", end - start)
     a.to_csv("GA.csv", index=False)
 
 
