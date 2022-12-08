@@ -186,7 +186,7 @@ def eval_ls_solutions(ls_sol, con_df, tot_df, n=1):
     return [sort_result[i][0] for i in range(n)]
 
 
-def EvoProg(seed_data, ori_data, con_df, tot_df, num_pop=10, num_gen=1000, err_converg=math.inf):
+def EvoProg(seed_data, ori_data, con_df, tot_df, num_pop=10, num_gen=1000, err_converg=math.inf, crossover_time=3):
     # Initial solutions/ population
     N = tot_df['total'].iloc[0]
     model = learn_BN_diriclet(seed_data, con_df, tot_df) # NOTE: this model is quite good as it does incorporate census data
@@ -211,36 +211,41 @@ def EvoProg(seed_data, ori_data, con_df, tot_df, num_pop=10, num_gen=1000, err_c
     err_score = math.inf
     while counter < num_gen and err_score >= err_converg:
         print(f"RUNNING FOR GEN {counter}")
+
+        #TODO: defo can optimise the work on eval solution, will work on it later
+
         # pick the best solution
-        best_sol = eval_ls_solutions(solutions, con_df, tot_df)[0]
+        best_sol = eval_ls_solutions(solutions, con_df, tot_df, n=len(solutions))
 
         ######### TEST
-        test_score = eval_func(best_sol, con_df=con_df, tot_df=tot_df)
+        test_score = eval_func(best_sol[0], con_df=con_df, tot_df=tot_df)
         print("best at the moment", test_score)
         check_RMSD.append(test_score)
-        check_SRMSE.append(update_SRMSE(ori_data, best_sol))
+        check_SRMSE.append(update_SRMSE(ori_data, best_sol[0]))
         ########## TEST
 
-        # Mutate offspring
-        mutation_offsp = mutation(
-            indi=best_sol,
-            BN_model=model,
-            con_df=con_df,
-            tot_df=tot_df,
-            partition_rate=0.2,
-            num_keep_atts=2,
-            num_child=num_pop # this is to make sure that the population size is correct
-        )
-        solutions.extend(mutation_offsp)
+        # Mutate offspring, mutate all using the BN of the best, best one will get mutate more
+        for i in range(len(solutions)):
+            mutation_offsp = mutation(
+                indi=best_sol[i],
+                BN_model=model,
+                con_df=con_df,
+                tot_df=tot_df,
+                partition_rate=0.2,
+                num_keep_atts=int(len(state_names)/3), # A more robust way/ dynamic to declare this
+                num_child=(num_pop-i) # this is to make sure that the population size is correct
+            )
+            solutions.extend(mutation_offsp)
 
         # Producing offsprings (reproduction/ crossover)
-        best_pa_sol = eval_ls_solutions(solutions, con_df, tot_df, n=2)
-        cross_offsp = crossover(
-            pa1=best_pa_sol[0],
-            pa2=best_pa_sol[1],
-            partition_rate=0.4
-        )
-        solutions.extend(cross_offsp)
+        for _ in range(crossover_time):
+            best_pa_sol = eval_ls_solutions(solutions, con_df, tot_df, n=2)
+            cross_offsp = crossover(
+                pa1=best_pa_sol[0],
+                pa2=best_pa_sol[1],
+                partition_rate=0.4
+            )
+            solutions.extend(cross_offsp)
         # Select the "best" for next round (or replacement)
         solutions = eval_ls_solutions(solutions, con_df, tot_df, n=num_pop)
         # select the "best" only 1 for BN learning
@@ -270,10 +275,10 @@ def main():
     tot_df = pd.read_csv(data_location + "flat_marg.csv")
     seed_data = ori_data.sample(n=1000, ignore_index=True)
     start = time.time()
-    a = EvoProg(seed_data, ori_data, con_df, tot_df, num_gen=50)
+    final_pop = EvoProg(seed_data, ori_data, con_df, tot_df, num_gen=20)
     end = time.time()
     print("elapsed time in second", end - start)
-    a.to_csv("GA.csv", index=False)
+    final_pop.to_csv("GA.csv", index=False)
 
 
 if __name__ == "__main__":
