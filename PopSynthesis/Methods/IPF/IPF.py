@@ -105,10 +105,10 @@ if __name__ == "__main__":
     ATTRIBUTES = ['AGEGROUP', 'CARLICENCE', 'SEX', 'PERSINC', 'DWELLTYPE', 'TOTALVEHS']
     
     # import data
-    p_original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv")
+    p_original_df = pd.read_csv("../../Generator_data/data/source/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv")
     # Only have record of the main person (the person that did the survey)
     p_self_df = p_original_df[p_original_df['RELATIONSHIP']=='Self']
-    h_original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/H_VISTA12_16_SA1_V1.csv")
+    h_original_df = pd.read_csv("../../Generator_data/data/source/VISTA_2012_16_v1_SA1_CSV/H_VISTA12_16_SA1_V1.csv")
 
     orignal_df = pd.merge(p_self_df, h_original_df, on=['HHID'])
     df = orignal_df[ATTRIBUTES].dropna()
@@ -121,7 +121,7 @@ if __name__ == "__main__":
         df.loc[df['CARLICENCE'] == 'No Car Licence', 'CARLICENCE'] = 'NO'
         df.loc[df['CARLICENCE'] != 'NO', 'CARLICENCE'] = 'YES'
 
-    result_sample = IPF_training(df, 20)
+    result_sample = IPF_training(df, 5)
     print(update_SRMSE(df, result_sample))
     # print(SRMSE(df, result_sample))
     # print(result_sample)

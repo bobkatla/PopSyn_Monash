@@ -187,7 +187,7 @@ def eval_ls_solutions(ls_sol, con_df, tot_df, n=1):
     return [sort_result[i][0] for i in range(n)]
 
 
-def EvoProg(seed_data, ori_data, con_df, tot_df, num_pop=10, random_rate=0.2, num_gen=1000, err_converg=math.inf, crossover_time=3):
+def EvoProg_check_loop(seed_data, ori_data, con_df, tot_df, num_pop=10, random_rate=0.2, num_gen=1000, err_converg=math.inf, crossover_time=3):
     assert random_rate < 1
     num_random = max(int(num_pop * random_rate), 1) if random_rate > 0 else 0
     num_best = num_pop - num_random
@@ -278,6 +278,76 @@ def EvoProg(seed_data, ori_data, con_df, tot_df, num_pop=10, random_rate=0.2, nu
     return result
 
 
+def EvoProg(seed_data, con_df, tot_df, num_pop=10, random_rate=0.2, num_gen=1000, err_converg=math.inf, crossover_time=3):
+    assert random_rate < 1
+    num_random = max(int(num_pop * random_rate), 1) if random_rate > 0 else 0
+    num_best = num_pop - num_random
+    # Initial solutions/ population
+    N = tot_df['total'].iloc[0]
+    model = learn_BN_diriclet(seed_data, con_df, tot_df) # NOTE: this model is quite good as it does incorporate census data
+
+    # This is because I want to test only para update
+    state_names = get_state_names(con_df)
+    prior_counts, prior_cpds = get_prior(model, con_df, tot_df)
+
+    initial_pop = sample_BN(model, n=N)
+
+    # Run loop
+    solutions = [initial_pop]
+    counter = 0
+    err_score = math.inf
+    while counter < num_gen and err_score >= err_converg:
+        print(f"RUNNING FOR GEN {counter}")
+
+        #TODO: defo can optimise the work on eval solution, will work on it later
+
+        # pick the best solution
+        best_sol = eval_ls_solutions(solutions, con_df, tot_df, n=len(solutions))
+
+        # Mutate offspring, mutate all using the BN of the best, best one will get mutate more
+        print(f"GA - gen {counter}: mutation")
+        for i in range(len(solutions)):
+            mutation_offsp = mutation(
+                indi=best_sol[i],
+                BN_model=model,
+                con_df=con_df,
+                tot_df=tot_df,
+                partition_rate=0.2,
+                num_keep_atts=int(len(state_names)/3), # A more robust way/ dynamic to declare this
+                num_child=(num_pop-i) # this is to make sure that the population size is correct
+            )
+            solutions.extend(mutation_offsp)
+
+        # Producing offsprings (reproduction/ crossover)
+        print(f"GA - gen {counter}: crossover")
+        for _ in range(crossover_time):
+            best_pa_sol = eval_ls_solutions(solutions, con_df, tot_df, n=2)
+            cross_offsp = crossover(
+                pa1=best_pa_sol[0],
+                pa2=best_pa_sol[1],
+                partition_rate=0.4
+            )
+            solutions.extend(cross_offsp)
+        # Select the "best" for next round (or replacement)
+        sorted_solutions = eval_ls_solutions(solutions, con_df, tot_df, n=len(solutions))
+
+        print(f"GA - gen {counter}: selection")
+        # Having some random solutions from the worst to increase diversity
+        worst_solutions = sorted_solutions[num_best:]
+        random_solutions = random.sample(worst_solutions, k=num_random)
+
+        solutions = sorted_solutions[:num_best]
+        solutions.extend(random_solutions)
+        
+        # select the "best" only 1 for BN learning
+        model = learn_para_BN_dirichlet(model, sorted_solutions[0], state_names, prior_counts)
+        counter += 1
+    # Pick the final solution, can create BN as well
+    result = eval_ls_solutions(solutions, con_df, tot_df)[0]
+    
+    return result
+
+
 data_location = "../../../Generator_data/data/data_processed_here/"
 
 
@@ -287,7 +357,7 @@ def main():
     tot_df = pd.read_csv(data_location + "flat_marg.csv")
     seed_data = ori_data.sample(n=1000, ignore_index=True)
     start = time.time()
-    final_pop = EvoProg(seed_data, ori_data, con_df, tot_df, num_gen=20, random_rate=0.3)
+    final_pop = EvoProg_check_loop(seed_data, ori_data, con_df, tot_df, num_gen=20, random_rate=0.3)
     end = time.time()
     print("elapsed time in second", end - start)
     final_pop.to_csv("GA.csv", index=False)
