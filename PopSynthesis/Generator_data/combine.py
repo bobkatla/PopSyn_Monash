@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 
 ATTRIBUTES = ['AGEGROUP', 'HHSIZE', 'CARLICENCE', 'SEX', 'PERSINC', 'DWELLTYPE', 'TOTALVEHS', 'CW_ADHHWGT_SA3']
@@ -62,6 +63,20 @@ def generate_control_files_from_population(pop_df, to_csv=False, csv_name_contro
 
 
 if __name__ == "__main__":
-    flatten_df = flatten_data_self_generate(ATTRIBUTES, to_csv=True)
-    flatten_df = flatten_df.drop(columns='CW_ADHHWGT_SA3')
-    a = generate_control_files_from_population(flatten_df, to_csv=True)
+    flatten_df = flatten_data_self_generate(ATTRIBUTES, to_csv=False)
+    # Because I want to include the weights and transform it (now just integri to the nearest so not that correct)
+    # the csv saving would be for later
+    raw_non_weight = flatten_df.drop(columns='CW_ADHHWGT_SA3').to_numpy()
+    weights = flatten_df['CW_ADHHWGT_SA3'].to_numpy()
+    cols = flatten_df.drop(columns='CW_ADHHWGT_SA3').columns
+
+    final_raw = []
+    for i in range(len(weights)):
+        d = raw_non_weight[i]
+        w = int(float(weights[i]))
+        final_raw.append(np.repeat([d], w, axis=0))
+    
+    processed_final = np.concatenate(final_raw, axis=0)
+    final_data = pd.DataFrame(processed_final, columns=cols)
+    final_data.to_csv(f'./data/data_processed_here/flatten_seed_data.csv', index=False)
+    a = generate_control_files_from_population(final_data, to_csv=True)
