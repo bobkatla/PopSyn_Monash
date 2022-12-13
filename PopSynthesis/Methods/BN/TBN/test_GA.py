@@ -1,5 +1,6 @@
 import math
 import time
+import random
 
 import pandas as pd
 import numpy as np
@@ -186,7 +187,10 @@ def eval_ls_solutions(ls_sol, con_df, tot_df, n=1):
     return [sort_result[i][0] for i in range(n)]
 
 
-def EvoProg(seed_data, ori_data, con_df, tot_df, num_pop=10, num_gen=1000, err_converg=math.inf, crossover_time=3):
+def EvoProg(seed_data, ori_data, con_df, tot_df, num_pop=10, random_rate=0.2, num_gen=1000, err_converg=math.inf, crossover_time=3):
+    assert random_rate < 1
+    num_random = max(int(num_pop * random_rate), 1) if random_rate > 0 else 0
+    num_best = num_pop - num_random
     # Initial solutions/ population
     N = tot_df['total'].iloc[0]
     model = learn_BN_diriclet(seed_data, con_df, tot_df) # NOTE: this model is quite good as it does incorporate census data
@@ -247,9 +251,17 @@ def EvoProg(seed_data, ori_data, con_df, tot_df, num_pop=10, num_gen=1000, err_c
             )
             solutions.extend(cross_offsp)
         # Select the "best" for next round (or replacement)
-        solutions = eval_ls_solutions(solutions, con_df, tot_df, n=num_pop)
+        sorted_solutions = eval_ls_solutions(solutions, con_df, tot_df, n=len(solutions))
+
+        # Having some random solutions from the worst to increase diversity
+        worst_solutions = sorted_solutions[num_best:]
+        random_solutions = random.sample(worst_solutions, k=num_random)
+
+        solutions = sorted_solutions[:num_best]
+        solutions.extend(random_solutions)
+        
         # select the "best" only 1 for BN learning
-        model = learn_para_BN_dirichlet(model, solutions[0], state_names, prior_counts)
+        model = learn_para_BN_dirichlet(model, sorted_solutions[0], state_names, prior_counts)
         counter += 1
     # Pick the final solution, can create BN as well
     result = eval_ls_solutions(solutions, con_df, tot_df)[0]
@@ -259,8 +271,8 @@ def EvoProg(seed_data, ori_data, con_df, tot_df, num_pop=10, num_gen=1000, err_c
     ###### TEST
     print(check_RMSD) 
     print(check_SRMSE)
-    np.save('GA_results_RMSD', np.array(check_RMSD))
-    np.save('GA_results_SRMSE', np.array(check_SRMSE))
+    np.save('Testing/GA_results_RMSD_2', np.array(check_RMSD))
+    np.save('Testing/GA_results_SRMSE_2', np.array(check_SRMSE))
     ####### TEST
     
     return result
@@ -275,7 +287,7 @@ def main():
     tot_df = pd.read_csv(data_location + "flat_marg.csv")
     seed_data = ori_data.sample(n=1000, ignore_index=True)
     start = time.time()
-    final_pop = EvoProg(seed_data, ori_data, con_df, tot_df, num_gen=20)
+    final_pop = EvoProg(seed_data, ori_data, con_df, tot_df, num_gen=20, random_rate=0.3)
     end = time.time()
     print("elapsed time in second", end - start)
     final_pop.to_csv("GA.csv", index=False)

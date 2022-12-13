@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 
 
 if __name__ == "__main__":
-    SRMSE_result = np.load('GA_results_SRMSE.npy')
-    RMSD_result = np.load('GA_results_RMSD.npy')
+    SRMSE_result = np.load('Testing/GA_results_SRMSE_2.npy')
+    RMSD_result = np.load('TEsting/GA_results_RMSD_2.npy')
     fig, axs = plt.subplots(2)
     X = list(range(1, len(SRMSE_result)+1))
     axs[0].plot(X, SRMSE_result)
