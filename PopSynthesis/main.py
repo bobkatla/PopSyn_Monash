@@ -30,8 +30,9 @@ def run_loop_test_all(ori_data, con_df, tot_df, sample_range = range(1, 101, 5),
         sample_rate = r/100
         bn_SRMSE, evol_SRMSE, ipf_SRMSE = 0, 0, 0
         bn_RMSD, evol_RMSD, ipf_RMSD = 0, 0, 0
-        for _ in range(num_repeat):
+        for j in range(num_repeat):
             seed_data = ori_data.sample(frac=sample_rate)
+            print(f"RATE {r} - repeat {j} - DOING EVO")
             evo_sol = EvoProg(
                 seed_data=seed_data,
                 con_df=con_df,
@@ -44,14 +45,17 @@ def run_loop_test_all(ori_data, con_df, tot_df, sample_range = range(1, 101, 5),
             evol_SRMSE += update_SRMSE(evo_sol, ori_data)
             evol_RMSD += total_RMSE_flat(evo_sol, tot_df, con_df)
 
+            print(f"RATE {r} - repeat {j} - DOING BN")
             bn_sol = BN_learning_normal(seed_data=seed_data, N=N)
             bn_SRMSE += update_SRMSE(bn_sol, ori_data)
             bn_RMSD += total_RMSE_flat(bn_sol, tot_df, con_df)
 
+            print(f"RATE {r} - repeat {j} - DOING IPF")
             ipf_sol = IPF_training(seed_data, r)
             ipf_SRMSE += update_SRMSE(ipf_sol, ori_data)
             ipf_RMSD += total_RMSE_flat(ipf_sol, tot_df, con_df)
 
+        print(f"RATE {r} - FINALISING...")
         evol_re_SRMSE.append(evol_SRMSE/num_repeat)
         bn_re_SRMSE.append(bn_SRMSE/num_repeat)
         ipf_re_SRMSE.append(ipf_SRMSE/num_repeat)
@@ -59,6 +63,8 @@ def run_loop_test_all(ori_data, con_df, tot_df, sample_range = range(1, 101, 5),
         evol_re_RMSD.append(evol_RMSD/num_repeat)
         bn_re_RMSD.append(bn_RMSD/num_repeat)
         ipf_re_RMSD.append(ipf_RMSD/num_repeat)
+    
+    print("PREP RESULTS")
     _SRMSE = [ipf_re_SRMSE, bn_re_SRMSE, evol_re_SRMSE]
     _RMSD = [ipf_re_RMSD, bn_re_RMSD, evol_re_RMSD]
     return np.array([_SRMSE, _RMSD])
