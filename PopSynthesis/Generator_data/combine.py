@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-ATTRIBUTES = ['AGEGROUP', 'HHSIZE', 'CARLICENCE', 'SEX', 'PERSINC', 'DWELLTYPE', 'TOTALVEHS']
+ATTRIBUTES = ['AGEGROUP', 'HHSIZE', 'CARLICENCE', 'SEX', 'PERSINC', 'DWELLTYPE', 'TOTALVEHS', 'CW_ADHHWGT_SA3']
 
 
 def flatten_data_self_generate(ls_atts, make_like_paper=False, to_csv=False, csv_name='flatten_seed_data.csv'):
@@ -63,4 +63,5 @@ def generate_control_files_from_population(pop_df, to_csv=False, csv_name_contro
 
 if __name__ == "__main__":
     flatten_df = flatten_data_self_generate(ATTRIBUTES, to_csv=True)
+    flatten_df = flatten_df.drop(columns='CW_ADHHWGT_SA3')
     a = generate_control_files_from_population(flatten_df, to_csv=True)
