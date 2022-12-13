@@ -1,0 +1,10 @@
+version: "1.0"
+services:
+  work:
+    build: .
+    ports:
+      - "8000:9000"
+    volumes:
+      - ./hold_docker_results:/code
+    environment:
+      NOTHING: True
