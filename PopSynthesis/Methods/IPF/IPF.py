@@ -39,7 +39,7 @@ def IPF_training(df, sample_rate):
     j_cou = df.value_counts()
     j_idx = list(j_cou.index)
     # To solve zero cell by making a extremely small number
-    j_vals = [0.000000000000000000000000000001]*len(j_idx)
+    j_vals = [1e-25]*len(j_idx)
 
     # Fill up the vals for joint from sample
     N = df.shape[0]
@@ -55,7 +55,7 @@ def IPF_training(df, sample_rate):
     joint_dist_midx = pd.MultiIndex.from_tuples(j_idx, names=atts)
     joint_dist = pd.Series(j_vals, index=joint_dist_midx)
     
-    constraints, iterations = ipf.calculate_constraints(marginals, joint_dist, tolerance=1e-9)
+    constraints, iterations = ipf.calculate_constraints(marginals, joint_dist, tolerance=1e-5)
     return IPF_sampling(constraints)
     # print(iterations)
 
