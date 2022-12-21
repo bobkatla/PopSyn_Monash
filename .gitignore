@@ -5,3 +5,4 @@
 *logs
 **/SoA.egg-info
 **/Testing
+*.npy
