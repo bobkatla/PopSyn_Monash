@@ -1,1 +1,40 @@
-<mxfile host="app.diagrams.net" modified="2023-03-07T23:07:54.350Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36" version="21.0.2" etag="tRsnacFqkbeDd5uU4Cte" type="github"><diagram name="Page-1" id="MM2R8qyrStGVsI6Oqeew">UzV2zq1wL0osyPDNT0nNUTV2VTV2LsrPL4GwciucU3NyVI0MMlNUjV1UjYwMgFjVyA2HrCFY1qAgsSg1rwSLBiADYTaQg2Y1AA==</diagram></mxfile>
+<mxfile host="app.diagrams.net" modified="2023-03-07T23:25:41.956Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36" etag="Nh-SM4bFfTKkJaNLVJZp" version="21.0.2" type="github">
+  <diagram name="Page-1" id="MM2R8qyrStGVsI6Oqeew">
+    <mxGraphModel dx="678" dy="415" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="1y8b1ZVUHF6cR52BnwD--20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="1y8b1ZVUHF6cR52BnwD--1" target="1y8b1ZVUHF6cR52BnwD--10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1y8b1ZVUHF6cR52BnwD--21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="1y8b1ZVUHF6cR52BnwD--1" target="1y8b1ZVUHF6cR52BnwD--12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1y8b1ZVUHF6cR52BnwD--22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="1y8b1ZVUHF6cR52BnwD--1" target="1y8b1ZVUHF6cR52BnwD--15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1y8b1ZVUHF6cR52BnwD--1" value="Research aim:&lt;br&gt;To develop a reliable population synthesis for ABM to understand the current and future population" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="125" y="150" width="530" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="1y8b1ZVUHF6cR52BnwD--10" value="Task 1: Connecting households and persons" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=50;horizontalStack=0;rounded=1;fontSize=14;fontStyle=0;strokeWidth=2;resizeParent=0;resizeLast=1;shadow=0;dashed=0;align=center;arcSize=4;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="280" width="160" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="1y8b1ZVUHF6cR52BnwD--11" value="Method: Statistical-based&amp;nbsp;&lt;br&gt;combined with CO&amp;nbsp;&lt;br&gt;(e.g. BN and EP)" style="align=left;strokeColor=none;fillColor=none;spacingLeft=4;fontSize=12;verticalAlign=top;resizable=0;rotatable=0;part=1;html=1;" vertex="1" parent="1y8b1ZVUHF6cR52BnwD--10">
+          <mxGeometry y="50" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="1y8b1ZVUHF6cR52BnwD--12" value="Task 2: Detecting shared activities in a households" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=50;horizontalStack=0;rounded=1;fontSize=14;fontStyle=0;strokeWidth=2;resizeParent=0;resizeLast=1;shadow=0;dashed=0;align=center;arcSize=4;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="310" y="280" width="160" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="1y8b1ZVUHF6cR52BnwD--13" value="Method: Machine Learning&lt;br&gt;(e.g. DL to learn the pattern)" style="align=left;strokeColor=none;fillColor=none;spacingLeft=4;fontSize=12;verticalAlign=top;resizable=0;rotatable=0;part=1;html=1;" vertex="1" parent="1y8b1ZVUHF6cR52BnwD--12">
+          <mxGeometry y="50" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="1y8b1ZVUHF6cR52BnwD--15" value="Task 3: Evaluating the effect of EVs deployment" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=50;horizontalStack=0;rounded=1;fontSize=14;fontStyle=0;strokeWidth=2;resizeParent=0;resizeLast=1;shadow=0;dashed=0;align=center;arcSize=4;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="280" width="160" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="1y8b1ZVUHF6cR52BnwD--16" value="Method: ABM using previous&lt;br&gt;works with MATSim&amp;nbsp;&amp;nbsp;" style="align=left;strokeColor=none;fillColor=none;spacingLeft=4;fontSize=12;verticalAlign=top;resizable=0;rotatable=0;part=1;html=1;" vertex="1" parent="1y8b1ZVUHF6cR52BnwD--15">
+          <mxGeometry y="50" width="160" height="70" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
