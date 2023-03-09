@@ -12,11 +12,17 @@ if __name__ == "__main__":
 	df = pd.read_csv("./data/source2/VISTA/H_VISTA_1220_LGA_V1.csv")
 	
     # Process the VISTA to match with LG
-	df['homeLGA'] = df['homeLGA'].str.replace(r"\(.*\)","").str.replace(" ", "")
-	gdf['LGA_NAME_2021'] = gdf['LGA_NAME_2021'].str.replace(" ", "")
+	df['homeLGA'] = df['homeLGA'].str.replace(r"\(.*\)","", regex=True).str.replace(" ", "")
+	gdf['LGA_NAME_2021'] = gdf['LGA_NAME_2021'].str.replace(r"\(.*\)","", regex=True).str.replace(" ", "")
 	count_vista = dict(df['homeLGA'].value_counts())
+
+	# I checked: all of the value in VISTA match with the one in CENSUS
+	# t = list(gdf['LGA_NAME_2021'])
+	# for a in count_vista:
+	# 	if a not in t:
+	# 		print(a)
+
 	gdf["VISTA_count"] = gdf['LGA_NAME_2021'].map(count_vista, na_action='ignore').fillna(0)
 	# gdf.plot()
 	gdf.plot(column='VISTA_count', cmap='OrRd', edgecolor='k', legend=True)
 	plt.show()
-	
