@@ -4,7 +4,6 @@ import pandas as pd
 import fiona
 
 
-
 if __name__ == "__main__":
 	# a = fiona.listlayers('G01_VIC_GDA2020.gpkg')
 	# print(a)
@@ -20,3 +19,4 @@ if __name__ == "__main__":
 	# gdf.plot()
 	gdf.plot(column='VISTA_count', cmap='OrRd', edgecolor='k', legend=True)
 	plt.show()
+	
