@@ -13,6 +13,7 @@ def get_hh_census():
     # Solving the unstate one so it can match
     final_df['Num_MVs_per_dweling_0_MVs_new'] = final_df['Num_MVs_per_dweling_0_MVs'] + final_df['Num_MVs_NS']
     # print(final_df.columns)
+    final_df = final_df.rename(columns={"LGA_NAME_2021": "LGA"})
     return pd.DataFrame(final_df)
 
 
@@ -31,6 +32,7 @@ def get_hh_seed():
     # extra processing to match
     df_hh_seed['homeLGA'] = df_hh_seed['homeLGA'].str.replace(r"\(.*\)","", regex=True).str.replace(" ", "")
     df_hh_seed = df_hh_seed.dropna(subset=['wdhhwgt_LGA'])
+    df_hh_seed = df_hh_seed.rename(columns={"homeLGA": "LGA", "wdhhwgt_LGA": "_weight"})
     return df_hh_seed
 
 
@@ -39,11 +41,13 @@ def main():
     df_hh_seed = get_hh_seed()
 
     # cut down the census to only have matching record with seed (only greater melbourne and geelong)
-    df_hh_census = df_hh_census[df_hh_census['LGA_NAME_2021'].isin(list(df_hh_seed['homeLGA'].unique()))]
+    df_hh_census = df_hh_census[df_hh_census['LGA'].isin(list(df_hh_seed['LGA'].unique()))]
 
     df_con_hh = pd.read_csv("./controls/hh_con.csv")
+    atts_census = list(df_con_hh['control_field'].unique())
+    atts_census.append("LGA")
     
-    return df_hh_census, df_hh_seed, df_con_hh
+    return df_hh_census[atts_census], df_hh_seed, df_con_hh
 
 
 if __name__ == "__main__":
