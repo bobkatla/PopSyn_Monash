@@ -17,8 +17,8 @@ def get_hh_census():
     return pd.DataFrame(final_df)
 
 
-def get_hh_seed():
-    atts_seed = [
+def get_hh_seed(atts=None):
+    atts_seed = atts if atts else [
         'hhid',
         'homeLGA',
         'hhsize',
@@ -44,10 +44,20 @@ def main():
     df_hh_census = df_hh_census[df_hh_census['LGA'].isin(list(df_hh_seed['LGA'].unique()))]
 
     df_con_hh = pd.read_csv("./controls/hh_con.csv")
-    atts_census = list(df_con_hh['control_field'].unique())
+    atts_census = list(df_con_hh['tot_name'].unique())
     atts_census.append("LGA")
+
+    df_hh_census = df_hh_census[atts_census]
+
+    households = df_hh_seed
+    print(eval('households.hhsize>=6'))
+
+    for ex,att,state in zip(df_con_hh['expression'], df_con_hh['att'], df_con_hh['state']):
+        bool_ex = eval(ex)
+        df_hh_seed.loc[bool_ex, att] = state
+    print(df_hh_seed)
     
-    return df_hh_census[atts_census], df_hh_seed, df_con_hh
+    return df_hh_census, df_hh_seed, df_con_hh
 
 
 if __name__ == "__main__":

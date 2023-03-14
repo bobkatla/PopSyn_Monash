@@ -1,9 +1,14 @@
 from PopSynthesis.Methods.BN.newBN import process_data
-from PopSynthesis.Methods.BN.TBN.utils import get_prior
+from PopSynthesis.Methods.BN.TBN.utils import get_prior,get_state_names
+
+
+def get_state_names(con_df):
+    NotImplemented
+
 
 def main():
     df_hh_census, df_hh_seed, df_con_hh = process_data.main()
-    # learn the struct
+    print(get_state_names(df_con_hh))
     # learn the para and get the final model
     
 
