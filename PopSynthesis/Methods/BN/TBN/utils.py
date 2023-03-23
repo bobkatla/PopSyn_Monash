@@ -47,7 +47,10 @@ def cal_count_states(con_df, tot_df):
 
 
 def learn_struct_BN_score(df, state_names=None, show_struct=False, method=HillClimbSearch, scoring_method='bicscore'):
-    est = method(df, state_names=state_names)
+    learn_df = df
+    if state_names is None and '_weight' in df:
+        learn_df = df.drop(columns=['_weight'])
+    est = method(learn_df, state_names=state_names)
     best_DAG = est.estimate(scoring_method=scoring_method)
     model = BayesianNetwork(best_DAG)
     if show_struct: 
