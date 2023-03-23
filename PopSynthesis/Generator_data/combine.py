@@ -67,7 +67,7 @@ if __name__ == "__main__":
     # Because I want to include the weights and transform it (now just integri to the nearest so not that correct)
     # the csv saving would be for later
     print(pd.unique(flatten_df['CARLICENCE']))
-    '''
+
     final_data = None
 
     want_short = False
@@ -89,4 +89,4 @@ if __name__ == "__main__":
         final_data = pd.DataFrame(processed_final, columns=cols)
     final_data.to_csv(f'./data/data_processed_here/flatten_seed_data.csv', index=False)
     a = generate_control_files_from_population(final_data, to_csv=True)
-'''
+    
