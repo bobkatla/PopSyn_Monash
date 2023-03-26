@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2023-03-12T05:50:39.366Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36" etag="-QsGwR9ha1wSL0n2d46l" version="21.0.2" type="github">
+<mxfile host="app.diagrams.net" modified="2023-03-16T02:45:55.741Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36" etag="LpN0-IHvtWibOvXduZC6" version="21.0.6" type="github">
   <diagram name="Page-1" id="MM2R8qyrStGVsI6Oqeew">
-    <mxGraphModel dx="969" dy="593" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="496" dy="1472" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -16,13 +16,13 @@
         <mxCell id="1y8b1ZVUHF6cR52BnwD--1" value="&lt;b&gt;&lt;i&gt;Research aim:&lt;/i&gt;&lt;/b&gt;&lt;br&gt;To develop a new approach to PopSyn and study the impact of emerging technologies" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="225" y="140" width="530" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="1y8b1ZVUHF6cR52BnwD--10" value="&lt;b&gt;&lt;i&gt;Task 1:&lt;/i&gt;&lt;/b&gt; Generate the population take into account both persons and households" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=50;horizontalStack=0;rounded=1;fontSize=14;fontStyle=0;strokeWidth=2;resizeParent=0;resizeLast=1;shadow=0;dashed=0;align=center;arcSize=4;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="1y8b1ZVUHF6cR52BnwD--10" value="&lt;b&gt;&lt;i&gt;Task 1:&lt;/i&gt;&lt;/b&gt; Generating the population considering both persons and households" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=50;horizontalStack=0;rounded=1;fontSize=14;fontStyle=0;strokeWidth=2;resizeParent=0;resizeLast=1;shadow=0;dashed=0;align=center;arcSize=4;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="20" y="280" width="300" height="120" as="geometry" />
         </mxCell>
         <mxCell id="1y8b1ZVUHF6cR52BnwD--11" value="Method: Hierarchical/ Hybrid models" style="align=left;strokeColor=none;fillColor=none;spacingLeft=4;fontSize=12;verticalAlign=top;resizable=0;rotatable=0;part=1;html=1;" parent="1y8b1ZVUHF6cR52BnwD--10" vertex="1">
           <mxGeometry y="50" width="300" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="1y8b1ZVUHF6cR52BnwD--12" value="&lt;b&gt;&lt;i&gt;Task 2:&lt;/i&gt;&lt;/b&gt; Improve the population synthesizer via activities&#39; generation" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=50;horizontalStack=0;rounded=1;fontSize=14;fontStyle=0;strokeWidth=2;resizeParent=0;resizeLast=1;shadow=0;dashed=0;align=center;arcSize=4;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="1y8b1ZVUHF6cR52BnwD--12" value="&lt;b&gt;&lt;i&gt;Task 2:&lt;/i&gt;&lt;/b&gt; Improving the population synthesizer via activities&#39; generation" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=50;horizontalStack=0;rounded=1;fontSize=14;fontStyle=0;strokeWidth=2;resizeParent=0;resizeLast=1;shadow=0;dashed=0;align=center;arcSize=4;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="340" y="280" width="300" height="120" as="geometry" />
         </mxCell>
         <mxCell id="1y8b1ZVUHF6cR52BnwD--13" value="Method: Machine Learning using multiple data&lt;br&gt;data sources" style="align=left;strokeColor=none;fillColor=none;spacingLeft=4;fontSize=12;verticalAlign=top;resizable=0;rotatable=0;part=1;html=1;" parent="1y8b1ZVUHF6cR52BnwD--12" vertex="1">
