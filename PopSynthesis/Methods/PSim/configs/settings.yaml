@@ -34,27 +34,28 @@ data_dir: data
 # input_pre_processor input_table_list
 input_table_list:
   - tablename: households
-    filename : seed_households.csv
+    filename : hh_seed.csv
     index_col: hh_id
     rename_columns:
       # not sure what SERIALNO is, but it is not unique
       #SERIALNO: hh_id
-      hhnum: hh_id
+      hh_num: hh_id
   - tablename: persons
     # expression_filename: seed_persons_expressions.csv
-    filename : seed_persons.csv
+    filename : pp_seed.csv
     rename_columns:
-      # SERIALNO: hh_id
-      hhnum: hh_id
+      hh_num: hh_id
   - tablename: geo_cross_walk
     filename : geo_cross_walk.csv
   - tablename: LGA_control_data
-    filename : control_totals_taz.csv
+    filename : LGA_controls.csv
+  - tablename: State_control_data
+    filename : state_controls.csv
 
 
 # Reserved Column Names
 # ------------------------------------------------------------------
-household_weight_col: WGTP
+household_weight_col: wdhhwgt_LGA
 household_id_col: hh_id
 total_hh_control: num_hh
 
@@ -85,11 +86,13 @@ output_synthetic_population:
   households:
     filename: synthetic_households.csv
     columns:
-      - 
+      - totalvehs
+      - hhsize
   persons:
     filename: synthetic_persons.csv
     columns:
-      - 
+      - sex
+      - persinc
 
 
 # Model steps for base mode
@@ -101,6 +104,7 @@ models:
     - meta_control_factoring
     - final_seed_balancing
     - integerize_final_seed_weights
+    - sub_balancing.geography=State
     - sub_balancing.geography=LGA
     - expand_households
     - write_data_dictionary
