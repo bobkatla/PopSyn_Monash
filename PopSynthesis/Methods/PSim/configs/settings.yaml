@@ -1,0 +1,114 @@
+####################################################################
+# PopulationSim Properties
+####################################################################
+
+
+# Algorithm/Software Configuration
+# ------------------------------------------------------------------
+INTEGERIZE_WITH_BACKSTOPPED_CONTROLS: True
+SUB_BALANCE_WITH_FLOAT_SEED_WEIGHTS: False
+GROUP_BY_INCIDENCE_SIGNATURE: True
+USE_SIMUL_INTEGERIZER: True
+USE_CVXPY: False
+max_expansion_factor: 30
+
+
+# Geographic Settings
+# ------------------------------------------------------------------
+geographies: [State, LGA]
+seed_geography: State
+
+
+# Tracing
+# ------------------------------------------------------------------
+
+
+  
+# Data Directory
+# ------------------------------------------------------------------
+data_dir: data
+
+
+# Input Data Tables
+# ------------------------------------------------------------------
+# input_pre_processor input_table_list
+input_table_list:
+  - tablename: households
+    filename : hh_seed.csv
+    index_col: hh_id
+    rename_columns:
+      # not sure what SERIALNO is, but it is not unique
+      #SERIALNO: hh_id
+      hh_num: hh_id
+  - tablename: persons
+    # expression_filename: seed_persons_expressions.csv
+    filename : pp_seed.csv
+    rename_columns:
+      hh_num: hh_id
+  - tablename: geo_cross_walk
+    filename : geo_cross_walk.csv
+  - tablename: LGA_control_data
+    filename : LGA_controls.csv
+  - tablename: State_control_data
+    filename : state_controls.csv
+
+
+# Reserved Column Names
+# ------------------------------------------------------------------
+household_weight_col: wdhhwgt_LGA
+household_id_col: hh_id
+total_hh_control: num_hh
+
+
+# Control Specification File Name
+# ------------------------------------------------------------------
+control_file_name: controls.csv
+
+
+# Output Tables
+# ------------------------------------------------------------------
+# output_tables can specify either a list of output tables to include or to skip
+# if neither is specified, then no tables will be written
+
+output_tables:
+  action: include
+  tables:
+    - summary_LGA
+    - expanded_household_ids
+
+
+# Synthetic Population Output Specification
+# ------------------------------------------------------------------
+#
+
+output_synthetic_population:
+  household_id: household_id
+  households:
+    filename: synthetic_households.csv
+    columns:
+      - totalvehs
+      - hhsize
+  persons:
+    filename: synthetic_persons.csv
+    columns:
+      - sex
+      - persinc
+
+
+# Model steps for base mode
+# ------------------------------------------------------------------
+models:
+    - input_pre_processor
+    - setup_data_structures
+    - initial_seed_balancing
+    - meta_control_factoring
+    - final_seed_balancing
+    - integerize_final_seed_weights
+    - sub_balancing.geography=LGA
+    - expand_households
+    - write_data_dictionary
+    - summarize
+    - write_tables
+    - write_synthetic_population
+
+resume_after:
