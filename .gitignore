@@ -6,3 +6,5 @@
 **/SoA.egg-info
 **/Testing
 *.npy
+**/output
+**/img_data
