@@ -8,6 +8,9 @@ seed_atts_P =[
 seed_atts_H = [
     'hhid',
     'homesa1',
+    'homesa2',
+    'homesa3',
+    'homesa4',
     'totalvehs',
     'hhsize',
     'wdhhwgt_sa3'
@@ -27,6 +30,6 @@ census_atts = [
 ]
 
 # Assuming all sample/VISTA data are in the same folder
-loc_file_vista = "../data/source2/VISTA/"
+loc_file_vista = "../data/source2/VISTA/SA/"
 # Assuming all census data pack are in the same place, this is the .gpkg file
 loc_file_census = "../data/source2/CENSUS/"

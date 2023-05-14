@@ -3,10 +3,15 @@ import geopandas as gpd
 from paras import seed_atts_H, seed_atts_P, census_atts, loc_file_census, loc_file_vista
 
 
-def get_seed_P(atts, dict_new_id):
+def get_seed_P(atts, dict_new):
     df = pd.read_csv(f"{loc_file_vista}P_VISTA_1220_SA1.csv")
     df = df[atts]
-    df['hh_num'] = df['hhid'].map(dict_new_id)
+    # Currently, the dict will be: 0-> hhid, the rest we will map
+    hh_id = dict_new[0]
+    for i in range(1, len(dict_new)):
+        to_map = dict_new[i] 
+        dict_map = dict(zip(hh_id, to_map))
+        df[to_map.name] = df['hhid'].map(dict_map)
     # an extra step to filter out persons corresponding with the available households only
     df = df[df['hh_num'].notnull()]
     return df
@@ -18,6 +23,12 @@ def get_seed_H(atts):
     df = df[atts]
     df = df[df['wdhhwgt_sa3'].notnull()]
     df['hh_num'] = df.index
+    df = df.rename(columns={
+        "homesa1": "SA1",
+        "homesa2": "SA2",
+        "homesa3": "SA3",
+        "homesa4": "SA4",
+    })
     return df
 
 
@@ -53,22 +64,30 @@ def get_geo_cross():
         "SA2_MAINCODE_2016": "SA2",
         "SA3_CODE_2016": "SA3",
         "SA4_CODE_2016": "SA4",
-        "STATE_CODE_2016": "STATE"
+        # "STATE_CODE_2016": "STATE"
     })
     return df_mb
 
 
 def get_ls_needed_df(seed_atts_P, seed_atts_H, census_atts):
-    seed_data_P = get_seed_P(seed_atts_P, dict_new_id=None)
     seed_data_H = get_seed_H(seed_atts_H)
+
+    dict_new = [
+        seed_data_H['hhid'], 
+        seed_data_H['hh_num'], 
+        seed_data_H['SA1'], 
+        seed_data_H['SA2'],
+        seed_data_H['SA3'], 
+        seed_data_H['SA4']
+    ]
+    seed_data_P = get_seed_P(seed_atts_P, dict_new=dict_new)
+
     census_data_sa1 = get_census_sa(census_atts, sa_level="SA1")
     census_data_sa2 = get_census_sa(census_atts, sa_level="SA2")
     census_data_sa3 = get_census_sa(census_atts, sa_level="SA3")
     census_data_sa4 = get_census_sa(census_atts, sa_level="SA4")
-    geo_cross = get_geo_cross()
 
-    # Printing test
-    print(census_data_sa1)
+    geo_cross = get_geo_cross()
 
     return (
         (seed_data_P, "P_sample.csv",),
@@ -92,8 +111,7 @@ def main():
 
 
 def test():
-    ls_test = ((pd.DataFrame(data={'col1': [1, 2], 'col2': [3, 4]}), "haha.csv",),)
-    output_csv(ls_to_csv=ls_test)
+    NotImplemented
 
 
 if __name__ == "__main__":
