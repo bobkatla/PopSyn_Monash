@@ -37,7 +37,18 @@ def get_census_sa(atts, sa_level):
 
 
 def get_geo_cross():
-    NotImplemented
+    # Maybe create my own MB file would be easier then clean from past, rule is simple, 
+    # SA4: State is 2, sa4 is 200-299, sa3 is plus 2 digits, sa2 is plus more 4 digits, sa1 is plus more 2 digits
+    df_mb = pd.read_csv("../data/source/MB_2016_VIC.csv")
+    df_mb = df_mb[[
+        "SA1_MAINCODE_2016",
+        "SA2_MAINCODE_2016",
+        "SA3_CODE_2016",
+        "SA4_CODE_2016",
+        "STATE_CODE_2016"
+    ]]
+    df_mb = df_mb.drop_duplicates()
+    return df_mb
 
 
 def get_ls_needed_df(seed_atts_P, seed_atts_H, census_atts):
@@ -72,5 +83,10 @@ def main():
 
     output_csv(ls_to_csv, out_loc="./")
 
+def test():
+    df = get_geo_cross()
+    print(df)
+
 if __name__ == "__main__":
-    main()
+    # main()
+    test()
