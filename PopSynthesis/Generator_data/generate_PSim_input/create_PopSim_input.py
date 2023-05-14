@@ -48,11 +48,18 @@ def get_geo_cross():
         "STATE_CODE_2016"
     ]]
     df_mb = df_mb.drop_duplicates()
+    df_mb = df_mb.rename(columns={
+        "SA1_MAINCODE_2016": "SA1",
+        "SA2_MAINCODE_2016": "SA2",
+        "SA3_CODE_2016": "SA3",
+        "SA4_CODE_2016": "SA4",
+        "STATE_CODE_2016": "STATE"
+    })
     return df_mb
 
 
 def get_ls_needed_df(seed_atts_P, seed_atts_H, census_atts):
-    seed_data_P = get_seed_P(seed_atts_P)
+    seed_data_P = get_seed_P(seed_atts_P, dict_new_id=None)
     seed_data_H = get_seed_H(seed_atts_H)
     census_data_sa1 = get_census_sa(census_atts, sa_level="SA1")
     census_data_sa2 = get_census_sa(census_atts, sa_level="SA2")
@@ -64,28 +71,30 @@ def get_ls_needed_df(seed_atts_P, seed_atts_H, census_atts):
     print(census_data_sa1)
 
     return (
-        (seed_data_P, "P_sample.csv"),
-        (seed_data_H, "P_sample.csv"),
-        (census_data_sa1, "P_sample.csv"),
-        (census_data_sa2, "P_sample.csv"),
-        (census_data_sa3, "P_sample.csv"),
-        (census_data_sa4, "P_sample.csv"),
-        (geo_cross, "P_sample.csv")
+        (seed_data_P, "P_sample.csv",),
+        (seed_data_H, "P_sample.csv",),
+        (census_data_sa1, "P_sample.csv",),
+        (census_data_sa2, "P_sample.csv",),
+        (census_data_sa3, "P_sample.csv",),
+        (census_data_sa4, "P_sample.csv",),
+        (geo_cross, "P_sample.csv",),
     )
 
 
 def output_csv(ls_to_csv, out_loc="./"):
-    NotImplemented
+    for f in ls_to_csv:
+        f[0].to_csv(f"{out_loc}{f[1]}", index=False)
 
 
 def main():
     ls_to_csv = get_ls_needed_df(seed_atts_P, seed_atts_H, census_atts)
-
     output_csv(ls_to_csv, out_loc="./")
 
+
 def test():
-    df = get_geo_cross()
-    print(df)
+    ls_test = ((pd.DataFrame(data={'col1': [1, 2], 'col2': [3, 4]}), "haha.csv",),)
+    output_csv(ls_to_csv=ls_test)
+
 
 if __name__ == "__main__":
     # main()
