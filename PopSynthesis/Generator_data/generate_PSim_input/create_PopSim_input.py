@@ -91,12 +91,12 @@ def get_ls_needed_df(seed_atts_P, seed_atts_H, census_atts):
 
     return (
         (seed_data_P, "P_sample.csv",),
-        (seed_data_H, "P_sample.csv",),
-        (census_data_sa1, "P_sample.csv",),
-        (census_data_sa2, "P_sample.csv",),
-        (census_data_sa3, "P_sample.csv",),
-        (census_data_sa4, "P_sample.csv",),
-        (geo_cross, "P_sample.csv",),
+        (seed_data_H, "H_sample.csv",),
+        (census_data_sa1, "census_sa1.csv",),
+        (census_data_sa2, "census_sa2.csv",),
+        (census_data_sa3, "census_sa3.csv",),
+        (census_data_sa4, "census_sa4.csv",),
+        (geo_cross, "geo_cross.csv",),
     )
 
 
@@ -107,7 +107,7 @@ def output_csv(ls_to_csv, out_loc="./"):
 
 def main():
     ls_to_csv = get_ls_needed_df(seed_atts_P, seed_atts_H, census_atts)
-    output_csv(ls_to_csv, out_loc="./")
+    output_csv(ls_to_csv, out_loc="./data/")
 
 
 def test():
@@ -115,5 +115,5 @@ def test():
 
 
 if __name__ == "__main__":
-    # main()
-    test()
+    main()
+    # test()
