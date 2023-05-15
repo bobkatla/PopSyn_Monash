@@ -64,7 +64,7 @@ def get_seed_H(atts):
     return df
 
 
-def get_census_sa(atts, sa_level):
+def get_census_sa(atts, sa_level, ls_filter_zone=None):
     inside_atts = atts.copy()
     inside_atts.extend([
         f"{sa_level}_CODE_2021",
@@ -75,11 +75,19 @@ def get_census_sa(atts, sa_level):
     # NOTE: combine later with other tables, now just this
     final_gdf = gdf_h.merge(gdf_p, how='inner')
     # The step with ls_zones to have only the zones in VISTA (greater Mel and geelong)
-    df = pd.DataFrame(final_gdf)
-    return df[inside_atts]
+    df = pd.DataFrame(final_gdf)[inside_atts]
+    df = df.rename(columns={
+        f"{sa_level}_CODE_2021": sa_level,
+        f"{sa_level}_NAME_2021": "NAME"
+    })
+    
+    if ls_filter_zone:
+        df = df[df[sa_level].isin(ls_filter_zone)]
+
+    return df
 
 
-def get_geo_cross():
+def get_geo_cross(ls_highest_level=None):
     # Maybe create my own MB file would be easier then clean from past, rule is simple, 
     # SA4: State is 2, sa4 is 200-299, sa3 is plus 2 digits, sa2 is plus more 4 digits, sa1 is plus more 2 digits
     df_mb = pd.read_csv("../data/source/MB_2021.csv")
@@ -100,7 +108,12 @@ def get_geo_cross():
     })
     # getting Victoria only
     df_mb = df_mb[df_mb["STATE"]==2]
-    return df_mb
+
+    # getting only SA4 that exist in sample
+    if ls_highest_level:
+        df_mb = df_mb[df_mb["SA4"].isin(ls_highest_level)]
+
+    return df_mb.astype("float")
 
 
 def get_ls_needed_df(seed_atts_P, seed_atts_H, census_atts):
@@ -116,22 +129,20 @@ def get_ls_needed_df(seed_atts_P, seed_atts_H, census_atts):
     ]
     seed_data_P = get_seed_P(seed_atts_P, dict_new=dict_new)
 
-    census_data_sa1 = get_census_sa(census_atts, sa_level="SA1")
-    census_data_sa2 = get_census_sa(census_atts, sa_level="SA2")
-    census_data_sa3 = get_census_sa(census_atts, sa_level="SA3")
-    census_data_sa4 = get_census_sa(census_atts, sa_level="SA4")
+    # We can assume that we only need for SA4 higest level that exist in sample
+    geo_cross = get_geo_cross(list(seed_data_H["SA4"].unique()))
 
-    geo_cross = get_geo_cross()
-
-    return (
+    ls_results = [
         (seed_data_P, "P_sample.csv",),
         (seed_data_H, "H_sample.csv",),
-        (census_data_sa1, "census_sa1.csv",),
-        (census_data_sa2, "census_sa2.csv",),
-        (census_data_sa3, "census_sa3.csv",),
-        (census_data_sa4, "census_sa4.csv",),
         (geo_cross, "geo_cross.csv",),
-    )
+    ]
+
+    for sa in ("SA1", "SA2", "SA3", "SA4"):
+        data_sa = get_census_sa(census_atts, sa_level=sa, ls_filter_zone=list(geo_cross[sa].unique()))
+        ls_results.append((data_sa, f"census_{sa}.csv",))
+
+    return ls_results
 
 
 def output_csv(ls_to_csv, out_loc="./"):
@@ -145,8 +156,8 @@ def main():
 
 
 def test():
-    b = get_seed_H(seed_atts_H)
-    a = convert_2016_2021(b, "SA1")
+    seed_data_H = get_seed_H(seed_atts_H)
+    a = get_geo_cross(list(seed_data_H["SA4"].unique()))
     print(a)
 
 
