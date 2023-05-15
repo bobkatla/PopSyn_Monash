@@ -33,3 +33,5 @@ census_atts = [
 loc_file_vista = "../data/source2/VISTA/SA/"
 # Assuming all census data pack are in the same place, this is the .gpkg file
 loc_file_census = "../data/source2/CENSUS/"
+
+loc_file_convert = "../data/source2/CONVERT/"
