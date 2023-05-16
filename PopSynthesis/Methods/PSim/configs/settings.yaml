@@ -15,8 +15,8 @@ max_expansion_factor: 30
 
 # Geographic Settings
 # ------------------------------------------------------------------
-geographies: [State, LGA]
-seed_geography: State
+geographies: [SA4, SA3, SA2]
+seed_geography: SA3
 
 
 # Tracing
@@ -34,7 +34,7 @@ data_dir: data
 # input_pre_processor input_table_list
 input_table_list:
   - tablename: households
-    filename : hh_seed.csv
+    filename : H_sample.csv
     index_col: hh_id
     rename_columns:
       # not sure what SERIALNO is, but it is not unique
@@ -42,20 +42,22 @@ input_table_list:
       hh_num: hh_id
   - tablename: persons
     # expression_filename: seed_persons_expressions.csv
-    filename : pp_seed.csv
+    filename : P_sample.csv
     rename_columns:
       hh_num: hh_id
   - tablename: geo_cross_walk
-    filename : geo_cross_walk.csv
-  - tablename: LGA_control_data
-    filename : LGA_controls.csv
-  - tablename: State_control_data
-    filename : state_controls.csv
+    filename : geo_cross.csv
+  - tablename: SA2_control_data
+    filename : census_SA2.csv
+  - tablename: SA3_control_data
+    filename : census_SA3.csv
+  - tablename: SA4_control_data
+    filename : census_SA4.csv
 
 
 # Reserved Column Names
 # ------------------------------------------------------------------
-household_weight_col: wdhhwgt_LGA
+household_weight_col: wdhhwgt_sa3
 household_id_col: hh_id
 total_hh_control: num_hh
 
@@ -73,7 +75,8 @@ control_file_name: controls.csv
 output_tables:
   action: include
   tables:
-    - summary_LGA
+    - summary_SA2
+    - summary_SA3
     - expanded_household_ids
 
 
@@ -104,7 +107,8 @@ models:
     - meta_control_factoring
     - final_seed_balancing
     - integerize_final_seed_weights
-    - sub_balancing.geography=LGA
+    - sub_balancing.geography=SA3
+    - sub_balancing.geography=SA2
     - expand_households
     - write_data_dictionary
     - summarize
