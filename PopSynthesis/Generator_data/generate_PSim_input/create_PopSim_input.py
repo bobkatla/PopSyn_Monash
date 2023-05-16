@@ -160,7 +160,7 @@ def convert_to_int(list_files):
     for f in list_files:
         df, name = f
         for t in ls_to_int:
-            print(name, t)
+            # print(name, t)
             if "census" not in name or t in name:
                 df = df[df[t].notnull()]
                 df[t] = df[t].astype("int")
