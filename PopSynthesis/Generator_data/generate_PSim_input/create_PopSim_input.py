@@ -42,6 +42,8 @@ def get_seed_P(atts, dict_new):
     for sa in ("SA1", "SA2", "SA3", "SA4"):
         df = convert_2016_2021(df, sa)
 
+    df["hh_num"] = df["hh_num"].astype("int")
+
     return df
 
 
@@ -60,6 +62,8 @@ def get_seed_H(atts):
     # Process converting 2016-2021
     for sa in ("SA1", "SA2", "SA3", "SA4"):
         df = convert_2016_2021(df, sa)
+
+    df["hh_num"] = df["hh_num"].astype("int")
 
     return df
 
@@ -82,7 +86,7 @@ def get_census_sa(atts, sa_level, ls_filter_zone=None):
     })
     
     if ls_filter_zone:
-        df = df[df[sa_level].isin(ls_filter_zone)]
+        df = df[df[sa_level].astype("float").isin(ls_filter_zone)]
 
     return df
 
@@ -133,14 +137,15 @@ def get_ls_needed_df(seed_atts_P, seed_atts_H, census_atts):
     geo_cross = get_geo_cross(list(seed_data_H["SA4"].unique()))
 
     ls_results = [
-        (seed_data_P, "P_sample.csv",),
-        (seed_data_H, "H_sample.csv",),
-        (geo_cross, "geo_cross.csv",),
+        [seed_data_P, "P_sample.csv"],
+        [seed_data_H, "H_sample.csv"],
+        [geo_cross, "geo_cross.csv"],
     ]
 
     for sa in ("SA1", "SA2", "SA3", "SA4"):
-        data_sa = get_census_sa(census_atts, sa_level=sa, ls_filter_zone=list(geo_cross[sa].unique()))
-        ls_results.append((data_sa, f"census_{sa}.csv",))
+        ls_zones = list(geo_cross[sa].unique())
+        data_sa = get_census_sa(census_atts, sa_level=sa, ls_filter_zone=ls_zones)
+        ls_results.append([data_sa, f"census_{sa}.csv"])
 
     return ls_results
 
@@ -150,8 +155,22 @@ def output_csv(ls_to_csv, out_loc="./"):
         f[0].to_csv(f"{out_loc}{f[1]}", index=False)
 
 
+def convert_to_int(list_files):
+    ls_to_int = ("SA2", "SA3", "SA4")
+    for f in list_files:
+        df, name = f
+        for t in ls_to_int:
+            print(name, t)
+            if "census" not in name or t in name:
+                df = df[df[t].notnull()]
+                df[t] = df[t].astype("int")
+        f[0] = df
+    return list_files
+
+
 def main():
     ls_to_csv = get_ls_needed_df(seed_atts_P, seed_atts_H, census_atts)
+    ls_to_csv = convert_to_int(ls_to_csv)
     output_csv(ls_to_csv, out_loc="./data/")
 
 

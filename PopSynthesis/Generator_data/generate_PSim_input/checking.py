@@ -9,3 +9,20 @@ Something todo, defo:
 2. Check what SA don't exist in sample, alot sa1 yes, but maybe not sa2
 3. Deal with zero cell (aggre how, maybe just combine with nearest SA)
 """
+
+import pandas as pd
+
+
+def main():
+    df_census = pd.read_csv("./data/census_SA2.csv")
+    df_H = pd.read_csv("./data/H_sample.csv")
+    count=0
+    for z in df_census["SA2"]:
+        if z not in df_H["SA2"]:
+            print(z, "not")
+            count += 1
+    print(count)
+
+
+if __name__ == "__main__":
+    main()
