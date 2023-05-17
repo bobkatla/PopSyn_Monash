@@ -17,7 +17,7 @@ if __name__ == '__main__':
     print(marginals)
     print(joint_dist)
 
-    constraints, iterations = ipf.calculate_constraints(marginals, joint_dist, tolerance=1e-10)
+    constraints, iterations = ipu.calculate_constraints(marginals, joint_dist, tolerance=1e-10)
     print(iterations)
 
 # from synthpop.recipes.starter2 import Starter
