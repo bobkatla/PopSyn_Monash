@@ -2,7 +2,13 @@ seed_atts_P =[
     'hhid',
     'persid',
     "sex",
-    "persinc",
+    "carlicence",
+    "age",
+    "fulltimework",
+    "parttimework",
+    "casualwork",
+    "anywork",
+    "studying",
     "wdperswgt_sa3"
 ] 
 seed_atts_H = [
@@ -13,6 +19,9 @@ seed_atts_H = [
     'homesa4',
     'totalvehs',
     'hhsize',
+    "dwelltype",
+    "owndwell",
+    "hhinc",
     'wdhhwgt_sa3'
 ]
 census_atts = [
@@ -27,6 +36,18 @@ census_atts = [
     'Num_MVs_per_dweling_Tot',
     'Num_MVs_NS',
     'Total_dwelings',
+    "Age_0_4_yr_P",
+    "Age_5_14_yr_P",
+    "Age_15_19_yr_P",
+    "Age_20_24_yr_P",
+    "Age_25_34_yr_P",
+    "Age_35_44_yr_P",
+    "Age_45_54_yr_P",
+    "Age_55_64_yr_P",
+    "Age_65_74_yr_P",
+    "Age_75_84_yr_P",
+    "Age_85ov_P",
+
 ]
 
 # Assuming all sample/VISTA data are in the same folder

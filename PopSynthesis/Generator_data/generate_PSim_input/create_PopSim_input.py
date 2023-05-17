@@ -159,6 +159,7 @@ def convert_to_int(list_files):
     ls_to_int = ("SA2", "SA3", "SA4")
     for f in list_files:
         df, name = f
+        df = df.dropna()
         for t in ls_to_int:
             # print(name, t)
             if "census" not in name or t in name:
