@@ -2,7 +2,6 @@
 Process data to have the formated input for the IPF
 """
 import pandas as pd
-import numpy as np
 
 
 def get_sample_counts(df, ls_to_rm=None, ls_to_have=None):
@@ -70,34 +69,18 @@ def process_data(seed, census, zone_lev, control, hh=True):
     return final_results
 
 
-def IPF_sampling(constraints):
-    # constraints.to_csv('./Joint_dist_result_IPF.csv')
-    ls = None
-    for i in constraints.index:
-        if constraints[i]: 
-            # TODO: instead of just rounding like this, use the papers method of int rounding
-            ls_repeat = np.repeat([i], int(constraints[i]), axis=0)
-            if ls is None: ls = ls_repeat
-            else: ls = np.concatenate((ls, ls_repeat), axis=0)
-    return pd.DataFrame(ls, columns=constraints.index.names)
-
-
-def test():
+def get_test_data():
     hh = pd.read_csv("../data/H_sample.csv")
     pp = pd.read_csv("../data/P_sample.csv")
     con = pd.read_csv("../controls/controls.csv")
-    census = pd.read_csv("../data/census_SA3.csv")
-    a = process_data(pp, census, "SA3", con, False)
+    census_sa3 = pd.read_csv("../data/census_SA3.csv")
+    return hh, pp, con, census_sa3
 
-    import synthpop.ipf.ipf as ipf
-    for b in a:
-        c = a[b]
-        print(c["seed"])  
-        print(c["census"])        
-        constraints, iterations = ipf.calculate_constraints(c["census"], c["seed"], tolerance=1e-5)
-        print(constraints)
-        print(IPF_sampling(constraints))
-        break
+
+def test():
+    hh, pp, con, census_sa3 = get_test_data()
+    a = process_data(pp, census_sa3, "SA3", con, False)
+    print(a)
 
 
 if __name__ == "__main__":
