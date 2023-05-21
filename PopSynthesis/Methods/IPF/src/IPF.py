@@ -4,7 +4,7 @@ import synthpop.ipf.ipf as ipf
 from PopSynthesis.Methods.IPF.src.data_process import process_data, get_test_data
 
 
-def IPF_sampling(constraints):
+def IPF_sampling(constraints, rounding=None):
     # constraints.to_csv('./Joint_dist_result_IPF.csv')
     ls = None
     for i in constraints.index:
@@ -16,14 +16,34 @@ def IPF_sampling(constraints):
     return pd.DataFrame(ls, columns=constraints.index.names)
 
 
+def IPF_all(seed, census, zone_lev, con, hh=True, tolerence=1e-5):
+    dict_zones = process_data(
+        seed=seed,
+        census=census,
+        zone_lev=zone_lev,
+        control=con,
+        hh=hh
+    )
+    ls_df = []
+    for zone in dict_zones:
+        zone_details = dict_zones[zone]      
+        constraints, iterations = ipf.calculate_constraints(zone_details["census"], zone_details["seed"], tolerance=tolerence)
+        result = IPF_sampling(constraints)
+        result[zone_lev] = zone
+        ls_df.append(result)
+    synthetic_population = pd.concat(ls_df)
+
+    return synthetic_population
+
+
 if __name__ == "__main__":
     hh, pp, con, census_sa3 = get_test_data()
-    a = process_data(pp, census_sa3, "SA3", con, False)
-    for b in a:
-        c = a[b]
-        print(c["seed"])  
-        print(c["census"])        
-        constraints, iterations = ipf.calculate_constraints(c["census"], c["seed"], tolerance=1e-5)
-        print(constraints)
-        print(IPF_sampling(constraints))
-        break
+    fin = IPF_all(
+        pp, 
+        census_sa3,
+        "SA3",
+        con,
+        False
+    )
+    print(fin["sex"].value_counts())
+    
