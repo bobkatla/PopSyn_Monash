@@ -2,6 +2,7 @@
 Process data to have the formated input for the IPF
 """
 import pandas as pd
+import numpy as np
 
 
 def get_sample_counts(df, ls_to_rm=None, ls_to_have=None):
@@ -34,7 +35,7 @@ def process_data(seed, census, zone_lev, control, hh=True):
     for index, row in census.iterrows():
         # zone by zone
         zone = row[zone_lev]
-        househodlds, persons, inside = seed[seed[zone_lev]==zone], seed[seed[zone_lev]==zone], seed[seed[zone_lev]==zone]
+        households, persons, inside = seed[seed[zone_lev]==zone], seed[seed[zone_lev]==zone], seed[seed[zone_lev]==zone]
 
         ls_tups = []
         margi_val = []
@@ -48,7 +49,9 @@ def process_data(seed, census, zone_lev, control, hh=True):
 
             if att not in ls_to_have: ls_to_have.append(att)
 
-            # filter_on_exp = eval(exp)
+            filter_on_exp = eval(exp)
+            inside.loc[filter_on_exp, att] = state
+
             # seed_val = filter_on_exp.value_counts()[True]
             # Because we only need the count so the below is not needed but maybe in the future
             # df_test = seed[filter_on_exp]
@@ -59,10 +62,7 @@ def process_data(seed, census, zone_lev, control, hh=True):
         midx = pd.MultiIndex.from_tuples(ls_tups)
         marginals = pd.Series(margi_val, index=midx)
 
-        total = row["Total_dwelings"] if hh else row["Tot_P_P"]
-
         final_results[zone] = {
-            "total": total,
             "seed": j_cou,
             "census": marginals
         }

@@ -39,11 +39,11 @@ def IPF_all(seed, census, zone_lev, con, hh=True, tolerence=1e-5):
 if __name__ == "__main__":
     hh, pp, con, census_sa3 = get_test_data()
     fin = IPF_all(
-        pp, 
+        hh, 
         census_sa3,
         "SA3",
         con,
-        False
+        True
     )
-    print(fin["sex"].value_counts())
+    print(fin["totalvehs"].value_counts())
     
