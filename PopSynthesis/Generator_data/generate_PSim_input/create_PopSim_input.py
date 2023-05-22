@@ -78,6 +78,14 @@ def get_census_sa(atts, sa_level, ls_filter_zone=None):
     gdf_h = gpd.read_file(f"{loc_file_census}G34_VIC_GDA2020.gpkg", layer=f"G34_{sa_level}_2021_VIC") # number veh
     # NOTE: combine later with other tables, now just this
     final_gdf = gdf_h.merge(gdf_p, how='inner')
+
+    
+    gdf_num_p = gpd.read_file(f"{loc_file_census}G35_VIC_GDA2020.gpkg", layer=f"G35_{sa_level}_2021_VIC") # number people inside
+    final_gdf = final_gdf.merge(gdf_num_p, how='inner')
+
+    gdf_employ = gpd.read_file(f"{loc_file_census}G46B_VIC_GDA2020.gpkg", layer=f"G46B_{sa_level}_2021_VIC") # num employment
+    final_gdf = final_gdf.merge(gdf_employ, how='inner')
+
     # The step with ls_zones to have only the zones in VISTA (greater Mel and geelong)
     df = pd.DataFrame(final_gdf)[inside_atts]
     df = df.rename(columns={
@@ -176,11 +184,10 @@ def main():
 
 
 def test():
-    seed_data_H = get_seed_H(seed_atts_H)
-    a = get_geo_cross(list(seed_data_H["SA4"].unique()))
+    a = get_census_sa(census_atts, "SA4")
     print(a)
 
 
 if __name__ == "__main__":
-    main()
-    # test()
+    # main()
+    test()

@@ -47,7 +47,21 @@ census_atts = [
     "Age_65_74_yr_P",
     "Age_75_84_yr_P",
     "Age_85ov_P",
-
+    'Num_Psns_UR_1_Total',
+    "Num_Psns_UR_2_Total",
+    "Num_Psns_UR_3_Total",
+    "Num_Psns_UR_4_Total",
+    "Num_Psns_UR_5_Total",
+    "Num_Psns_UR_6mo_Total",
+    "P_LFS_NS_Tot", # labor force not stated
+    "P_Not_in_LF_Tot", # not in labor force
+    "P_Tot_LF_Tot", # tot labor force
+    "P_Tot_Unemp_Tot", # unemployed (should be in labor force)
+    "P_Tot_Emp_Tot", # employed
+    "P_Hours_wkd_NS_Tot", # hour work not stated
+    "P_Emp_awy_f_wrk_Tot", # away from work
+    "P_Emp_PartT_Tot", # parttime
+    "P_Emp_FullT_Tot", # full time
 ]
 
 # Assuming all sample/VISTA data are in the same folder
