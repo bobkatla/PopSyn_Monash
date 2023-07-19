@@ -68,6 +68,15 @@ def get_seed_H(atts):
     return df
 
 
+def census_process_extra(df):
+    # This may create error if these atts are in not in, but this is just quick development
+    df["TOT_CASUAL_GUESS"] = df["P_Tot_Emp_Tot"] - (df["P_Emp_PartT_Tot"] + df["P_Emp_FullT_Tot"])
+    df["TOT_NOT_WORKING"] = df["Tot_P_P"] - df["P_Tot_Emp_Tot"]
+    df["TOT_NOT_FT_WORK"] = df["Tot_P_P"] - df["P_Emp_FullT_Tot"]
+    df["TOT_NOT_PT_WORK"] = df["Tot_P_P"] - df["P_Emp_PartT_Tot"]
+    df["TOT_NOT_CASUAL_WORK"] = df["Tot_P_P"] - df["TOT_CASUAL_GUESS"]
+    return df
+
 def get_census_sa(atts, sa_level, ls_filter_zone=None):
     inside_atts = atts.copy()
     inside_atts.extend([
@@ -95,6 +104,9 @@ def get_census_sa(atts, sa_level, ls_filter_zone=None):
     
     if ls_filter_zone:
         df = df[df[sa_level].astype("float").isin(ls_filter_zone)]
+
+    # Extra step of processing to match seed with census
+    df = census_process_extra(df)
 
     return df
 
@@ -189,5 +201,5 @@ def test():
 
 
 if __name__ == "__main__":
-    # main()
-    test()
+    main()
+    # test()

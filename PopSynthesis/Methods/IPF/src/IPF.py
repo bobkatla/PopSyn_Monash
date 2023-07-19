@@ -16,7 +16,7 @@ def IPF_sampling(constraints, rounding=None):
     return pd.DataFrame(ls, columns=constraints.index.names)
 
 
-def IPF_all(seed, census, zone_lev, con, hh=True, tolerence=1e-5):
+def IPF_all(seed, census, zone_lev, con, hh=True, tolerence=1e-5, max_iterations=1000):
     dict_zones = process_data(
         seed=seed,
         census=census,
@@ -27,10 +27,11 @@ def IPF_all(seed, census, zone_lev, con, hh=True, tolerence=1e-5):
     ls_df = []
     for zone in dict_zones:
         zone_details = dict_zones[zone]      
-        constraints, iterations = ipf.calculate_constraints(zone_details["census"], zone_details["seed"], tolerance=tolerence)
+        constraints, iterations = ipf.calculate_constraints(zone_details["census"], zone_details["seed"], tolerance=tolerence, max_iterations=max_iterations)
         result = IPF_sampling(constraints)
         result[zone_lev] = zone
         ls_df.append(result)
+        print(f"Done for {zone} with {iterations} iter")
     synthetic_population = pd.concat(ls_df)
 
     return synthetic_population
@@ -43,7 +44,9 @@ if __name__ == "__main__":
         census_sa3,
         "SA3",
         con,
-        True
+        True,
+        max_iterations=100000000000000
     )
-    print(fin["totalvehs"].value_counts())
+    fin.to_csv("test_hh.csv")
+    print(fin)
     
