@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2023-07-19T00:46:09.061Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36" etag="ZJURCWq0CQwWvmGN0snf" version="21.3.2" type="github">
+<mxfile host="app.diagrams.net" modified="2023-07-19T00:48:44.631Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36" etag="Rs4RbvVokvYdmQ6dj4-K" version="21.3.2" type="github">
   <diagram name="Page-1" id="M-VxKTPD5DRaOb1jhItE">
     <mxGraphModel dx="678" dy="386" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
@@ -52,23 +52,32 @@
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="260" y="310" />
-              <mxPoint x="100" y="310" />
-              <mxPoint x="100" y="470" />
+              <mxPoint x="60" y="310" />
+              <mxPoint x="60" y="470" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="pnYCGuM_4Pa2nasa4k_5-31" value="Reject Sampling some" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="pnYCGuM_4Pa2nasa4k_5-30">
-          <mxGeometry x="-0.2163" relative="1" as="geometry">
-            <mxPoint as="offset" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="pnYCGuM_4Pa2nasa4k_5-6" value="PP BN" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+        <mxCell id="pnYCGuM_4Pa2nasa4k_5-6" value="PP BN&lt;br&gt;(Rejection Sampling based on evidences)" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
           <mxGeometry x="203" y="220" width="120" height="80" as="geometry" />
         </mxCell>
         <mxCell id="pnYCGuM_4Pa2nasa4k_5-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;dashed=1;" edge="1" parent="1" source="pnYCGuM_4Pa2nasa4k_5-7" target="pnYCGuM_4Pa2nasa4k_5-8">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="pnYCGuM_4Pa2nasa4k_5-7" value="HH BN" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+        <mxCell id="pnYCGuM_4Pa2nasa4k_5-36" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="pnYCGuM_4Pa2nasa4k_5-7" target="pnYCGuM_4Pa2nasa4k_5-11">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="477" y="310" />
+              <mxPoint x="60" y="310" />
+              <mxPoint x="60" y="470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pnYCGuM_4Pa2nasa4k_5-37" value="Reject Sampling both level" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="pnYCGuM_4Pa2nasa4k_5-36">
+          <mxGeometry x="0.0388" y="-1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pnYCGuM_4Pa2nasa4k_5-7" value="HH BN&lt;br&gt;(Sample first then generate evidence)" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
           <mxGeometry x="417" y="220" width="120" height="80" as="geometry" />
         </mxCell>
         <mxCell id="pnYCGuM_4Pa2nasa4k_5-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="pnYCGuM_4Pa2nasa4k_5-8" target="pnYCGuM_4Pa2nasa4k_5-11">
