@@ -145,6 +145,7 @@ def mutation(indi, BN_model, con_df, tot_df, partition_rate=0.25, num_keep_atts=
 
         count_combine_best_att = mut_part.groupby(ls_best_atts)[ls_atts[0]].count()
         for state_combine in count_combine_best_att.index:
+            print(state_combine)
             # create evidence
             evidence = [State(att, state) for att, state in zip(ls_best_atts,state_combine)]
             num_to_sample = count_combine_best_att[state_combine]
@@ -172,7 +173,7 @@ def crossover(pa1, pa2, partition_rate=0.4):
     return [offspring1, offspring2]
 
 
-def eval_ls_solutions(ls_sol, con_df, tot_df, n=1):
+def eval_ls_solutions(ls_sol, con_df, tot_df, eval_func, n=1):
     assert n <= len(ls_sol)
     # Should return the list of best solutions
     check = []
