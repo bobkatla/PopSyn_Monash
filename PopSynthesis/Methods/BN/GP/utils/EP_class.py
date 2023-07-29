@@ -9,6 +9,7 @@ import pylab as plt
 from pgmpy.models import BayesianNetwork
 from PopSynthesis.Methods.BN.utils.learn_BN import learn_struct_BN_score, sample_BN
 from PopSynthesis.Methods.BN.TBN.test_GA import mutation as base_mut, crossover as base_cross
+from PopSynthesis.Methods.BN.utils.data_process import sample_from_full_pop
 
 
 class EP_base(ABC):
@@ -89,19 +90,22 @@ class EP_BN_creator(EP_base):
 
 
 def test():
-    data_loc = "../data/"
+    data_loc = "../data/flatten/"
     # controls_loc = "../controls/"
-    sample = pd.read_csv(data_loc + "flatten_seed_data.csv")
-    marginal = pd.read_csv(data_loc + "flat_marg.csv")
-    controls = pd.read_csv(data_loc + "flat_con.csv")
-    test_creator = EP_BN_creator(
-        sample=sample,
-        marginal=marginal,
-        controls=controls
-    )
+    full_pop = pd.read_csv(data_loc + "full_population_2021.csv")
+    sample = sample_from_full_pop(full_pop=full_pop, sample_rate=1)
+    marginal = pd.read_csv(data_loc + "marginal_2021.csv")
+    controls = pd.read_csv(data_loc + "controls_2021.csv")
 
-    test_creator.mutation()
-    print(test_creator.ls_sols)
+    print(sample, marginal, controls, sep='\n')
+    # test_creator = EP_BN_creator(
+    #     sample=sample,
+    #     marginal=marginal,
+    #     controls=controls
+    # )
+
+    # test_creator.mutation()
+    # print(test_creator.ls_sols)
 
 
 if __name__ == "__main__":
