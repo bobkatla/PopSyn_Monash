@@ -15,8 +15,8 @@ max_expansion_factor: 30
 
 # Geographic Settings
 # ------------------------------------------------------------------
-geographies: [SA4, SA3]
-seed_geography: SA4
+geographies: [SA3, SA1]
+seed_geography: SA3
 
 
 # Tracing
@@ -49,8 +49,8 @@ input_table_list:
     filename : geo_cross.csv
   - tablename: SA3_control_data
     filename : census_SA3.csv
-  - tablename: SA4_control_data
-    filename : census_SA4.csv
+  - tablename: SA1_control_data
+    filename : census_SA1.csv
 
 
 # Reserved Column Names
@@ -73,7 +73,7 @@ control_file_name: controls.csv
 output_tables:
   action: include
   tables:
-    - summary_SA3
+    - summary_SA1
     - expanded_household_ids
 
 
@@ -104,7 +104,7 @@ models:
     - meta_control_factoring
     - final_seed_balancing
     - integerize_final_seed_weights
-    - sub_balancing.geography=SA3
+    - sub_balancing.geography=SA1
     - expand_households
     - write_data_dictionary
     - summarize

@@ -55,11 +55,13 @@ def contain_all_nodes(DAG):
     return True
 
 
-def BN_training(df, sample_rate, ite_check=200,sample=True, plotting=False, sampling_type='forward', struct_method='hc', para_method='bayes', black_ls = None, show_progress=True):
-    N = df.shape[0]
-    one_percent = int(N/100)
-    # It is noted that with small samples, cannot ebtablish the edges
-    seed_df = df.sample(n = sample_rate * one_percent).copy()
+def BN_training(df, to_sample=True, sample_rate=1, ite_check=200,sample=True, plotting=False, sampling_type='forward', struct_method='hc', para_method='bayes', black_ls = None, show_progress=True):
+    seed_df = df
+    if to_sample:
+        N = df.shape[0]
+        one_percent = int(N/100)
+        # It is noted that with small samples, cannot ebtablish the edges
+        seed_df = df.sample(n = sample_rate * one_percent).copy()
 
     cannot_create_DAG = True
     for _ in range(ite_check):
