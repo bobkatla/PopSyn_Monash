@@ -1,0 +1,113 @@
+<mxfile host="app.diagrams.net" modified="2023-08-11T05:37:17.871Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36" etag="n5w2ZWTL4ATZsPlXFkW2" version="21.6.3" type="github">
+  <diagram name="Page-1" id="WRdhbBN_rGMiQ0-goSM_">
+    <mxGraphModel dx="1259" dy="673" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="WTUOeehkknHExcAX4gBJ-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="WTUOeehkknHExcAX4gBJ-2" target="WTUOeehkknHExcAX4gBJ-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-2" value="Training data (2016 census)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="80" y="170" width="80" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="WTUOeehkknHExcAX4gBJ-3" target="WTUOeehkknHExcAX4gBJ-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-3" value="Population Synthesis" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="220" y="190" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="WTUOeehkknHExcAX4gBJ-5" target="WTUOeehkknHExcAX4gBJ-29">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="340" y="460" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="440" y="380" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-5" value="Synthetic population for training" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="400" y="170" width="80" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="WTUOeehkknHExcAX4gBJ-12" target="WTUOeehkknHExcAX4gBJ-13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-12" value="Testing data (2021 census)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="550" y="160" width="80" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="WTUOeehkknHExcAX4gBJ-13" target="WTUOeehkknHExcAX4gBJ-14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-13" value="Population Synthesis" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="690" y="180" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-34" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="WTUOeehkknHExcAX4gBJ-14" target="WTUOeehkknHExcAX4gBJ-31">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="900" y="525" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-14" value="Synthetic population for testing" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="860" y="160" width="80" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="WTUOeehkknHExcAX4gBJ-20" target="WTUOeehkknHExcAX4gBJ-29">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="210" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-20" value="Training EV data (2016 census)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="40" y="330" width="80" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-22" value="Testing EV data (2021 census)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="420" y="620" width="80" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;shape=link;" edge="1" parent="1" source="WTUOeehkknHExcAX4gBJ-23" target="WTUOeehkknHExcAX4gBJ-22">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-27" value="Comparing" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="WTUOeehkknHExcAX4gBJ-26">
+          <mxGeometry x="-0.1895" y="-2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-23" value="Predicted EV data" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#a20025;strokeColor=#6F0000;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="420" y="475" width="80" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" target="WTUOeehkknHExcAX4gBJ-31">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="290" y="400" as="sourcePoint" />
+            <mxPoint x="635" y="430" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="290" y="401" />
+              <mxPoint x="655" y="401" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-38" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="WTUOeehkknHExcAX4gBJ-29" target="WTUOeehkknHExcAX4gBJ-30">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-29" value="ML Trainning" style="rhombus;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="230" y="340" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-40" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;shape=link;" edge="1" parent="1" source="WTUOeehkknHExcAX4gBJ-30" target="WTUOeehkknHExcAX4gBJ-39">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-41" value="Comparing" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="WTUOeehkknHExcAX4gBJ-40">
+          <mxGeometry x="-0.198" y="-2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-30" value="Connection between household&#39;s attributes and EV ownership" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#a20025;strokeColor=#6F0000;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="210" y="477.5" width="120" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-35" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="WTUOeehkknHExcAX4gBJ-31" target="WTUOeehkknHExcAX4gBJ-23">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-31" value="ML model to map between attributes and EV ownership" style="rhombus;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="585" y="460" width="140" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="WTUOeehkknHExcAX4gBJ-39" value="Literature" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="230" y="620" width="80" height="100" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
