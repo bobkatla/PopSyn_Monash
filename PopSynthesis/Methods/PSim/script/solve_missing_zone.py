@@ -84,9 +84,9 @@ def main():
 
     ls_zones = df_seed[name_zone_lev].astype("Int64").unique()
     ls_missing_zones = _extract_missing_zones(ls_available=ls_all_zones, ls_zones=ls_zones ,zone_lev=name_zone_lev)
+    df_seed = df_seed.drop(columns=["SA1", "SA2", "SA3", "SA4", "hhid"])
     # Learn BN
     BN = _learn_BN(df_seed=df_seed)
-    print(BN)
     dummy_seed = _sampling_BN(BN, ls_zone=ls_missing_zones)
     # Combine dummy seed and original seed
     # Output the new seed, this will be the new input
