@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import bnlearn as bn
 from pgmpy.sampling import GibbsSampling, BayesianModelSampling
-from PopSynthesis.Benchmark.checker import update_SRMSE
+from PopSynthesis.Benchmark.legacy.checker import update_SRMSE
 from multiprocessing import Process, Lock, Array
 
 

@@ -3,7 +3,7 @@ import synthpop.ipf.ipf as ipf
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from PopSynthesis.Benchmark.checker import update_SRMSE
+from PopSynthesis.Benchmark.legacy.checker import update_SRMSE
 from multiprocessing import Process, Lock, Array
 
 

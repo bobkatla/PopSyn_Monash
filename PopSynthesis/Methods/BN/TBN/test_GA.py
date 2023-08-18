@@ -14,7 +14,7 @@ from pgmpy.models import BayesianNetwork
 from pgmpy.factors.discrete import State
 
 from PopSynthesis.Methods.BN.TBN.utils import learn_struct_BN_score, compare_dist, get_prior, get_state_names, cal_count_states
-from PopSynthesis.Benchmark.checker import total_RMSE_flat, update_SRMSE
+from PopSynthesis.Benchmark.legacy.checker import total_RMSE_flat, update_SRMSE
 
 """
     Some parameters:

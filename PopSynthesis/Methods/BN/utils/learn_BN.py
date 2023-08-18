@@ -7,7 +7,7 @@ import numpy as np
 import networkx as nx
 import pylab as plt
 from itertools import chain
-from PopSynthesis.Benchmark.checker import total_RMSE_flat, update_SRMSE
+from PopSynthesis.Benchmark.legacy.checker import total_RMSE_flat, update_SRMSE
 
 data_location = "../../../Generator_data/data/data_processed_here/"
 

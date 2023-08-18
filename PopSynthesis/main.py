@@ -5,7 +5,7 @@ from pgmpy.estimators import HillClimbSearch, BicScore, MaximumLikelihoodEstimat
 from pgmpy.sampling import BayesianModelSampling
 from pgmpy.models import BayesianNetwork
 
-from PopSynthesis.Benchmark.checker import total_RMSE_flat, update_SRMSE
+from PopSynthesis.Benchmark.legacy.checker import total_RMSE_flat, update_SRMSE
 from PopSynthesis.Methods.BN.TBN.test_GA import EvoProg
 from PopSynthesis.Methods.IPF.IPF import IPF_training
 
