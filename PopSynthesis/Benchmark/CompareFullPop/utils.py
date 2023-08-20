@@ -50,20 +50,27 @@ def get_pp_based_on_id(hh_pop: pd.DataFrame, full_pp_pop: pd.DataFrame, shared_i
     return final_df
 
 
+def wrapper_get_all(seed_df_hh:pd.DataFrame, seed_df_pp:pd.DataFrame, sample_rate:float, name_weights_in_hh:str, new_name_weights_in_hh:str, shared_ids_name: str) -> tuple[pd.DataFrame, pd.DataFrame]:
+    # check for the weights and intergerlise it and then realise the full populationj
+    full_hh_seed = realise_full_pop_based_on_weight(seed_df_hh, name_weights_in_hh)
+    # sample from it based on the percentage
+    sample_of_pop = sampling_from_full_pop(full_pop=full_hh_seed, rate=sample_rate)
+    # Condense the population to create a 'new seed data'
+    fake_HH_seed_data = condense_pop(sample_of_pop, name_for_weight_col=new_name_weights_in_hh)
+    # find a way to do it for both HH and PP
+    fake_PP_seed_data = get_pp_based_on_id(fake_HH_seed_data, seed_df_pp, shared_ids_name)
+
+    return fake_HH_seed_data, fake_PP_seed_data
+
+
 def main():
     # NOTE: later will make this dynamic by getting input from the cmd
     loc_data = "../data/"
     # import the seed data
     seed_df_hh = pd.read_csv(loc_data + "H_sample.csv")
     seed_df_pp = pd.read_csv(loc_data + "P_sample.csv")
-    # check for the weights and intergerlise it and then realise the full populationj
-    full_hh_seed = realise_full_pop_based_on_weight(seed_df_hh, "wdhhwgt_sa3")
-    # sample from it based on the percentage
-    sample_of_pop = sampling_from_full_pop(full_pop=full_hh_seed, rate=0.01)
-    # Condense the population to create a 'new seed data'
-    fake_HH_seed_data = condense_pop(sample_of_pop, name_for_weight_col='_weight')
-    # find a way to do it for both HH and PP
-    fake_PP_seed_data = get_pp_based_on_id(fake_HH_seed_data, seed_df_pp, 'hhid')
+    
+    fake_HH_seed_data, fake_PP_seed_data = wrapper_get_all(seed_df_hh, seed_df_pp, sample_rate=0.01, name_weights_in_hh="wdhhwgt_sa3", new_name_weights_in_hh='_weight', shared_ids_name='hhid')
 
     print(fake_HH_seed_data, fake_PP_seed_data)
 
