@@ -69,6 +69,43 @@ def process_data(seed, census, zone_lev, control, hh=True):
     return final_results
 
 
+def get_marg_val_from_full(df):
+    atts = df.columns
+    ls_tups = []
+    margi_val = []
+    
+    for att in atts:
+        counts = df[att].value_counts()
+        indexs = list(counts.index)
+        for i, c in enumerate(counts):
+            ls_tups.append((att, indexs[i]))
+            margi_val.append(c)
+
+    # Margi dist for IPF
+    marginal_midx = pd.MultiIndex.from_tuples(ls_tups)
+    marginals = pd.Series(margi_val, index=marginal_midx)
+    return marginals
+
+
+def get_joint_dist_from_sample(seed_df, full_pop):
+    atts = full_pop.columns
+    j_cou = full_pop.value_counts()
+    # joint dist for IPF but only the bone
+    j_idx = list(j_cou.index)
+    # To solve zero cell by making a extremely small number
+    j_vals = [1e-25]*len(j_idx)
+
+    seed_cou = seed_df.value_counts()
+    seed_idx = list(seed_cou.index)
+    for idx in seed_idx:
+        i = j_idx.index(idx)
+        j_vals[i] = seed_cou[idx]
+
+    joint_dist_midx = pd.MultiIndex.from_tuples(j_idx, names=atts)
+    joint_dist = pd.Series(j_vals, index=joint_dist_midx)
+    return joint_dist
+
+
 def get_test_data():
     hh = pd.read_csv("../data/H_sample.csv")
     pp = pd.read_csv("../data/P_sample.csv")
