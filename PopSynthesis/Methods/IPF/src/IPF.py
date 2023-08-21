@@ -3,7 +3,7 @@ import pandas as pd
 import synthpop.ipf.ipf as ipf
 from PopSynthesis.Methods.IPF.src.data_process import process_data, get_test_data, get_marg_val_from_full, get_joint_dist_from_sample
 from PopSynthesis.Benchmark.CompareFullPop.utils import wrapper_get_all, sampling_from_full_pop, realise_full_pop_based_on_weight
-from PopSynthesis.Benchmark.CompareFullPop.compare import full_pop_SRMSE
+from PopSynthesis.Benchmark.CompareFullPop.compare import full_pop_SRMSE, SRMSE_based_on_counts
 
 
 def IPF_sampling(constraints, rounding=None):
@@ -61,10 +61,12 @@ def eval_based_on_full_pop(loc_data, tolerance=1e-5,  max_iterations=10000, rang
         joint_dist = get_joint_dist_from_sample(seed_df=seed_df, full_pop=full_df_hh)
         print("Doing the IPF now")
         constraints, iterations = ipf.calculate_constraints(marginals, joint_dist, tolerance=tolerance,  max_iterations=max_iterations)
-        print("Doing the sampling")
-        syn_pop = IPF_sampling(constraints=constraints)
+        # Rounding the contraints
+        constraints = constraints.round()
+        # print("Doing the sampling")
+        # syn_pop = IPF_sampling(constraints=constraints)
         print("Calculate SRMSE now")
-        SRMSE = full_pop_SRMSE(full_df_hh, syn_pop)
+        SRMSE = SRMSE_based_on_counts(full_df_hh.value_counts(), constraints)
         results.append(SRMSE)
         print(f"Done rate {rate} with {iterations} iters, got score of {SRMSE}")
     return results
