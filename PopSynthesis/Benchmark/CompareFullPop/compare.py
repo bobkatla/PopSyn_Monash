@@ -12,7 +12,7 @@ def full_pop_SRMSE(actual: pd.DataFrame, pred: pd.DataFrame) -> float:
     return update_SRMSE(actual=actual, pred=pred)
 
 
-def SRMSE_based_on_counts(actual_cou: pd.DataFrame, pred_cou: pd.DataFrame) -> float:
+def SRMSE_based_on_counts(actual_cou: pd.Series, pred_cou: pd.Series) -> float:
     assert pred_cou.index.names == actual_cou.index.names
     start_time = time.time()
     # key step: we need to organize the cols for 2 df to match so the val count later is correct
