@@ -59,6 +59,16 @@ def learn_struct_BN_score(df, state_names=None, show_struct=False, method=HillCl
     return model
 
 
+def learn_para_BN(model, data_df, learn_method=BayesianEstimator):
+    para_learn = learn_method(
+            model=model,
+            data=data_df
+        )
+    ls_CPDs = para_learn.get_parameters(weighted='_weight' in data_df)
+    model.add_cpds(*ls_CPDs)
+    return model
+
+
 def multiply_ls_arr(ls_arr):
     # NOTE: order matters, list of 1d arr, return 1 1d arr
     l_re = 1
