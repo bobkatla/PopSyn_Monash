@@ -39,7 +39,7 @@ def main():
     min_rate, max_rate, tot = 0.01, 0.05, 5
     results = eval_based_on_full_pop(loc_data=loc_data, range_sample=np.linspace(min_rate, max_rate, tot))
     data = np.asarray(results)
-    np.save(f'./output/result_IPF_{min_rate}_{max_rate}.npy', data)
+    np.save(f'./output/result_naive_{min_rate}_{max_rate}.npy', data)
     print(results)
 
 
