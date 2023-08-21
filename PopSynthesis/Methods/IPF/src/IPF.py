@@ -9,7 +9,11 @@ from PopSynthesis.Benchmark.CompareFullPop.compare import full_pop_SRMSE
 def IPF_sampling(constraints, rounding=None):
     # constraints.to_csv('./Joint_dist_result_IPF.csv')
     ls = None
-    for i in constraints.index:
+    for count, i in enumerate(constraints.index):
+        if count % int(len(constraints.index)/10) == 0:
+            check = (count / len(constraints.index)) * 100
+            print(f"SAMPLING got till {round(check, 2)}%")
+
         if constraints[i]: 
             # TODO: instead of just rounding like this, use the papers method of int rounding
             ls_repeat = np.repeat([i], int(constraints[i]), axis=0)
@@ -39,7 +43,7 @@ def IPF_all(seed, census, zone_lev, con, hh=True, tolerence=1e-5, max_iterations
     return synthetic_population
 
 
-def eval_based_on_full_pop(loc_data, tolerance=1e-5, range_sample=np.linspace(0.01, 0.1, 10)):
+def eval_based_on_full_pop(loc_data, tolerance=1e-5,  max_iterations=10000, range_sample=np.linspace(0.01, 0.1, 10)):
     seed_df_hh = pd.read_csv(loc_data + "H_sample.csv")
     seed_df_pp = pd.read_csv(loc_data + "P_sample.csv")
     
@@ -56,7 +60,8 @@ def eval_based_on_full_pop(loc_data, tolerance=1e-5, range_sample=np.linspace(0.
         seed_df = sampling_from_full_pop(full_df_hh, rate=rate)
         joint_dist = get_joint_dist_from_sample(seed_df=seed_df, full_pop=full_df_hh)
         print("Doing the IPF now")
-        constraints, iterations = ipf.calculate_constraints(marginals, joint_dist, tolerance=tolerance)
+        constraints, iterations = ipf.calculate_constraints(marginals, joint_dist, tolerance=tolerance,  max_iterations=max_iterations)
+        print("Doing the sampling")
         syn_pop = IPF_sampling(constraints=constraints)
         print("Calculate SRMSE now")
         SRMSE = full_pop_SRMSE(full_df_hh, syn_pop)
