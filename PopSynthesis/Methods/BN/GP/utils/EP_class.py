@@ -82,6 +82,7 @@ class EP_BN_creator(EP_base):
 from PopSynthesis.Methods.IPF.src.data_process import get_marg_val_from_full
 from PopSynthesis.Benchmark.CompareFullPop.utils import sampling_from_full_pop, realise_full_pop_based_on_weight
 from PopSynthesis.Benchmark.CompareFullPop.compare import SRMSE_based_on_counts
+from PopSynthesis.Benchmark.CompareCensus.compare import compare_RMS_census
 from pgmpy.factors.discrete import State
 import numpy as np
 import math
@@ -137,7 +138,7 @@ class EP_for_full_pop_creator(EP_base):
         return results
     
 
-    def run_EP(self, seed_data, num_pop=10, random_rate=0.2, num_gen=1000, err_converg=math.inf, crossover_time=3):
+    def run_EP(self, seed_data, num_pop=3, random_rate=0.2, num_gen=1000, err_converg=math.inf, crossover_time=1):
         self.set_BN(seed_data=seed_data)
         self.init_first_gen()
 
@@ -160,7 +161,9 @@ class EP_for_full_pop_creator(EP_base):
             test_score = best_sol[1]
             print("Best at the moment", test_score)
             check_RMSD.append(test_score)
-            check_SRMSE.append(SRMSE_based_on_counts(marg_count, best_sol[0].value_counts()))
+            srmse = SRMSE_based_on_counts(marg_count, best_sol[0].value_counts())
+            print(f"SMRSE: {srmse}")
+            check_SRMSE.append(srmse)
             ########## TEST
 
             # Mutate offspring, mutate all using the BN of the best, best one will get mutate more
@@ -177,7 +180,7 @@ class EP_for_full_pop_creator(EP_base):
             print(f"GA - gen {counter}: crossover")
             for _ in range(crossover_time):
                 best_pa_sol = [self.ls_sols[0], self.ls_sols[1]]
-                self.crossover(
+                self.cross_over(
                     pa1=best_pa_sol[0][0],
                     pa2=best_pa_sol[1][0],
                     partition_rate=0.4
@@ -210,12 +213,13 @@ class EP_for_full_pop_creator(EP_base):
         # This is used to input new offspring into the list, sorted
         score_new = self.eval_func(new_indi)
         for i, sol in enumerate(self.ls_sols):
-            if score_new >= sol[1]:
+            if score_new <= sol[1]:
                 self.ls_sols.insert(i, (new_indi, score_new, ))
                 break  
             if i == len(self.ls_sols) - 1:
                 # it has the lowest score
                 self.ls_sols.append((new_indi, score_new, )) 
+                break
 
 
     def init_first_gen(self):
@@ -258,10 +262,11 @@ class EP_for_full_pop_creator(EP_base):
                     model=self.BN_model, 
                     n=num_to_sample, # NOTE: can try further test of instead of having only 1, we can create more and select the best of mutation (maybe most different one?)
                     typeOf='rejection',
-                    evidence=evidence, show_progress=True)
+                    evidence=evidence, show_progress=False)
                 final_list_df.append(new_rec)
             # combine again
             final_child = pd.concat(final_list_df, ignore_index=True)
+            print("Inserting mutated child")
             self.insert_new_sol(final_child)
 
 
@@ -289,25 +294,20 @@ class EP_for_full_pop_creator(EP_base):
     def eval_func(self, sol): 
         # NOTE: trying to minimise this
         marg_processed_syn_pop = get_marg_val_from_full(sol)
-        census_dist = self.norm_probs_census
-        syn_dist = self.get_norm_vals_for_atts(marg_processed_syn_pop)
-        re = 0
-        for att in self.atts:
-            # Have to make the syn_dist as target cause' it may have 0, if we swap there will be err as log(0) is undefined
-            re -= self.cross_entropy(syn_dist[att], census_dist[att])
-        return re
+        return compare_RMS_census(self.marginals, marg_processed_syn_pop)
 
 
 def test():
     data_loc = "../data/basics/"
+    output_loc = "../output/"
+    min_rate, max_rate, tot = 0.01, 0.05, 2
+    
     EP_creator = EP_for_full_pop_creator(data_loc)
-    EP_creator.loop_check(range_sample=np.linspace(0.01, 0.1, 5))
+    results = EP_creator.loop_check(range_sample=np.linspace(min_rate, max_rate, tot))
 
-    # min_rate, max_rate, tot = 0.0001, 0.001, 10
-        # results = self.EP_run(loc_data=loc_data, range_sample)
-        # data = np.asarray(results)
-        # np.save(f'{output_loc}/result_EP_{min_rate}_{max_rate}.npy', data)
-        # print(results)
+    data = np.asarray(results)
+    np.save(f'{output_loc}/result_EP_{min_rate}_{max_rate}.npy', data)
+    print(results)
 
 
 if __name__ == "__main__":
