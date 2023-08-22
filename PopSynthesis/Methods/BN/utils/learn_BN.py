@@ -275,14 +275,14 @@ def learn_BN_diriclet(data_df, con_df, tot_df):
     return model
 
 
-def sample_BN(model, n, typeOf='forward', evidence=None):
+def sample_BN(model, n, typeOf='forward', evidence=None, show_progress=False):
     inference = BayesianModelSampling(model)
     syn = None
     if typeOf == 'forward':
         if evidence: print("Using forward sampling, the evidence you provided would not have any effect")
         syn = inference.forward_sample(size=n)
     elif typeOf == 'rejection':
-        syn = inference.rejection_sample(evidence=evidence, size=n, show_progress=False)
+        syn = inference.rejection_sample(evidence=evidence, size=n, show_progress=show_progress)
     else:
         print("ERRORRRRR, not sure what type of sampling is that")
     return syn

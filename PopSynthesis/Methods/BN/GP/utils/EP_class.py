@@ -258,7 +258,7 @@ class EP_for_full_pop_creator(EP_base):
                     model=self.BN_model, 
                     n=num_to_sample, # NOTE: can try further test of instead of having only 1, we can create more and select the best of mutation (maybe most different one?)
                     typeOf='rejection',
-                    evidence=evidence)
+                    evidence=evidence, show_progress=True)
                 final_list_df.append(new_rec)
             # combine again
             final_child = pd.concat(final_list_df, ignore_index=True)
