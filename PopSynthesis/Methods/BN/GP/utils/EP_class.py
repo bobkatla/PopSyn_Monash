@@ -138,7 +138,7 @@ class EP_for_full_pop_creator(EP_base):
         return results
     
 
-    def run_EP(self, seed_data, num_pop=3, random_rate=0.2, num_gen=1000, err_converg=math.inf, crossover_time=1):
+    def run_EP(self, seed_data, num_pop=5, random_rate=0.2, num_gen=10, crossover_time=1):
         self.set_BN(seed_data=seed_data)
         self.init_first_gen()
 
@@ -149,9 +149,8 @@ class EP_for_full_pop_creator(EP_base):
         check_SRMSE=[]
 
         counter = 0
-        err_score = math.inf
         marg_count = self.full_df_hh.value_counts()
-        while counter < num_gen and err_score >= err_converg:
+        while counter < num_gen:
             print(f"RUNNING FOR GEN {counter}")
             #TODO: defo can optimise the work on eval solution, will work on it later
             # pick the best solution
@@ -193,6 +192,11 @@ class EP_for_full_pop_creator(EP_base):
         
         # Pick the final solution, can create BN as well
         result = self.ls_sols[0]
+
+        print(check_RMSD) 
+        print(check_SRMSE)
+        np.save('Testing/GA_results_RMSD.npy', np.array(check_RMSD))
+        np.save('Testing/GA_results_SRMSE.npy', np.array(check_SRMSE))
 
         return result
 
