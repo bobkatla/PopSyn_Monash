@@ -26,6 +26,29 @@ def get_sample_counts(df, ls_to_rm=None, ls_to_have=None):
     return df.value_counts()
 
 
+def get_marg_from_constraints(constraints):
+    vals = constraints.values
+    new_df = constraints.index.to_frame(index=False)
+    atts = new_df.columns
+    new_df["weights"] = vals
+
+    ls_tups = []
+    margi_val = []
+
+    for att in atts:
+        reduced_df = new_df[[att, "weights"]]
+        group_by_df = reduced_df.groupby(att).sum()
+        for state in group_by_df.index:
+            ls_tups.append((att, state))
+            margi_val.append(group_by_df.loc[state])
+
+    # Margi dist for IPF
+    marginal_midx = pd.MultiIndex.from_tuples(ls_tups)
+    marginals = pd.Series(margi_val, index=marginal_midx)
+    return marginals
+
+
+
 def process_data(seed, census, zone_lev, control, hh=True):
     # We are approaching this zone by zone
     seed_type = "households" if hh else "persons"

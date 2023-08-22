@@ -3,8 +3,10 @@ simple based on the weights of the seed data and sample from it
 """
 import pandas as pd
 import numpy as np
-from PopSynthesis.Benchmark.CompareFullPop.utils import wrapper_get_all, sampling_from_full_pop, realise_full_pop_based_on_weight, condense_pop
-from PopSynthesis.Benchmark.CompareFullPop.compare import full_pop_SRMSE, SRMSE_based_on_counts
+from PopSynthesis.Benchmark.CompareFullPop.utils import sampling_from_full_pop, realise_full_pop_based_on_weight, condense_pop
+from PopSynthesis.Methods.IPF.src.data_process import get_marg_val_from_full
+from PopSynthesis.Benchmark.CompareFullPop.compare import SRMSE_based_on_counts
+from PopSynthesis.Benchmark.CompareCensus.compare import compare_RMS_census
 
 
 def eval_based_on_full_pop(loc_data, range_sample=np.linspace(0.01, 0.1, 10)):
@@ -19,6 +21,8 @@ def eval_based_on_full_pop(loc_data, range_sample=np.linspace(0.01, 0.1, 10)):
     full_df_hh = realise_full_pop_based_on_weight(seed_df_hh, weight_col="wdhhwgt_sa3")
     n = len(full_df_hh)
     results = []
+    results_rmse = []
+    marginals = get_marg_val_from_full(full_df_hh)
     for rate in range_sample:
         print(f"PROCESSING rate {rate}")
         seed_df = sampling_from_full_pop(full_df_hh, rate=1) # shuffle the data
@@ -32,17 +36,19 @@ def eval_based_on_full_pop(loc_data, range_sample=np.linspace(0.01, 0.1, 10)):
         print("Calculate SRMSE now")
         SRMSE = SRMSE_based_on_counts(full_df_hh.value_counts(), syn_pop.value_counts())
         results.append(SRMSE)
+        results_rmse.append(compare_RMS_census(marginals, get_marg_val_from_full(syn_pop)))
         print(f"Done rate {rate} with score of {SRMSE}")
-    return results
+    return results, results_rmse
 
 
 def main():
     loc_data = "./data/"
     min_rate, max_rate, tot = 0.0001, 0.0005, 5
-    results = eval_based_on_full_pop(loc_data=loc_data, range_sample=np.linspace(min_rate, max_rate, tot))
-    data = np.asarray(results)
-    np.save(f'./output/result_naive_{min_rate}_{max_rate}.npy', data)
+    results, results_rmse = eval_based_on_full_pop(loc_data=loc_data, range_sample=np.linspace(min_rate, max_rate, tot))
+    np.save(f'./output/result_naive_{min_rate}_{max_rate}.npy', np.asarray(results))
     print(results)
+    np.save(f'./output/result_rmse_naive_{min_rate}_{max_rate}.npy', np.asarray(results_rmse))
+    print(results_rmse)
 
 
 if __name__ == "__main__":
