@@ -126,6 +126,7 @@ class EP_for_full_pop_creator(EP_base):
 
     def loop_check(self, range_sample=np.linspace(0.01, 0.1, 10)):
         results = []
+        results_rmse = []
         for rate in range_sample:
             print(f"PROCESSING rate {rate}")
             seed_df = sampling_from_full_pop(self.full_df_hh, rate=rate)
@@ -134,8 +135,9 @@ class EP_for_full_pop_creator(EP_base):
             print("Calculate SRMSE now")
             SRMSE = SRMSE_based_on_counts(self.full_df_hh.value_counts(), syn_pop.value_counts())
             results.append(SRMSE)
+            results_rmse.append(compare_RMS_census(self.marginals, get_marg_val_from_full(syn_pop)))
             print(f"Done rate {rate} with score of {SRMSE}")
-        return results
+        return results, results_rmse
     
 
     def run_EP(self, seed_data, num_pop=5, random_rate=0.2, num_gen=10, crossover_time=1):
@@ -195,8 +197,8 @@ class EP_for_full_pop_creator(EP_base):
 
         print(check_RMSD) 
         print(check_SRMSE)
-        np.save('Testing/GA_results_RMSD.npy', np.array(check_RMSD))
-        np.save('Testing/GA_results_SRMSE.npy', np.array(check_SRMSE))
+        np.save('Testing/GA_results_RMSD.npy_L', np.array(check_RMSD))
+        np.save('Testing/GA_results_SRMSE.npy_L', np.array(check_SRMSE))
 
         return result
 
@@ -304,14 +306,15 @@ class EP_for_full_pop_creator(EP_base):
 def test():
     data_loc = "../data/basics/"
     output_loc = "../output/"
-    min_rate, max_rate, tot = 0.01, 0.05, 2
+    min_rate, max_rate, tot = 0.01, 0.05, 5
     
     EP_creator = EP_for_full_pop_creator(data_loc)
-    results = EP_creator.loop_check(range_sample=np.linspace(min_rate, max_rate, tot))
+    results, results_rmse = EP_creator.loop_check(range_sample=np.linspace(min_rate, max_rate, tot))
 
-    data = np.asarray(results)
-    np.save(f'{output_loc}/result_EP_{min_rate}_{max_rate}.npy', data)
+    np.save(f'{output_loc}/result_EP_{min_rate}_{max_rate}.npy', np.asarray(results))
     print(results)
+    np.save(f'{output_loc}/result_EP_{min_rate}_{max_rate}.npy', np.asarray(results_rmse))
+    print(results_rmse)
 
 
 if __name__ == "__main__":
