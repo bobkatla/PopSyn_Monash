@@ -26,7 +26,7 @@ def realise_full_pop_based_on_weight(df:pd.DataFrame, weight_col:str) -> pd.Data
 
 def sampling_from_full_pop(full_pop:pd.DataFrame, rate: float) -> pd.DataFrame:
     assert rate <= 1
-    sample_pop = full_pop.sample(frac=rate, random_state=1)
+    sample_pop = full_pop.sample(frac=rate)
     return sample_pop
 
 

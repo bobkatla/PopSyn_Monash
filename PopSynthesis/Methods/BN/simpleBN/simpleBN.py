@@ -26,7 +26,9 @@ def loop_learn_full_pop(loc_data, range_sample=np.linspace(0.01, 0.1, 10), rejec
     results = []
     for rate in range_sample:
         print(f"PROCESSING rate {rate}")
-        seed_df = sampling_from_full_pop(full_df_hh, rate=rate)
+        seed_df = sampling_from_full_pop(full_df_hh, rate=1) # shuffle the data
+        seed_df = sampling_from_full_pop(seed_df, rate=1) # shuffle the data
+        seed_df = seed_df.head(int(rate * n))
         new_seed_df = condense_pop(seed_df, "_weight")
         print("Learn BN")
         model = learn_struct_BN_score(new_seed_df, show_struct=False)
@@ -61,7 +63,7 @@ def loop_learn_full_pop(loc_data, range_sample=np.linspace(0.01, 0.1, 10), rejec
 
 def main():
     loc_data = "./data/"
-    min_rate, max_rate, tot = 0.00001, 0.00005, 5
+    min_rate, max_rate, tot = 0.0001, 0.0005, 5
     results = loop_learn_full_pop(loc_data=loc_data, range_sample=np.linspace(min_rate, max_rate, tot), reject_sample=False)
     data = np.asarray(results)
     np.save(f'./output/results_simpleBN_{min_rate}_{max_rate}.npy', data)

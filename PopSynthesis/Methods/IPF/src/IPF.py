@@ -53,11 +53,14 @@ def eval_based_on_full_pop(loc_data, tolerance=1e-5,  max_iterations=10000, rang
     to_drop_cols = ["hh_num", "hhid", "SA1", "SA2", "SA3", "SA4"]
     seed_df_hh = seed_df_hh.drop(columns=to_drop_cols)
     full_df_hh = realise_full_pop_based_on_weight(seed_df_hh, weight_col="wdhhwgt_sa3")
+    N = len(full_df_hh)
     marginals = get_marg_val_from_full(full_df_hh)
     results = []
     for rate in range_sample:
         print(f"PROCESSING rate {rate}")
-        seed_df = sampling_from_full_pop(full_df_hh, rate=rate)
+        seed_df = sampling_from_full_pop(full_df_hh, rate=1) # shuffle the data
+        seed_df = sampling_from_full_pop(seed_df, rate=1) # shuffle the data
+        seed_df = seed_df.head(int(rate * N))
         joint_dist = get_joint_dist_from_sample(seed_df=seed_df, full_pop=full_df_hh)
         print("Doing the IPF now")
         constraints, iterations = ipf.calculate_constraints(marginals, joint_dist, tolerance=tolerance,  max_iterations=max_iterations)
