@@ -87,6 +87,76 @@ class EP_BN_creator(EP_base):
     
     def eval_func(self, sol):
         return 0
+    
+
+from PopSynthesis.Methods.IPF.src.data_process import get_marg_val_from_full
+from PopSynthesis.Benchmark.CompareFullPop.utils import sampling_from_full_pop, realise_full_pop_based_on_weight
+from PopSynthesis.Benchmark.CompareFullPop.compare import SRMSE_based_on_counts
+import numpy as np
+import math
+    
+
+class EP_for_full_pop_creator(EP_base):
+    def __init__(self, loc_data) -> None:
+        self.seed_df_hh = pd.read_csv(loc_data + "H_sample.csv")
+        self.seed_df_pp = pd.read_csv(loc_data + "P_sample.csv")
+
+        # NOTE: for now, only HH data
+        to_drop_cols = ["hh_num", "hhid", "SA1", "SA2", "SA3", "SA4"]
+        self.seed_df_hh = self.seed_df_hh.drop(columns=to_drop_cols)
+        self.full_df_hh = realise_full_pop_based_on_weight(self.seed_df_hh, weight_col="wdhhwgt_sa3")
+        self.N = len(self.full_df_hh)
+
+        self.marginals = get_marg_val_from_full(self.full_df_hh)
+
+
+    def loop_check(self,  range_sample=np.linspace(0.01, 0.1, 10)):
+        results = []
+        for rate in range_sample:
+            print(f"PROCESSING rate {rate}")
+            seed_df = sampling_from_full_pop(self.full_df_hh, rate=rate)
+            print("Doing the EP now")
+            syn_pop = self.run_EP(seed_data=seed_df)
+            print("Calculate SRMSE now")
+            SRMSE = SRMSE_based_on_counts(self.full_df_hh.value_counts(), syn_pop.value_counts())
+            results.append(SRMSE)
+            print(f"Done rate {rate} with score of {SRMSE}")
+        return results
+    
+    
+    def run_EP(self, seed_data, num_pop=10, random_rate=0.2, num_gen=1000, err_converg=math.inf, crossover_time=3):
+        self.set_BN()
+        self.init_first_gen()
+        
+        return None
+
+
+    def set_BN(self, seed_data, default=True):
+        # TODO: make it more advanced with customisation
+        model = None
+        if default:
+            model = learn_struct_BN_score(seed_data)
+            # this will learning using MLE
+            model.fit(seed_data)
+        else:
+            NotImplemented
+        self.BN_model = model
+
+
+    def init_first_gen(self):
+        first_gen = sample_BN(self.BN_model, self.N)
+        score = self.eval_func(first_gen)
+        self.ls_sols = [(first_gen, score, )]
+
+
+    def mutation(self): pass
+
+    def cross_over(self): pass
+
+    def annihilation(self): pass
+
+    def eval_func(self, gen): 
+        return 0
 
 
 def test():
@@ -97,15 +167,11 @@ def test():
     marginal = pd.read_csv(data_loc + "marginal_2021.csv")
     controls = pd.read_csv(data_loc + "controls_2021.csv")
 
-    print(sample, marginal, controls, sep='\n')
-    # test_creator = EP_BN_creator(
-    #     sample=sample,
-    #     marginal=marginal,
-    #     controls=controls
-    # )
-
-    # test_creator.mutation()
-    # print(test_creator.ls_sols)
+    # min_rate, max_rate, tot = 0.0001, 0.001, 10
+        # results = self.EP_run(loc_data=loc_data, range_sample)
+        # data = np.asarray(results)
+        # np.save(f'{output_loc}/result_EP_{min_rate}_{max_rate}.npy', data)
+        # print(results)
 
 
 if __name__ == "__main__":
