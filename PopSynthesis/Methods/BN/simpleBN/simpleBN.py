@@ -66,7 +66,7 @@ def loop_learn_full_pop(loc_data, range_sample=np.linspace(0.01, 0.1, 10), rejec
 
 def main():
     loc_data = "./data/"
-    min_rate, max_rate, tot = 0.0001, 0.0005, 5
+    min_rate, max_rate, tot = 0.1, 1, 10
     results, results_rmse = loop_learn_full_pop(loc_data=loc_data, range_sample=np.linspace(min_rate, max_rate, tot), reject_sample=False)
     np.save(f'./output/results_simpleBN_{min_rate}_{max_rate}.npy', np.asarray(results))
     print(results)

@@ -140,7 +140,7 @@ class EP_for_full_pop_creator(EP_base):
         return results, results_rmse
     
 
-    def run_EP(self, seed_data, num_pop=5, random_rate=0.2, num_gen=10, crossover_time=1):
+    def run_EP(self, seed_data, num_pop=8, random_rate=0.2, num_gen=20, crossover_time=2):
         self.set_BN(seed_data=seed_data)
         self.init_first_gen()
 
@@ -193,12 +193,12 @@ class EP_for_full_pop_creator(EP_base):
             counter += 1
         
         # Pick the final solution, can create BN as well
-        result = self.ls_sols[0]
+        result = self.ls_sols[0][0]
 
         print(check_RMSD) 
         print(check_SRMSE)
-        np.save('Testing/GA_results_RMSD.npy_L', np.array(check_RMSD))
-        np.save('Testing/GA_results_SRMSE.npy_L', np.array(check_SRMSE))
+        np.save('../output/GA_results_RMSD.npy_XL', np.array(check_RMSD))
+        np.save('../output/GA_results_SRMSE.npy_XL', np.array(check_SRMSE))
 
         return result
 
@@ -306,7 +306,7 @@ class EP_for_full_pop_creator(EP_base):
 def test():
     data_loc = "../data/basics/"
     output_loc = "../output/"
-    min_rate, max_rate, tot = 0.01, 0.05, 5
+    min_rate, max_rate, tot = 0.1, 1, 10
     
     EP_creator = EP_for_full_pop_creator(data_loc)
     results, results_rmse = EP_creator.loop_check(range_sample=np.linspace(min_rate, max_rate, tot))
