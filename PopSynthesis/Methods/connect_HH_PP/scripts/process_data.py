@@ -22,6 +22,8 @@ PP_ATTS = [
     "anywork"
 ]
 
+LS_GR_RELA = ["Self", "Spouse", "Child", "Grandchild"] # For the rest we will make them Others
+
 
 def matching_id(df1, df2, join_by):
     NotImplemented
@@ -74,8 +76,7 @@ def process_rela(pp_df):
     check_rela_gb(gb_df_2) # Should print nothing
 
     # replace values in columns
-    ls_keep_same = ["Self", "Spouse", "Child", "Grandchild"] # Others we will make them Others
-    pp_df.loc[~pp_df["relationship"].isin(ls_keep_same), "relationship"] = "Others"
+    pp_df.loc[~pp_df["relationship"].isin(LS_GR_RELA), "relationship"] = "Others"
     # print(pp_df["relationship"].unique())
     return pp_df
 
@@ -84,7 +85,22 @@ def adding_pp_related_atts(pp_df, hh_df):
     # This adding the persons-related atts to the hh df for later sampling
     # at the moment we will use to have the number of each relationship
     # the total will make the hhsize
-    NotImplemented
+    ls_rela = pp_df["relationship"].unique()
+    gb_df_pp = pp_df.groupby("hhid")["relationship"].apply(lambda x: list(x))
+    dict_count_rela = {}
+    for hhid, rela_gr in zip(gb_df_pp.index, gb_df_pp):
+        check_dict = {x: 0 for x in ls_rela}
+        for i in rela_gr: check_dict[i] += 1
+        dict_count_rela[hhid] = check_dict
+
+    for rela in ls_rela:
+        hh_df[rela] = hh_df.apply(lambda row: dict_count_rela[row["hhid"]][rela], axis=1)
+
+    # check Self again
+    assert len(hh_df["Self"].unique()) == 1
+    assert hh_df["Self"].unique()[0] == 1
+
+    return hh_df.drop(columns=["Self"])
 
 
 def process_hh_main_person(hh_df, main_pp_df, to_csv=False, name_file="connect_hh_main"):
@@ -102,6 +118,10 @@ def main():
 
     pp_df = process_rela(pp_df)
     hh_df = adding_pp_related_atts(pp_df, hh_df)
+
+    #Tempo saving
+    # pp_df.to_csv("first_processed_all_P.csv", index=False)
+    # hh_df.to_csv("first_processed_all_H.csv", index=False)
     """
     main_pp_df = pp_df[pp_df["relationship"]=="Self"]
     # process hh_main
