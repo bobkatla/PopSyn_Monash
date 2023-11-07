@@ -79,7 +79,7 @@ def process_rela(pp_df):
     return pp_df
 
 
-def adding_pp_related_atts(pp_df, hh_df):
+def adding_pp_related_atts(hh_df, pp_df):
     # This adding the persons-related atts to the hh df for later sampling
     # at the moment we will use to have the number of each relationship
     # the total will make the hhsize
@@ -128,28 +128,70 @@ def process_main_other(main_pp_df, sub_df, rela, to_csv=True):
     
     return combine_df
 
+def get_weights_dict(hh_df_w, pp_df_w):
+    re_dict = {}
+    # Process HH weights
+    hh_df_w["_weight"] = hh_df_w["wdhhwgt_sa3"].fillna(0) + hh_df_w["wehhwgt_sa3"].fillna(0)
+    pp_df_w["_weight"] = pp_df_w["wdperswgt_sa3"].fillna(0) + pp_df_w["weperswgt_sa3"].fillna(0)
+    re_dict["hh"] = dict(zip(hh_df_w["hhid"], hh_df_w["_weight"]))
+    re_dict["pp"] = dict(zip(pp_df_w["persid"], pp_df_w["_weight"]))
+    return re_dict
+
+
+def add_weights_in_df(df, weights_dict, type="hh"):
+    select_col = None
+    dict_check = weights_dict[type]
+    if type == "hh":
+        check_cols = [x for x in df.columns if "hhid" in x]
+        if len(check_cols) == 0:
+            raise ValueError("No HHID to match with the weights")
+        else:
+            select_col = check_cols[0] # Don't know there will be mutiple but just incase, will select the first col
+        
+    elif type == "pp":
+        check_cols = [x for x in df.columns if "persid" in x]
+        if len(check_cols) == 0:
+            raise ValueError("No persid to match witht the weights")
+        elif len(check_cols) == 1:
+            select_col = check_cols[0]
+        else:
+            pref_val = "persid_main" # We will now use the weights of the main person
+            select_col = pref_val if pref_val in check_cols else check_cols[0]
+    else:
+        raise ValueError("You pick wrong type for dict check")
+    
+    assert select_col is not None
+    df["_weight"] = df.apply(lambda row: dict_check[row[select_col]], axis=1)
+    return df
+
 
 def main():
     # Import HH and PP samples (VISTA)
-    hh_df = pd.read_csv("..\..\..\Generator_data\data\source2\VISTA\SA\H_VISTA_1220_SA1.csv")[HH_ATTS]
-    pp_df = pd.read_csv("..\..\..\Generator_data\data\source2\VISTA\SA\P_VISTA_1220_SA1.csv")[PP_ATTS]
+    hh_df_raw = pd.read_csv("..\..\..\Generator_data\data\source2\VISTA\SA\H_VISTA_1220_SA1.csv")
+    pp_df_raw = pd.read_csv("..\..\..\Generator_data\data\source2\VISTA\SA\P_VISTA_1220_SA1.csv")
 
-    pp_df = process_rela(pp_df)
-    hh_df = adding_pp_related_atts(pp_df, hh_df)
+    pp_df = process_rela(pp_df_raw[PP_ATTS])
+    hh_df = adding_pp_related_atts(hh_df_raw[HH_ATTS], pp_df)
 
+    weights_dict = get_weights_dict(hh_df_raw[["hhid", "wdhhwgt_sa3", "wehhwgt_sa3"]], pp_df_raw[["persid", "wdperswgt_sa3", "weperswgt_sa3"]])
     #Tempo saving
     # pp_df.to_csv("../data/first_processed_all_P.csv", index=False)
     # hh_df.to_csv("../data/first_processed_all_H.csv", index=False)
     
     main_pp_df = pp_df[pp_df["relationship"]=="Self"]
-    
+
     # process hh_main
-    df_hh_main = process_hh_main_person(hh_df, main_pp_df, to_csv=True)
+    df_hh_main = process_hh_main_person(hh_df, main_pp_df, to_csv=False)
+    df_hh_main = add_weights_in_df(df_hh_main, weights_dict, type="hh")
+    df_hh_main.to_csv(f"../data/connect_hh_main.csv", index=False)
 
     for rela in ALL_RELA:
         if rela != "Self":
+            print(f"DOING {rela}")
             sub_df = pp_df[pp_df["relationship"]==rela]
-            df_main_other = process_main_other(main_pp_df, sub_df, rela=rela, to_csv=True)
+            df_main_other = process_main_other(main_pp_df, sub_df, rela=rela, to_csv=False)
+            df_main_other = add_weights_in_df(df_main_other, weights_dict, type="pp")
+            df_main_other.to_csv(f"../data/connect_main_{rela}.csv", index=False)
 
 
 if __name__ == "__main__":
