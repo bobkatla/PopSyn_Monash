@@ -152,25 +152,25 @@ def main():
     df_seed_H = pd.read_csv("../data/H_sample.csv")
     # df_seed_P = pd.read_csv("../data/p_sample.csv")
 
-    name_zone_lev = "SA1"
+    name_zone_lev = "POA"
     df_census = pd.read_csv(f"../data/census_{name_zone_lev}.csv")
-    ls_all_zones = df_census[name_zone_lev].astype("Int64").unique()
+    # ls_all_zones = df_census[name_zone_lev].astype("Int64").unique()
     # Extract missing zones
 
     df_seed = df_seed_H
     # print(df_seed_H["hhsize"].unique()) # till 11
     df_seed = df_seed.rename(columns={"wdhhwgt_sa3": "_weight"})
 
-    ls_zones = df_seed[name_zone_lev].astype("Int64").unique()
-    ls_missing_zones = _extract_missing_zones(ls_available=ls_all_zones, ls_zones=ls_zones ,zone_lev=name_zone_lev)
+    # ls_zones = df_seed[name_zone_lev].astype("Int64").unique()
+    # ls_missing_zones = _extract_missing_zones(ls_available=ls_all_zones, ls_zones=ls_zones ,zone_lev=name_zone_lev)
     df_seed = df_seed.drop(columns=["SA1", "SA2", "SA3", "SA4", "hhid", "hh_num"])
     # Learn BN
     BN = _learn_BN(df_seed=df_seed)
-    a = _sample_some_missing(BN, "./synthetic_2021_HH.csv", df_census, name_zone_lev)
+    # a = _sample_some_missing(BN, "./synthetic_2021_HH.csv", df_census, name_zone_lev)
 
     # dummy_seed = _sampling_BN(BN, ls_zone=ls_missing_zones, df_marg=df_census)
-    # final_re = _tempo_test(BN, df_census, name_zone_lev)
-    # final_re.to_csv("./synthetic_2021_HH.csv", index=False)
+    final_re = _tempo_test(BN, df_census, name_zone_lev)
+    final_re.to_csv("./synthetic_2021_HH_POA.csv", index=False)
     # Combine dummy seed and original seed
     # Output the new seed, this will be the new input
     
