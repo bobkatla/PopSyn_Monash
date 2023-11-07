@@ -196,10 +196,19 @@ def main():
 
 
 def test():
-    a = get_census_sa(census_atts, "SA4")
-    print(a)
+    atts_hhsz = [
+        "Num_Psns_UR_6mo_Total",
+        "Num_Psns_UR_5_Total",
+        "Num_Psns_UR_4_Total",
+        "Num_Psns_UR_3_Total",
+        "Num_Psns_UR_2_Total",
+        "Num_Psns_UR_1_Total",
+        "Total_dwelings"
+    ]
+    a = get_census_sa(census_atts, "POA")
+    a.to_csv("POA_marg.csv", index=False)
 
 
 if __name__ == "__main__":
-    main()
-    # test()
+    # main()
+    test()
