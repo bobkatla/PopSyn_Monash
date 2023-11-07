@@ -23,10 +23,8 @@ PP_ATTS = [
 ]
 
 LS_GR_RELA = ["Self", "Spouse", "Child", "Grandchild"] # For the rest we will make them Others
-
-
-def matching_id(df1, df2, join_by):
-    NotImplemented
+HANDLE_THE_REST_RELA = "Others"
+ALL_RELA = LS_GR_RELA + [HANDLE_THE_REST_RELA]
 
 
 def check_rela_gb(gb_df):
@@ -76,7 +74,7 @@ def process_rela(pp_df):
     check_rela_gb(gb_df_2) # Should print nothing
 
     # replace values in columns
-    pp_df.loc[~pp_df["relationship"].isin(LS_GR_RELA), "relationship"] = "Others"
+    pp_df.loc[~pp_df["relationship"].isin(LS_GR_RELA), "relationship"] = HANDLE_THE_REST_RELA
     # print(pp_df["relationship"].unique())
     return pp_df
 
@@ -104,11 +102,31 @@ def adding_pp_related_atts(pp_df, hh_df):
 
 
 def process_hh_main_person(hh_df, main_pp_df, to_csv=False, name_file="connect_hh_main"):
-    NotImplemented
+    # they need to perfect match
+    assert len(hh_df) == len(main_pp_df)
+    combine_df = hh_df.merge(main_pp_df, on="hhid", how="inner")
+    combine_df = combine_df.drop(columns=["relationship"])
+    if to_csv:
+        combine_df.to_csv(f"../data/{name_file}.csv", index=False)
+    return combine_df
 
 
-def process_main_other(main_pp_df, sub_df, to_csv=True, name_file="connect_main_other"):
-    NotImplemented
+def process_main_other(main_pp_df, sub_df, rela, to_csv=True):
+    assert len(main_pp_df["relationship"].unique()) == 1 # It is Self
+    assert len(sub_df["relationship"].unique()) == 1 # It is the relationship we checking
+    # Change the name to avoid confusion
+    main_pp_df = main_pp_df.add_suffix('_main', axis=1)
+    sub_df = sub_df.add_suffix(f'_{rela}', axis=1)
+    main_pp_df = main_pp_df.rename(columns={"hhid_main": "hhid"})
+    sub_df = sub_df.rename(columns={f"hhid_{rela}": "hhid"})
+
+    combine_df = main_pp_df.merge(sub_df, on="hhid", how="right")
+    combine_df = combine_df.drop(columns=[f"relationship_{rela}", "relationship_main"])
+    
+    if to_csv:
+        combine_df.to_csv(f"../data/connect_main_{rela}.csv", index=False)
+    
+    return combine_df
 
 
 def main():
@@ -120,19 +138,19 @@ def main():
     hh_df = adding_pp_related_atts(pp_df, hh_df)
 
     #Tempo saving
-    # pp_df.to_csv("first_processed_all_P.csv", index=False)
-    # hh_df.to_csv("first_processed_all_H.csv", index=False)
-    """
+    # pp_df.to_csv("../data/first_processed_all_P.csv", index=False)
+    # hh_df.to_csv("../data/first_processed_all_H.csv", index=False)
+    
     main_pp_df = pp_df[pp_df["relationship"]=="Self"]
+    
     # process hh_main
     df_hh_main = process_hh_main_person(hh_df, main_pp_df, to_csv=True)
 
-    for rela in pp_df["relationship"]:
+    for rela in ALL_RELA:
         if rela != "Self":
             sub_df = pp_df[pp_df["relationship"]==rela]
-            name_file = f"connect_main_{rela}"
-            df_main_other = process_main_other(main_pp_df, sub_df, name_file=name_file, to_csv=True)
-    """
+            df_main_other = process_main_other(main_pp_df, sub_df, rela=rela, to_csv=True)
+
 
 if __name__ == "__main__":
     main()
