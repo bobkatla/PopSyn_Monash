@@ -219,7 +219,7 @@ def test():
     print(pp_df)
 
 
-def convert_pp_age_gr(pp_df, range_age, age_limit):
+def convert_pp_age_gr(pp_df, range_age=10, age_limit=100):
     check_dict = {}
     hold_min = None
     new_name = None
@@ -240,6 +240,44 @@ def convert_pp_age_gr(pp_df, range_age, age_limit):
     return pp_df
 
 
+def convert_hh_totvehs(hh_df, veh_limit=4):
+    def convert_veh(row):
+        if row["totalvehs"] < veh_limit:
+            return str(row["totalvehs"])
+        else:
+            return f"{veh_limit}+"
+    hh_df["totalvehs"] = hh_df.apply(convert_veh, axis=1)
+    return hh_df
+
+
+def convert_hh_inc(hh_df, check_states):
+    def con_inc(row):
+        hh_inc = row["hhinc"]
+        results = None
+        # Confime hhinc always exist, it's float
+        if hh_inc == 0:
+            return "Zero income"
+        elif hh_inc < 0:
+            return "Negative income"
+        else:
+            for state in check_states:
+                bool_val = None
+                if "p.w." in state:
+                    state = state.replace("p.w.", "").replace(" ", "").replace("$", "")
+                    if "+" in state:
+                        val = state.replace("+", "")
+                        bool_val = hh_inc >= int(val)
+                    elif "-" in state:
+                        a, b = state.split("-")
+                        bool_val = hh_inc >= int(a) and hh_inc <= int(b)
+                    else:
+                        raise ValueError(f"Dunno I never seen this lol {state}")
+                if bool_val:
+                    return state
+    hh_df["hhinc"] = hh_df.apply(con_inc, axis=1)
+    return hh_df
+
+
 def main():
     # Import HH and PP samples (VISTA)
     hh_df_raw = pd.read_csv("..\..\..\Generator_data\data\source2\VISTA\SA\H_VISTA_1220_SA1.csv")
@@ -247,7 +285,16 @@ def main():
 
     pp_df = process_rela(pp_df_raw[PP_ATTS])
     pp_df = get_main_max_age(pp_df)
+    pp_df = convert_pp_age_gr(pp_df=pp_df)
+    
     hh_df = adding_pp_related_atts(hh_df_raw[HH_ATTS], pp_df)
+    hh_df = convert_hh_totvehs(hh_df)
+    hh_df = convert_hh_inc(hh_df, check_states=pp_df["persinc"].unique())
+
+    # return dict statenames for hh
+    dict_hh_state_names = {hh_cols: list(hh_df[hh_cols].unique()) for hh_cols in hh_df.columns if hh_cols not in ALL_RELA}
+    with open('../data/dict_hh_states.pickle', 'wb') as handle:
+        pickle.dump(dict_hh_state_names, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     # return dict statenames for pp
     dict_pp_state_names = {pp_cols: list(pp_df[pp_cols].unique()) for pp_cols in pp_df.columns}
