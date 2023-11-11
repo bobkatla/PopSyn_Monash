@@ -27,6 +27,7 @@ PP_ATTS = [
 LS_GR_RELA = ["Self", "Spouse", "Child", "Grandchild"] # For the rest we will make them Others
 HANDLE_THE_REST_RELA = "Others"
 ALL_RELA = LS_GR_RELA + [HANDLE_THE_REST_RELA]
+NOT_INCLUDED_IN_BN_LEARN = ["hhid", "persid"]
 
 
 def check_rela_gb(gb_df):
@@ -292,12 +293,12 @@ def main():
     hh_df = convert_hh_inc(hh_df, check_states=pp_df["persinc"].unique())
 
     # return dict statenames for hh
-    dict_hh_state_names = {hh_cols: list(hh_df[hh_cols].unique()) for hh_cols in hh_df.columns if hh_cols not in ALL_RELA}
+    dict_hh_state_names = {hh_cols: sorted(list(hh_df[hh_cols].unique())) for hh_cols in hh_df.columns if hh_cols not in ALL_RELA and hh_cols not in NOT_INCLUDED_IN_BN_LEARN}
     with open('../data/dict_hh_states.pickle', 'wb') as handle:
         pickle.dump(dict_hh_state_names, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     # return dict statenames for pp
-    dict_pp_state_names = {pp_cols: list(pp_df[pp_cols].unique()) for pp_cols in pp_df.columns}
+    dict_pp_state_names = {pp_cols: sorted(list(pp_df[pp_cols].unique())) for pp_cols in pp_df.columns if pp_cols not in NOT_INCLUDED_IN_BN_LEARN}
     with open('../data/dict_pp_states.pickle', 'wb') as handle:
         pickle.dump(dict_pp_state_names, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
