@@ -45,8 +45,7 @@ def process_rela(pp_df):
 
     gb_df = pp_df.groupby("hhid")["relationship"].apply(lambda x: list(x))
     # check_rela_gb(gb_df)
-    
-    # There are cases of no Self but 2 spouses, we need to process them
+
     # There are various cases, requires some manual works
     # In order of replacement: 1 person, 2 spouses, 1 spouse, no spouse then pick the oldest
     # Thus we have 2 way of replacement: oldest (apply for 1 person and others) and spouse
@@ -78,8 +77,6 @@ def process_rela(pp_df):
     pp_df.loc[~pp_df["relationship"].isin(LS_GR_RELA), "relationship"] = HANDLE_THE_REST_RELA
     # print(pp_df["relationship"].unique())
 
-    pp_df = get_main_by_high_inc(pp_df)
-
     return pp_df
 
 
@@ -99,10 +96,10 @@ def adding_pp_related_atts(hh_df, pp_df):
         hh_df[rela] = hh_df.apply(lambda row: dict_count_rela[row["hhid"]][rela], axis=1)
 
     # check Self again
-    assert len(hh_df["Self"].unique()) == 1
-    assert hh_df["Self"].unique()[0] == 1
+    assert len(hh_df["Main"].unique()) == 1
+    assert hh_df["Main"].unique()[0] == 1
 
-    return hh_df.drop(columns=["Self"])
+    return hh_df.drop(columns=["Main"])
 
 
 def process_hh_main_person(hh_df, main_pp_df, to_csv=False, name_file="connect_hh_main"):
@@ -116,7 +113,7 @@ def process_hh_main_person(hh_df, main_pp_df, to_csv=False, name_file="connect_h
 
 
 def process_main_other(main_pp_df, sub_df, rela, to_csv=True):
-    assert len(main_pp_df["relationship"].unique()) == 1 # It is Self
+    assert len(main_pp_df["relationship"].unique()) == 1 # It is Main
     assert len(sub_df["relationship"].unique()) == 1 # It is the relationship we checking
     # Change the name to avoid confusion
     main_pp_df = main_pp_df.add_suffix('_main', axis=1)
@@ -170,7 +167,6 @@ def add_weights_in_df(df, weights_dict, type="hh"):
 
 
 def add_converted_inc(pp_df):
-
     def process_inc(row):
         r_check = row["persinc"]
         val = None
@@ -194,24 +190,32 @@ def add_converted_inc(pp_df):
         return val
     
     pp_df["inc_dummy"] = pp_df.apply(process_inc, axis=1)
-
     return pp_df
 
 
-def get_main_by_high_inc (pp_df):
+def get_main_max_age(pp_df):
     # add the dummy inc to rank
-    pp_df = add_converted_inc(pp_df)
-    gb_df = pp_df.groupby("hhid")["relationship"].apply(lambda x: list(x))
-
-
+    ls_hh_id = pp_df["hhid"].unique()
+    for hh_id in ls_hh_id:
+        print(hh_id)
+        sub_df = pp_df[pp_df["hhid"]==hh_id]
+        idx_max_age = sub_df["age"].idxmax()
+        rela_max_age = sub_df.loc[idx_max_age]["relationship"]
+        # CONFIRMED this will be Spouse or Others only
+        pp_df.at[idx_max_age, "relationship"] = "Main"
+        if rela_max_age != "Self":
+            sub_sub_df = sub_df[sub_df["relationship"]=="Self"]
+            idx_self = sub_sub_df.index[0]
+            pp_df.at[idx_self, "relationship"] = rela_max_age
+    return pp_df
 
 
 def test():
     # Import HH and PP samples (VISTA)
     pp_df_raw = pd.read_csv("..\..\..\Generator_data\data\source2\VISTA\SA\P_VISTA_1220_SA1.csv")
     pp_df = process_rela(pp_df_raw[PP_ATTS])
-    pp_df = add_converted_inc(pp_df)
-    print(pp_df["inc_dummy"].unique())
+    pp_df = get_main_max_age(pp_df)
+    print(pp_df)
 
 
 def main():
@@ -220,6 +224,7 @@ def main():
     pp_df_raw = pd.read_csv("..\..\..\Generator_data\data\source2\VISTA\SA\P_VISTA_1220_SA1.csv")
 
     pp_df = process_rela(pp_df_raw[PP_ATTS])
+    pp_df = get_main_max_age(pp_df)
     hh_df = adding_pp_related_atts(hh_df_raw[HH_ATTS], pp_df)
 
     weights_dict = get_weights_dict(hh_df_raw[["hhid", "wdhhwgt_sa3", "wehhwgt_sa3"]], pp_df_raw[["persid", "wdperswgt_sa3", "weperswgt_sa3"]])
@@ -227,7 +232,7 @@ def main():
     # pp_df.to_csv("../data/first_processed_all_P.csv", index=False)
     # hh_df.to_csv("../data/first_processed_all_H.csv", index=False)
     
-    main_pp_df = pp_df[pp_df["relationship"]=="Self"]
+    main_pp_df = pp_df[pp_df["relationship"]=="Main"]
 
     # process hh_main
     df_hh_main = process_hh_main_person(hh_df, main_pp_df, to_csv=False)
@@ -244,5 +249,5 @@ def main():
 
 
 if __name__ == "__main__":
-    # main()
-    test()
+    main()
+    # test()
