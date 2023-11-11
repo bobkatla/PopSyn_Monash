@@ -36,15 +36,15 @@ def reject_samp_veh(BN, df_marg, zone_lev):
         zone_info = df_marg[df_marg[zone_lev]==zone]
         assert len(zone_info) == 1
         for totveh_label in ls_total_veh:
-            n_totvehs = zone_info[totveh_label[0]].iat[0]
+            n_totvehs = int(zone_info[totveh_label[0]].iat[0])
             evidence = State('totalvehs', totveh_label[1]) if totveh_label[1] is not None else None
             # Weird case of multiple
+            syn = None
             if evidence:
-                syn = inference.rejection_sample(evidence=evidence, size=n_totvehs, show_progress=True)
-                ls_re.append(syn)
+                syn = inference.rejection_sample(evidence=[evidence], size=n_totvehs, show_progress=True)
             else:
                 syn = inference.forward_sample(size=n_totvehs, show_progress=True)
-                ls_re.append(syn)
+            ls_re.append(syn)
         if ls_re == []: continue
         final_for_zone = pd.concat(ls_re, axis=0)
         final_for_zone[zone_lev] = zone
@@ -91,18 +91,17 @@ def main():
     hh_state_names = None
     with open('../data/dict_hh_states.pickle', 'rb') as handle:
         hh_state_names = pickle.load(handle)
+    state_names = hh_state_names | pp_state_names
 
-    state_names = pp_state_names | hh_state_names
-    print(state_names)
+    print("Learn BN")
+    model = learn_struct_BN_score(df_seed, show_struct=False, state_names=state_names)
+    model = learn_para_BN(model, df_seed)
+    print("Doing the sampling")
+    # census_df = pd.read_csv("../data/census_sa1.csv")
+    POA_df = process_POA()
+    final_syn_pop = reject_samp_veh(BN=model, df_marg=POA_df, zone_lev="POA")
+    final_syn_pop.to_csv("SynPop_hh_main_POA.csv", index=False)
 
-    # print("Learn BN")
-    # model = learn_struct_BN_score(df_seed, show_struct=False, state_names=state_names)
-    # model = learn_para_BN(model, df_seed)
-    # print("Doing the sampling")
-    # # census_df = pd.read_csv("../data/census_sa1.csv")
-    # POA_df = process_POA()
-    # final_syn_pop = reject_samp_veh(BN=model, df_marg=POA_df, zone_lev="POA")
-    # final_syn_pop.to_csv("SynPop_hh_main_POA.csv", index=False)
 
 if __name__ == "__main__":
     main()
