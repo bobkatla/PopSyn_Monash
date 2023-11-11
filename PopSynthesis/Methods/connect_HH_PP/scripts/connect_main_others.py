@@ -3,6 +3,7 @@ from process_data import HH_ATTS, PP_ATTS, ALL_RELA
 from PopSynthesis.Methods.BN.utils.learn_BN import learn_struct_BN_score, learn_para_BN
 from pgmpy.sampling import BayesianModelSampling
 from pgmpy.factors.discrete import State
+import pickle
 
 
 def process_combine_df(combine_df):
@@ -66,6 +67,10 @@ def main():
     # Store the HH in df, Store the main in a list to handle later
     store_pp_df = extra_pp_df(main_pp_df_all)
     ls_df_pp = [store_pp_df]
+
+    state_names = None
+    with open('../data/dict_pp_states.pickle', 'rb') as handle:
+        state_names = pickle.load(handle)
 
     all_rela_exist = ALL_RELA.copy()
     all_rela_exist.remove("Self")

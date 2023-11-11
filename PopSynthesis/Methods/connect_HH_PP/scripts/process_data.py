@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from collections import defaultdict 
+import pickle
 pd.options.mode.chained_assignment = None  # default='warn'
 
 
@@ -239,7 +240,6 @@ def convert_pp_age_gr(pp_df, range_age, age_limit):
     return pp_df
 
 
-
 def main():
     # Import HH and PP samples (VISTA)
     hh_df_raw = pd.read_csv("..\..\..\Generator_data\data\source2\VISTA\SA\H_VISTA_1220_SA1.csv")
@@ -248,6 +248,11 @@ def main():
     pp_df = process_rela(pp_df_raw[PP_ATTS])
     pp_df = get_main_max_age(pp_df)
     hh_df = adding_pp_related_atts(hh_df_raw[HH_ATTS], pp_df)
+
+    # return dict statenames for pp
+    dict_pp_state_names = {pp_cols: list(pp_df[pp_cols].unique()) for pp_cols in pp_df.columns}
+    with open('../data/dict_pp_states.pickle', 'wb') as handle:
+        pickle.dump(dict_pp_state_names, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     weights_dict = get_weights_dict(hh_df_raw[["hhid", "wdhhwgt_sa3", "wehhwgt_sa3"]], pp_df_raw[["persid", "wdperswgt_sa3", "weperswgt_sa3"]])
     #Tempo saving
