@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from collections import defaultdict 
+pd.options.mode.chained_assignment = None  # default='warn'
 
 
 HH_ATTS = [
@@ -76,6 +77,9 @@ def process_rela(pp_df):
     # replace values in columns
     pp_df.loc[~pp_df["relationship"].isin(LS_GR_RELA), "relationship"] = HANDLE_THE_REST_RELA
     # print(pp_df["relationship"].unique())
+
+    pp_df = get_main_by_high_inc(pp_df)
+
     return pp_df
 
 
@@ -165,6 +169,51 @@ def add_weights_in_df(df, weights_dict, type="hh"):
     return df
 
 
+def add_converted_inc(pp_df):
+
+    def process_inc(row):
+        r_check = row["persinc"]
+        val = None
+        if "p.w." in r_check:
+            r_check = r_check.replace("p.w.", "").replace(" ", "").replace("$", "")
+            if "+" in r_check:
+                r_check = r_check.replace("+", "")
+            elif "-" in r_check:
+                r_check = r_check.split("-")[0]
+            else:
+                raise ValueError(f"Dunno I never seen this lol {r_check}")
+            val = int(r_check)
+        elif "Zero" in r_check:
+            val = 0
+        elif "Negative" in r_check:
+            val = -1
+        elif "Missing" in r_check:
+            val = -2
+        else:
+            raise ValueError(f"Dunno I never seen this lol {r_check}")
+        return val
+    
+    pp_df["inc_dummy"] = pp_df.apply(process_inc, axis=1)
+
+    return pp_df
+
+
+def get_main_by_high_inc (pp_df):
+    # add the dummy inc to rank
+    pp_df = add_converted_inc(pp_df)
+    gb_df = pp_df.groupby("hhid")["relationship"].apply(lambda x: list(x))
+
+
+
+
+def test():
+    # Import HH and PP samples (VISTA)
+    pp_df_raw = pd.read_csv("..\..\..\Generator_data\data\source2\VISTA\SA\P_VISTA_1220_SA1.csv")
+    pp_df = process_rela(pp_df_raw[PP_ATTS])
+    pp_df = add_converted_inc(pp_df)
+    print(pp_df["inc_dummy"].unique())
+
+
 def main():
     # Import HH and PP samples (VISTA)
     hh_df_raw = pd.read_csv("..\..\..\Generator_data\data\source2\VISTA\SA\H_VISTA_1220_SA1.csv")
@@ -195,4 +244,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    test()
