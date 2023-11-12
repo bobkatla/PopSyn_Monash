@@ -251,24 +251,49 @@ def convert_hh_totvehs(hh_df, veh_limit=4):
     return hh_df
 
 
+LS_HH_INC = [
+    "$1-$149 ($1-$7,799)",
+    "$150-$299 ($7,800-$15,599)",
+    "$300-$399 ($15,600-$20,799)",
+    "$400-$499 ($20,800-$25,999)",
+    "$500-$649 ($26,000-$33,799)",
+    "$650-$799 ($33,800-$41,599)",
+    "$800-$999 ($41,600-$51,999)",
+    "$1,000-$1,249 ($52,000-$64,999)",
+    "$1,250-$1,499 ($65,000-$77,999)",
+    "$1,500-$1,749 ($78,000-$90,999)",
+    "$1,750-$1,999 ($91,000-$103,999)",
+    "$2,000 or more ($104,000 or more)",
+    "$2,500-$2,999 ($130,000-$155,999)",
+    "$3,000-$3,499 ($156,000-$181,999)",
+    "$3,500-$3,999 ($182,000-$207,999)",
+    "$4,000-$4,499 ($208,000-$233,999)",
+    "$4,500-$4,999 ($234,000-$259,999)",
+    "$5,000-$5,999 ($260,000-$311,999)",
+    "$6,000-$7,999 ($312,000-$415,999)",
+    "$8,000 or more ($416,000 or more)",
+]
+
+
 def convert_hh_inc(hh_df, check_states):
     def con_inc(row):
         hh_inc = row["hhinc"]
         results = None
         # Confime hhinc always exist, it's float
         if hh_inc == 0:
-            return "Zero income"
+            return "Nil income"
         elif hh_inc < 0:
             return "Negative income"
         else:
             for state in check_states:
                 bool_val = None
-                if "p.w." in state:
-                    state = state.replace("p.w.", "").replace(" ", "").replace("$", "")
-                    if "+" in state:
-                        val = state.replace("+", "")
+                if "$" in state:
+                    state = state.replace(",", "").replace("$", "")
+                    if "more" in state:
+                        val = state.split(" ")[0]
                         bool_val = hh_inc >= int(val)
                     elif "-" in state:
+                        state = state.split(" ")[0]
                         a, b = state.split("-")
                         bool_val = hh_inc >= int(a) and hh_inc <= int(b)
                     else:
@@ -290,7 +315,7 @@ def main():
     
     hh_df = adding_pp_related_atts(hh_df_raw[HH_ATTS], pp_df)
     hh_df = convert_hh_totvehs(hh_df)
-    hh_df = convert_hh_inc(hh_df, check_states=pp_df["persinc"].unique())
+    hh_df = convert_hh_inc(hh_df, check_states=LS_HH_INC)
 
     # return dict statenames for hh
     dict_hh_state_names = {hh_cols: list(hh_df[hh_cols].unique()) for hh_cols in hh_df.columns if hh_cols not in ALL_RELA and hh_cols not in NOT_INCLUDED_IN_BN_LEARN}
