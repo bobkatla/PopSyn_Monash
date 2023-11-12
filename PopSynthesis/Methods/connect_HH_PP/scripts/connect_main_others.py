@@ -4,69 +4,15 @@ from PopSynthesis.Methods.BN.utils.learn_BN import learn_struct_BN_score, learn_
 from pgmpy.sampling import BayesianModelSampling
 from pgmpy.factors.discrete import State
 from pgmpy.estimators import BayesianEstimator
-import pickle5 as pickle
+import pickle as pickle
 
 
-def learn_para_BN_diric(model, data_df, state_names):
-    para_learn = BayesianEstimator(
-            model=model,
-            data=data_df,
-            state_names=state_names
-        )
-    ls_CPDs = para_learn.get_parameters(
-        prior_type='K2'
-    )
-    model.add_cpds(*ls_CPDs)
-    return model
-
-
-def process_combine_df(combine_df):
-    combine_df["hhid"] = combine_df.index
-    hh_df = combine_df[HH_ATTS]
-    all_rela_exist = ALL_RELA.copy()
-    all_rela_exist.remove("Self")
-    hh_df["hhsize"] = combine_df[all_rela_exist].sum(axis=1)
-    pp_cols = PP_ATTS + all_rela_exist
-    pp_cols.remove("relationship")
-    pp_cols.remove("persid")
-    pp_df = combine_df[pp_cols]
-    return hh_df, pp_df
-
-
-def extra_pp_df(pp_df):
-    to_drop_cols = [x  for x in pp_df.columns if x in ALL_RELA]
-    pp_df = pp_df.drop(columns=to_drop_cols)
-    pp_df["relationsip"] = "Self"
-    return pp_df
-
-
-def get_2_pp_connect_state_names(state_names_base, rela):
-    new_dict_name = {}
-    for name in state_names_base:
-        new_dict_name[f"{name}_main"] = state_names_base[name]
-        new_dict_name[f"{name}_{rela}"] = state_names_base[name]
-    return new_dict_name
-
-
-def inference_model_get(ls_rela, state_names_base):
-    re_dict = {}
-    for rela in ls_rela:
-        df = pd.read_csv(f"../data/connect_main_{rela}.csv")
-        id_cols = [x for x in df.columns if "hhid" in x or "persid" in x]
-        df = df.drop(columns=id_cols)
-        print(f"Learn BN {rela}")
-        rela_state_names = get_2_pp_connect_state_names(state_names_base, rela)
-        model = learn_struct_BN_score(df, show_struct=False, state_names=rela_state_names)
-        model = learn_para_BN_diric(model, df, state_names=rela_state_names)
-        re_dict[rela] = BayesianModelSampling(model)
-    return re_dict
-
-
-def process_rela_connect(main_pp_df, infer_model, rela):
+def process_rela_ori(main_pp_df, infer_model, rela):
     # Loop through each HH and append
     all_cols = [x for x in main_pp_df.columns if x not in ALL_RELA]
     all_cols.remove("hhid")
     sub_pp_df = main_pp_df[main_pp_df[rela] > 0]
+    print(sub_pp_df)
     ls_df = []
     for i, row in sub_pp_df.iterrows():
         if i % 100 == 0:
