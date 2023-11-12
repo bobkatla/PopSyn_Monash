@@ -4,7 +4,7 @@ from PopSynthesis.Methods.BN.utils.learn_BN import learn_struct_BN_score, learn_
 from pgmpy.sampling import BayesianModelSampling
 from pgmpy.factors.discrete import State
 from pgmpy.estimators import BayesianEstimator
-import pickle
+import pickle5 as pickle
 
 
 def learn_para_BN_diric(model, data_df, state_names):
@@ -56,31 +56,30 @@ def inference_model_get(ls_rela, state_names_base):
         df = df.drop(columns=id_cols)
         print(f"Learn BN {rela}")
         rela_state_names = get_2_pp_connect_state_names(state_names_base, rela)
-        model = learn_struct_BN_score(df, show_struct=True, state_names=rela_state_names)
+        model = learn_struct_BN_score(df, show_struct=False, state_names=rela_state_names)
         model = learn_para_BN_diric(model, df, state_names=rela_state_names)
         re_dict[rela] = BayesianModelSampling(model)
     return re_dict
 
 
 def process_rela_connect(main_pp_df, infer_model, rela):
-    print(f"Processing the relationship {rela}")
     # Loop through each HH and append
     all_cols = [x for x in main_pp_df.columns if x not in ALL_RELA]
     all_cols.remove("hhid")
+    sub_pp_df = main_pp_df[main_pp_df[rela] > 0]
     ls_df = []
-    for i, row in main_pp_df.iterrows():
+    for i, row in sub_pp_df.iterrows():
         if i % 100 == 0:
-            print(f"DOING PROGRESS: {(i*100)/len(main_pp_df)}%")
+            print(f"DOING  {rela}: {(i*100)/len(main_pp_df)}%")
         evidences = [State(f"{name}_main", row[name]) for name in all_cols]
         print(evidences, rela)
         syn = infer_model.rejection_sample(evidence=evidences, size=row[rela], show_progress=True)
         remove_cols = [x for x in syn.columns if "_main" in x]
         syn = syn.drop(columns=remove_cols)
-        if row[rela] > 0:
-            syn.columns = syn.columns.str.rstrip(f'_{rela}')
-            syn["relationship"] = rela
-            syn["hhid"] = row["hhid"]
-            ls_df.append(syn)
+        syn.columns = syn.columns.str.rstrip(f'_{rela}')
+        syn["relationship"] = rela
+        syn["hhid"] = row["hhid"]
+        ls_df.append(syn)
     re_df = pd.concat(ls_df)
     return re_df
 
@@ -107,6 +106,7 @@ def main():
     for rela in all_rela_exist:
         infer_model = dict_model_inference[rela]
         pop_rela = process_rela_connect(main_pp_df_all, infer_model, rela)
+        pop_rela.to_csv(f"pp_{rela}.csv", index=False)
         ls_df_pp.append(pop_rela)
 
     fin_pp_df = pd.concat(ls_df_pp)
