@@ -11,7 +11,7 @@ from pgmpy.sampling import BayesianModelSampling
 from pgmpy.estimators import BayesianEstimator
 
 
-init_n_pool = 10000
+init_n_pool = 20000
 
 
 def process_combine_df(combine_df):

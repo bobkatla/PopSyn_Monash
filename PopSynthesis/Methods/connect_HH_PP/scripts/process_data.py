@@ -290,6 +290,7 @@ def convert_hh_inc(hh_df, check_states):
                     if "more" in state:
                         val = state.split(" ")[0]
                         bool_val = hh_inc >= int(val)
+                        state = val + "+"
                     elif "-" in state:
                         state = state.split(" ")[0]
                         a, b = state.split("-")
