@@ -263,7 +263,7 @@ LS_HH_INC = [
     "$1,250-$1,499 ($65,000-$77,999)",
     "$1,500-$1,749 ($78,000-$90,999)",
     "$1,750-$1,999 ($91,000-$103,999)",
-    "$2,000 or more ($104,000 or more)",
+    "$2,000-$2,499 ($104,000-$129,999)",
     "$2,500-$2,999 ($130,000-$155,999)",
     "$3,000-$3,499 ($156,000-$181,999)",
     "$3,500-$3,999 ($182,000-$207,999)",
@@ -280,11 +280,9 @@ def convert_hh_inc(hh_df, check_states):
         hh_inc = row["hhinc"]
         results = None
         # Confime hhinc always exist, it's float
-        if hh_inc == 0:
-            return "Nil income"
-        elif hh_inc < 0:
+        if hh_inc < 0:
             return "Negative income"
-        else:
+        elif hh_inc > 0:
             for state in check_states:
                 bool_val = None
                 if "$" in state:
@@ -300,6 +298,8 @@ def convert_hh_inc(hh_df, check_states):
                         raise ValueError(f"Dunno I never seen this lol {state}")
                 if bool_val:
                     return state
+        else:
+            return "Nil income"
     hh_df["hhinc"] = hh_df.apply(con_inc, axis=1)
     return hh_df
 
