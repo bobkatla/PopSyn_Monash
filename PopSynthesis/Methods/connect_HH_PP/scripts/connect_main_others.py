@@ -110,8 +110,8 @@ def main():
         ls_df_pp.append(pop_rela)
 
     fin_pp_df = pd.concat(ls_df_pp)
-    hh_df.to_csv("syn_hh_s.csv", index=False)
-    fin_pp_df.to_csv("syn_pp_connected_s.csv", index=False)
+    hh_df.to_csv("syn_hh.csv", index=False)
+    fin_pp_df.to_csv("syn_pp_connected.csv", index=False)
     
 
 if __name__ ==  "__main__":
