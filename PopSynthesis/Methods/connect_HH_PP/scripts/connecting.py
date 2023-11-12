@@ -9,17 +9,6 @@ import random
 from numpy.random import multinomial
 
 
-def _constrained_sum_sample_pos(n, total):
-    # print(n, total)
-    # """Return a randomly chosen list of n positive integers summing to total.
-    # Each such list is equally likely to occur."""
-    # dividers = sorted(random.sample(range(0, total), n-1))
-    # return [a - b for a, b in zip(dividers + [total], [0] + dividers)]
-    result = multinomial(total, [1/n] * n)
-    # print(result)
-    return result
-
-
 def reject_samp_veh(BN, df_marg, zone_lev):
     inference = BayesianModelSampling(BN)
     ls_total_veh = [
@@ -66,19 +55,6 @@ def process_POA():
 
 
 def main():
-    # path = r'../data' # use your path
-    # all_files = glob.glob(os.path.join(path , "connect*"))
-    # for file in all_files:
-    #     print(f"DOING {file}")
-    #     df = pd.read_csv(file)
-    #     # drop all the ids as they are not needed for in BN learning
-    #     id_cols = [x for x in df.columns if "hhid" in x or "persid" in x]
-    #     df = df.drop(columns=id_cols)
-    #     print("Learn BN")
-    #     model = learn_struct_BN_score(df, show_struct=True)
-    #     model = learn_para_BN(model, df)
-    #     print("Doing the sampling")
-
     #learning to get the HH only with main person
     df_seed = pd.read_csv("../data/connect_hh_main.csv")
     # drop all the ids as they are not needed for in BN learning
