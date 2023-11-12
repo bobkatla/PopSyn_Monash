@@ -11,7 +11,7 @@ from pgmpy.sampling import BayesianModelSampling
 from pgmpy.estimators import BayesianEstimator
 
 
-init_n_pool = 1000000
+init_n_pool = 10000
 
 
 def process_combine_df(combine_df):
@@ -110,15 +110,19 @@ def process_rela_fast(main_pp_df, infer_model, rela):
     comb_df = pd.merge(gb_df_hhid, gb_df_num_rela, left_index=True, right_index=True)
 
     ls_to_com_df = []
+    hold_ids = []
     for check_val, ls_hhid, ls_rela in zip(comb_df.index, comb_df["hhid"], comb_df[rela]):
         to_sample_df = dict_to_sample[check_val]
+        tot = 0
         for hhid, n in zip (ls_hhid, ls_rela):
-            print(f"DOINGGGG {hhid}")
-            re_df = to_sample_df.sample(n=n, replace=True)
-            re_df["relationship"] = rela
-            re_df["hhid"] = hhid
-            ls_to_com_df.append(re_df)
+            hold_id = [hhid]*n
+            hold_ids += hold_id
+            tot += n
+        re_df = to_sample_df.sample(n=tot, replace=True)
+        ls_to_com_df.append(re_df)
     final_rela_df = pd.concat(ls_to_com_df)
+    final_rela_df["hhid"] = hold_ids
+    final_rela_df["relationship"] = rela
     
     return to_del_df, final_rela_df
 
