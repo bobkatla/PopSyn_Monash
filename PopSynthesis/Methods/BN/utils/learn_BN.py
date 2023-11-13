@@ -54,7 +54,7 @@ def learn_struct_BN_score(df, state_names=None, show_struct=False, method=HillCl
     best_DAG = est.estimate(scoring_method=scoring_method)
     model = BayesianNetwork(best_DAG)
     if show_struct: 
-        nx.draw_circular(model ,with_labels=True)
+        nx.draw_circular(model ,with_labels=True, node_size=2000,font_size=16)
         plt.show()
     return model
 
