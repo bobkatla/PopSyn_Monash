@@ -5,7 +5,7 @@ from PopSynthesis.Methods.BN.utils.learn_BN import learn_struct_BN_score, learn_
 from pgmpy.sampling import BayesianModelSampling
 from pgmpy.factors.discrete import State
 
-from PopSynthesis.Methods.connect_HH_PP.paras_dir import data_dir, processed_data
+from PopSynthesis.Methods.connect_HH_PP.paras_dir import data_dir, processed_data, geo_lev
 
 
 def reject_samp_veh(BN, df_marg, zone_lev):
@@ -41,15 +41,15 @@ def reject_samp_veh(BN, df_marg, zone_lev):
     return final_result
 
 
-def process_POA():
-    df = pd.read_csv(os.path.join(data_dir, "POA_numveh.csv"), skiprows=9, skipfooter=7, engine='python')
+def process_census_numvehs(geo_lev="POA"):
+    df = pd.read_csv(os.path.join(data_dir, f"{geo_lev}_numvehs.csv"), skiprows=9, skipfooter=7, engine='python')
     df = df.dropna(axis=1, how='all')
     df = df.dropna(axis=0, thresh=6)
     df = df[:-1]
     df["None info"] = df["Not stated"] + df["Not applicable"]
     df = df.drop(columns=["Not stated", "Not applicable", "Total"])
-    df = df.rename({"VEHRD Number of Motor Vehicles (ranges)" : "POA"}, axis=1)
-    df["POA"] = df.apply(lambda r: r["POA"].replace(", VIC", ""), axis=1)
+    df = df.rename({"VEHRD Number of Motor Vehicles (ranges)" : geo_lev}, axis=1)
+    df[geo_lev] = df.apply(lambda r: r[geo_lev].replace(", VIC", ""), axis=1)
     return df
 
 
@@ -72,10 +72,10 @@ def main():
     model = learn_struct_BN_score(df_seed, show_struct=False, state_names=state_names)
     model = learn_para_BN(model, df_seed)
     print("Doing the sampling")
-    # census_df = pd.read_csv("../data/census_sa1.csv")
-    POA_df = process_POA()
-    final_syn_pop = reject_samp_veh(BN=model, df_marg=POA_df, zone_lev="POA")
-    final_syn_pop.to_csv(os.path.join(processed_data, "SynPop_hh_main_POA.csv"), index=False)
+
+    census_df = process_census_numvehs(geo_lev=geo_lev)
+    final_syn_pop = reject_samp_veh(BN=model, df_marg=census_df, zone_lev=geo_lev)
+    final_syn_pop.to_csv(os.path.join(processed_data, f"SynPop_hh_main_{geo_lev}.csv"), index=False)
 
 
 if __name__ == "__main__":

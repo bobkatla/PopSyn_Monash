@@ -6,15 +6,15 @@ import pandas as pd
 import pickle
 import os
 
-from PopSynthesis.Methods.BN.utils.learn_BN import learn_struct_BN_score, learn_para_BN
+from PopSynthesis.Methods.BN.utils.learn_BN import learn_struct_BN_score
 from pgmpy.sampling import BayesianModelSampling
 from pgmpy.estimators import BayesianEstimator
 
-from PopSynthesis.Methods.connect_HH_PP.paras_dir import processed_data
+from PopSynthesis.Methods.connect_HH_PP.paras_dir import processed_data, geo_lev
 from PopSynthesis.Methods.connect_HH_PP.scripts.const import *
 
 
-init_n_pool = 20000
+init_n_pool = 1000000
 
 
 def process_combine_df(combine_df):
@@ -132,7 +132,7 @@ def process_rela_fast(main_pp_df, infer_model, rela):
 
 def main():
     # Import the synthetic with main and households
-    combine_df = pd.read_csv(r"..\output\SynPop_hh_main_POA.csv")
+    combine_df = pd.read_csv(os.path.join(processed_data, f"SynPop_hh_main_{geo_lev}.csv"))
     # Process the HH and main to have the HH with IDs and People in HH
     hh_df, main_pp_df_all = process_combine_df(combine_df)
     # Store the HH in df, Store the main in a list to handle later
