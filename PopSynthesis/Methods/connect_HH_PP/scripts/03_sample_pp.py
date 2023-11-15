@@ -61,7 +61,7 @@ def get_2_pp_connect_state_names(state_names_base, rela):
 def inference_model_get(ls_rela, state_names_base):
     re_dict = {}
     for rela in ls_rela:
-        df = pd.read_csv(f"../data/connect_main_{rela}.csv")
+        df = pd.read_csv(os.path.join(processed_data, f"connect_main_{rela}.csv"))
         id_cols = [x for x in df.columns if "hhid" in x or "persid" in x]
         df = df.drop(columns=id_cols)
         print(f"Learn BN {rela}")
