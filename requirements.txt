@@ -9,3 +9,4 @@ populationsim
 pybbn
 setuptools
 synthpop
+python==3.9.18
