@@ -25,15 +25,16 @@ def reject_samp_veh(BN, df_marg, zone_lev):
         assert len(zone_info) == 1
         for totveh_label in ls_total_veh:
             n_totvehs = int(zone_info[totveh_label[0]].iat[0])
-            evidence = State('totalvehs', totveh_label[1]) if totveh_label[1] is not None else None
-            # Weird case of multiple
-            syn = None
-            if evidence:
-                syn = inference.rejection_sample(evidence=[evidence], size=n_totvehs, show_progress=True)
-            else:
-                syn = inference.forward_sample(size=n_totvehs, show_progress=True)
-            ls_re.append(syn)
-        if ls_re == []: continue
+            if n_totvehs > 0:
+                evidence = State('totalvehs', totveh_label[1]) if totveh_label[1] is not None else None
+                # Weird case of multiple
+                syn = None
+                if evidence:
+                    syn = inference.rejection_sample(evidence=[evidence], size=n_totvehs, show_progress=True)
+                else:
+                    syn = inference.forward_sample(size=n_totvehs, show_progress=True)
+                ls_re.append(syn)
+            if ls_re == []: continue
         final_for_zone = pd.concat(ls_re, axis=0)
         final_for_zone[zone_lev] = zone
         ls_all.append(final_for_zone)
