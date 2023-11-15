@@ -2,32 +2,11 @@ import pandas as pd
 import numpy as np
 from collections import defaultdict 
 import pickle
+import os
 pd.options.mode.chained_assignment = None  # default='warn'
 
-
-HH_ATTS = [
-    "hhid",
-    "dwelltype",
-    "owndwell",
-    "hhinc",
-    "totalvehs"
-]
-
-PP_ATTS = [
-    "persid",
-    "hhid",
-    "age",
-    "sex",
-    "relationship",
-    "persinc",
-    "nolicence",
-    "anywork"
-]
-
-LS_GR_RELA = ["Self", "Spouse", "Child", "Grandchild"] # For the rest we will make them Others
-HANDLE_THE_REST_RELA = "Others"
-ALL_RELA = LS_GR_RELA + [HANDLE_THE_REST_RELA]
-NOT_INCLUDED_IN_BN_LEARN = ["hhid", "persid", "relationship"]
+from PopSynthesis.Methods.connect_HH_PP.paras_dir import data_dir, processed_data
+from PopSynthesis.Methods.connect_HH_PP.scripts.const import *
 
 
 def check_rela_gb(gb_df):
@@ -110,7 +89,7 @@ def process_hh_main_person(hh_df, main_pp_df, to_csv=False, name_file="connect_h
     combine_df = hh_df.merge(main_pp_df, on="hhid", how="inner")
     combine_df = combine_df.drop(columns=["relationship"])
     if to_csv:
-        combine_df.to_csv(f"../data/{name_file}.csv", index=False)
+        combine_df.to_csv(os.path.join(processed_data ,f"{name_file}.csv"), index=False)
     return combine_df
 
 
@@ -127,7 +106,7 @@ def process_main_other(main_pp_df, sub_df, rela, to_csv=True):
     combine_df = combine_df.drop(columns=[f"relationship_{rela}", "relationship_main"])
     
     if to_csv:
-        combine_df.to_csv(f"../data/connect_main_{rela}.csv", index=False)
+        combine_df.to_csv(os.path.join(processed_data, f"connect_main_{rela}.csv"), index=False)
     
     return combine_df
 
@@ -212,14 +191,6 @@ def get_main_max_age(pp_df):
     return pp_df
 
 
-def test():
-    # Import HH and PP samples (VISTA)
-    pp_df_raw = pd.read_csv("..\..\..\Generator_data\data\source2\VISTA\SA\P_VISTA_1220_SA1.csv")
-    pp_df = process_rela(pp_df_raw[PP_ATTS])
-    pp_df = get_main_max_age(pp_df)
-    print(pp_df)
-
-
 def convert_pp_age_gr(pp_df, range_age=10, age_limit=100):
     check_dict = {}
     hold_min = None
@@ -251,34 +222,9 @@ def convert_hh_totvehs(hh_df, veh_limit=4):
     return hh_df
 
 
-LS_HH_INC = [
-    "$1-$149 ($1-$7,799)",
-    "$150-$299 ($7,800-$15,599)",
-    "$300-$399 ($15,600-$20,799)",
-    "$400-$499 ($20,800-$25,999)",
-    "$500-$649 ($26,000-$33,799)",
-    "$650-$799 ($33,800-$41,599)",
-    "$800-$999 ($41,600-$51,999)",
-    "$1,000-$1,249 ($52,000-$64,999)",
-    "$1,250-$1,499 ($65,000-$77,999)",
-    "$1,500-$1,749 ($78,000-$90,999)",
-    "$1,750-$1,999 ($91,000-$103,999)",
-    "$2,000-$2,499 ($104,000-$129,999)",
-    "$2,500-$2,999 ($130,000-$155,999)",
-    "$3,000-$3,499 ($156,000-$181,999)",
-    "$3,500-$3,999 ($182,000-$207,999)",
-    "$4,000-$4,499 ($208,000-$233,999)",
-    "$4,500-$4,999 ($234,000-$259,999)",
-    "$5,000-$5,999 ($260,000-$311,999)",
-    "$6,000-$7,999 ($312,000-$415,999)",
-    "$8,000 or more ($416,000 or more)",
-]
-
-
 def convert_hh_inc(hh_df, check_states):
     def con_inc(row):
         hh_inc = row["hhinc"]
-        results = None
         # Confime hhinc always exist, it's float
         if hh_inc < 0:
             return "Negative income"
@@ -307,8 +253,8 @@ def convert_hh_inc(hh_df, check_states):
 
 def main():
     # Import HH and PP samples (VISTA)
-    hh_df_raw = pd.read_csv("..\..\..\Generator_data\data\source2\VISTA\SA\H_VISTA_1220_SA1.csv")
-    pp_df_raw = pd.read_csv("..\..\..\Generator_data\data\source2\VISTA\SA\P_VISTA_1220_SA1.csv")
+    hh_df_raw = pd.read_csv(os.path.join(data_dir ,"H_VISTA_1220_SA1.csv"))
+    pp_df_raw = pd.read_csv(os.path.join(data_dir, "P_VISTA_1220_SA1.csv"))
 
     pp_df = process_rela(pp_df_raw[PP_ATTS])
     pp_df = get_main_max_age(pp_df)
@@ -320,25 +266,22 @@ def main():
 
     # return dict statenames for hh
     dict_hh_state_names = {hh_cols: list(hh_df[hh_cols].unique()) for hh_cols in hh_df.columns if hh_cols not in ALL_RELA and hh_cols not in NOT_INCLUDED_IN_BN_LEARN}
-    with open('../data/dict_hh_states.pickle', 'wb') as handle:
+    with open(os.path.join(processed_data, 'dict_hh_states.pickle'), 'wb') as handle:
         pickle.dump(dict_hh_state_names, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     # return dict statenames for pp
     dict_pp_state_names = {pp_cols: list(pp_df[pp_cols].unique()) for pp_cols in pp_df.columns if pp_cols not in NOT_INCLUDED_IN_BN_LEARN}
-    with open('../data/dict_pp_states.pickle', 'wb') as handle:
+    with open(os.path.join(processed_data, 'dict_pp_states.pickle'), 'wb') as handle:
         pickle.dump(dict_pp_state_names, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     weights_dict = get_weights_dict(hh_df_raw[["hhid", "wdhhwgt_sa3", "wehhwgt_sa3"]], pp_df_raw[["persid", "wdperswgt_sa3", "weperswgt_sa3"]])
-    #Tempo saving
-    # pp_df.to_csv("../data/first_processed_all_P.csv", index=False)
-    # hh_df.to_csv("../data/first_processed_all_H.csv", index=False)
     
     main_pp_df = pp_df[pp_df["relationship"]=="Main"]
 
     # process hh_main
     df_hh_main = process_hh_main_person(hh_df, main_pp_df, to_csv=False)
     df_hh_main = add_weights_in_df(df_hh_main, weights_dict, type="hh")
-    df_hh_main.to_csv(f"../data/connect_hh_main.csv", index=False)
+    df_hh_main.to_csv(os.path.join(processed_data, f"connect_hh_main.csv"), index=False)
 
     for rela in ALL_RELA:
         if rela != "Self":
@@ -346,9 +289,9 @@ def main():
             sub_df = pp_df[pp_df["relationship"]==rela]
             df_main_other = process_main_other(main_pp_df, sub_df, rela=rela, to_csv=False)
             df_main_other = add_weights_in_df(df_main_other, weights_dict, type="pp")
-            df_main_other.to_csv(f"../data/connect_main_{rela}.csv", index=False)
+            df_main_other.to_csv(os.path.join(processed_data, f"connect_main_{rela}.csv"), index=False)
 
 
 if __name__ == "__main__":
     main()
-    # test()
+

@@ -1,12 +1,11 @@
 import pandas as pd
-import os, glob
 import pickle
-
+import os
 from PopSynthesis.Methods.BN.utils.learn_BN import learn_struct_BN_score, learn_para_BN
 from pgmpy.sampling import BayesianModelSampling
 from pgmpy.factors.discrete import State
-import random
-from numpy.random import multinomial
+
+from PopSynthesis.Methods.connect_HH_PP.paras_dir import data_dir, processed_data
 
 
 def reject_samp_veh(BN, df_marg, zone_lev):
@@ -43,7 +42,7 @@ def reject_samp_veh(BN, df_marg, zone_lev):
 
 
 def process_POA():
-    df = pd.read_csv("../data/POA_numveh.csv", skiprows=9, skipfooter=7, engine='python')
+    df = pd.read_csv(os.path.join(data_dir, "POA_numveh.csv"), skiprows=9, skipfooter=7, engine='python')
     df = df.dropna(axis=1, how='all')
     df = df.dropna(axis=0, thresh=6)
     df = df[:-1]
@@ -56,16 +55,16 @@ def process_POA():
 
 def main():
     #learning to get the HH only with main person
-    df_seed = pd.read_csv("../data/connect_hh_main.csv")
+    df_seed = pd.read_csv(os.path.join(processed_data, "connect_hh_main.csv"))
     # drop all the ids as they are not needed for in BN learning
     id_cols = [x for x in df_seed.columns if "hhid" in x or "persid" in x]
     df_seed = df_seed.drop(columns=id_cols)
 
     pp_state_names = None
-    with open('../data/dict_pp_states.pickle', 'rb') as handle:
+    with open(os.path.join(processed_data, 'dict_pp_states.pickle'), 'rb') as handle:
         pp_state_names = pickle.load(handle)
     hh_state_names = None
-    with open('../data/dict_hh_states.pickle', 'rb') as handle:
+    with open(os.path.join(processed_data, 'dict_hh_states.pickle'), 'rb') as handle:
         hh_state_names = pickle.load(handle)
     state_names = hh_state_names | pp_state_names
 
@@ -76,7 +75,7 @@ def main():
     # census_df = pd.read_csv("../data/census_sa1.csv")
     POA_df = process_POA()
     final_syn_pop = reject_samp_veh(BN=model, df_marg=POA_df, zone_lev="POA")
-    final_syn_pop.to_csv("SynPop_hh_main_POA.csv", index=False)
+    final_syn_pop.to_csv(os.path.join(processed_data, "SynPop_hh_main_POA.csv"), index=False)
 
 
 if __name__ == "__main__":

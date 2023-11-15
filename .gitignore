@@ -8,3 +8,5 @@
 *.npy
 **/output
 **/img_data
+**/processed_data
+paras_dir.py

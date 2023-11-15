@@ -3,12 +3,15 @@ New way to do rejection sample, especially for the main to other
 Sample alot (like 10 mil) and select the needed sample from it, we can combine with sample method to randomly draw
 """
 import pandas as pd
-import pickle as pickle
+import pickle
+import os
 
-from process_data import HH_ATTS, PP_ATTS, ALL_RELA
 from PopSynthesis.Methods.BN.utils.learn_BN import learn_struct_BN_score, learn_para_BN
 from pgmpy.sampling import BayesianModelSampling
 from pgmpy.estimators import BayesianEstimator
+
+from PopSynthesis.Methods.connect_HH_PP.paras_dir import processed_data
+from PopSynthesis.Methods.connect_HH_PP.scripts.const import *
 
 
 init_n_pool = 20000
@@ -137,7 +140,7 @@ def main():
     ls_df_pp = [store_pp_df]
 
     state_names_pp = None
-    with open('../data/dict_pp_states.pickle', 'rb') as handle:
+    with open(os.path.join(processed_data, 'dict_pp_states.pickle'), 'rb') as handle:
         state_names_pp = pickle.load(handle)
 
     all_rela_exist = ALL_RELA.copy()
@@ -148,8 +151,8 @@ def main():
     for rela in all_rela_exist:
         infer_model = dict_model_inference[rela]
         to_del_df, pop_rela = process_rela_fast(main_pp_df_all, infer_model, rela)
-        pop_rela.to_csv(f"pp_{rela}_s.csv", index=False)
-        to_del_df.to_csv(f"del_main_pp_{rela}_s.csv", index=False)
+        pop_rela.to_csv(os.path.join(processed_data, f"pp_{rela}.csv"), index=False)
+        to_del_df.to_csv(os.path.join(processed_data, f"del_main_pp_{rela}.csv"), index=False)
         # ls_df_pp.append(pop_rela)
     # sample to have the pool
     # Group the available HH into diffrent group and get total number number

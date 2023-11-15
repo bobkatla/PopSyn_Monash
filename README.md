@@ -1,3 +1,3 @@
-# Bayesian Network practice
+# Population Synthesis
 
-This will be the place I hold my practice for Bayesian Network
+Various methods to test Population Synthesis
