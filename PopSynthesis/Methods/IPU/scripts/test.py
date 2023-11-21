@@ -25,13 +25,13 @@ def test_run(hh_marg, p_marg, hh_sample, p_sample):
     # print(hhs)
     # print(hh_jd)
 
-    # all_households, all_persons, all_stats = zs.synthesize_all_zones(hh_marg,
-    #                                                                  p_marg,
-    #                                                                  hh_sample,
-    #                                                                  p_sample,
-    #                                                                  xwalk)
+    all_households, all_persons, all_stats = zs.synthesize_all_zones(hh_marg,
+                                                                     p_marg,
+                                                                     hh_sample,
+                                                                     p_sample,
+                                                                     xwalk)
     
-    # print(all_households)
+    print(all_households)
     # print(all_persons)
     # print(all_stats)
     
