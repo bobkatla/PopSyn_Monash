@@ -16,9 +16,8 @@ ls_hhid = del_df["hhid"].unique()
 
 main_pp_df_hh = pd.read_csv(os.path.join(processed_data, f"SynPop_hh_main_{geo_lev}.csv"))
 main_pp_df_hh["hhid"] = main_pp_df_hh.index
-main_pp_df_hh["hhsize"] = main_pp_df_hh[[x for x in ALL_RELA if x != "Self"]].sum(axis=1)
 
-hh_cols = [x for x in HH_ATTS] + [geo_lev] + ["hhsize"]
+hh_cols = [x for x in HH_ATTS] + [geo_lev]
 hh_df = main_pp_df_hh[hh_cols]
 
 
@@ -45,6 +44,7 @@ final_pp_df.to_csv(os.path.join(output_dir, "syn_pp_final.csv"), index=False)
 
 hh_df_rm = hh_df[~hh_df["hhid"].isin(del_df["hhid"])]
 
-hh_df_rm["hhsize"] = hh_df_rm["hhsize"].replace(0, 1)
+counting_pp_hh = final_pp_df["hhid"].value_counts()
+hh_df_rm["hhsize"] = hh_df_rm.apply(lambda r: counting_pp_hh[r["hhid"]], axis=1)
 
 hh_df_rm.to_csv(os.path.join(output_dir, "syn_hh_final.csv"), index=False)

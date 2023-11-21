@@ -22,7 +22,6 @@ def process_combine_df(combine_df):
     hh_df = combine_df[HH_ATTS]
     all_rela_exist = ALL_RELA.copy()
     all_rela_exist.remove("Self")
-    hh_df["hhsize"] = combine_df[all_rela_exist].sum(axis=1)
     pp_cols = PP_ATTS + all_rela_exist
     pp_cols.remove("relationship")
     pp_cols.remove("persid")
