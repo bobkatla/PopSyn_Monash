@@ -256,13 +256,20 @@ def main():
     hh_df_raw = pd.read_csv(os.path.join(data_dir ,"H_VISTA_1220_SA1.csv"))
     pp_df_raw = pd.read_csv(os.path.join(data_dir, "P_VISTA_1220_SA1.csv"))
 
+    weights_dict = get_weights_dict(hh_df_raw[["hhid", "wdhhwgt_sa3", "wehhwgt_sa3"]], pp_df_raw[["persid", "wdperswgt_sa3", "weperswgt_sa3"]])
+
     pp_df = process_rela(pp_df_raw[PP_ATTS])
     pp_df = get_main_max_age(pp_df)
     pp_df = convert_pp_age_gr(pp_df=pp_df)
     
-    hh_df = adding_pp_related_atts(hh_df_raw[HH_ATTS], pp_df)
+    hh_df = adding_pp_related_atts(hh_df_raw[HH_ATTS + ["hhsize"]], pp_df)
     hh_df = convert_hh_totvehs(hh_df)
     hh_df = convert_hh_inc(hh_df, check_states=LS_HH_INC)
+
+    # pp_df = add_weights_in_df(pp_df, weights_dict, type="pp")
+    # hh_df = add_weights_in_df(hh_df, weights_dict, type="hh")
+    # pp_df.to_csv(os.path.join(processed_data, f"ori_sample_pp.csv"), index=False)
+    # hh_df.to_csv(os.path.join(processed_data, f"ori_sample_hh.csv"), index=False)
 
     # return dict statenames for hh
     dict_hh_state_names = {hh_cols: list(hh_df[hh_cols].unique()) for hh_cols in hh_df.columns if hh_cols not in ALL_RELA and hh_cols not in NOT_INCLUDED_IN_BN_LEARN}
@@ -273,8 +280,6 @@ def main():
     dict_pp_state_names = {pp_cols: list(pp_df[pp_cols].unique()) for pp_cols in pp_df.columns if pp_cols not in NOT_INCLUDED_IN_BN_LEARN}
     with open(os.path.join(processed_data, 'dict_pp_states.pickle'), 'wb') as handle:
         pickle.dump(dict_pp_state_names, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-    weights_dict = get_weights_dict(hh_df_raw[["hhid", "wdhhwgt_sa3", "wehhwgt_sa3"]], pp_df_raw[["persid", "wdperswgt_sa3", "weperswgt_sa3"]])
     
     main_pp_df = pp_df[pp_df["relationship"]=="Main"]
 
