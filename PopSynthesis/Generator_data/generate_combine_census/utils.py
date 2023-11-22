@@ -13,12 +13,12 @@ def process_from_census_data(geo_lev='POA'):
     total_hh_df = pd.read_csv(f"{data_loc}/total_hh_{geo_lev}.csv", skiprows=9, skipfooter=7, engine='python')
     total_hh_df = total_hh_df.dropna(axis=1, how='all')
     total_hh_df.index = total_hh_df.index.map(lambda r: r.replace(", VIC", ""))
-    total_hh_df = total_hh_df.add_prefix(f"Dwelling__")
+    total_hh_df = total_hh_df.add_prefix(f"Dwelling_")
 
     total_pp_df = pd.read_csv(f"{data_loc}/total_pp_{geo_lev}.csv", skiprows=9, skipfooter=7, engine='python')
     total_pp_df = total_pp_df.dropna(axis=1, how='all')
     total_pp_df.index = total_pp_df.index.map(lambda r: r.replace(", VIC", ""))
-    total_pp_df = total_pp_df.add_prefix(f"Person__")
+    total_pp_df = total_pp_df.add_prefix(f"Person_")
 
     ls_df = [total_pp_df, total_hh_df]
     for f in all_files:
