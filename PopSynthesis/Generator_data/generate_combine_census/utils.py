@@ -26,8 +26,8 @@ def process_from_census_data(geo_lev='POA'):
         type_count = df_metadata.iat[2, 0].split(": ")[1].split(" ")[0]
         df = pd.read_csv(f, skiprows=9, skipfooter=7, engine='python')
         df = df.dropna(axis=1, how='all')
-        df = df.dropna(axis=0, thresh=6)
-        df = df[:-1]
+        df = df.dropna(axis=0, how='all')
+        df = df[1:-1] #last row is total, first row is just geo, so drop
         if "Total" in df.columns:
             df = df.drop(columns=["Total"])
         first_row = df.columns[0]
