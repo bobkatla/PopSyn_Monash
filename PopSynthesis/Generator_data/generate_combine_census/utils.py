@@ -36,7 +36,6 @@ def process_from_census_data(geo_lev='POA'):
         df =df.add_prefix(f"{type_count}_{df.index.name}__")
         df.index.name = geo_lev
         ls_df.append(df)
-        break
     final_df = pd.concat(ls_df, axis=1)
     final_df = final_df.dropna(axis=0, thresh=10)
     return final_df
