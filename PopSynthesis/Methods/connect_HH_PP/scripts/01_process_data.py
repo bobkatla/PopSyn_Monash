@@ -227,7 +227,7 @@ def convert_hh_inc(hh_df, check_states):
         hh_inc = row["hhinc"]
         # Confime hhinc always exist, it's float
         if hh_inc < 0:
-            return "Negative income"
+            return "Negative income" #NOTE: None like this but exist in census, need to check whether this can be an issue
         elif hh_inc > 0:
             for state in check_states:
                 bool_val = None
@@ -250,6 +250,24 @@ def convert_hh_inc(hh_df, check_states):
     hh_df["hhinc"] = hh_df.apply(con_inc, axis=1)
     return hh_df
 
+def convert_hh_dwell(hh_df): # Removing the occupied rent free
+    hh_df["owndwell"] = hh_df.apply(lambda r: "Something Else" if r["owndwell"] == "Occupied Rent-Free" else r["owndwell"], axis=1)
+    return hh_df
+
+
+def convert_hh_size(hh_df):
+    hh_df["hhsize"] = hh_df.apply(lambda r: "8+" if r["hhsize"] >= 8 else str(r["hhsize"]), axis=1)
+    return hh_df
+
+
+def convert_all_hh_atts(hh_df, pp_df):
+    hh_df = adding_pp_related_atts(hh_df, pp_df)
+    hh_df = convert_hh_totvehs(hh_df)
+    hh_df = convert_hh_inc(hh_df, check_states=LS_HH_INC)
+    hh_df = convert_hh_dwell(hh_df)
+    hh_df = convert_hh_size(hh_df)
+    return hh_df
+
 
 def main():
     # Import HH and PP samples (VISTA)
@@ -262,14 +280,13 @@ def main():
     pp_df = get_main_max_age(pp_df)
     pp_df = convert_pp_age_gr(pp_df=pp_df)
     
-    hh_df = adding_pp_related_atts(hh_df_raw[HH_ATTS + ["hhsize"]], pp_df)
-    hh_df = convert_hh_totvehs(hh_df)
-    hh_df = convert_hh_inc(hh_df, check_states=LS_HH_INC)
+    hh_df = convert_all_hh_atts(hh_df_raw[HH_ATTS], pp_df)
 
-    # pp_df = add_weights_in_df(pp_df, weights_dict, type="pp")
-    # hh_df = add_weights_in_df(hh_df, weights_dict, type="hh")
-    # pp_df.to_csv(os.path.join(processed_data, f"ori_sample_pp.csv"), index=False)
-    # hh_df.to_csv(os.path.join(processed_data, f"ori_sample_hh.csv"), index=False)
+    # This part is to create the just simple converted samples from hh and pp
+    pp_df = add_weights_in_df(pp_df, weights_dict, type="pp")
+    hh_df = add_weights_in_df(hh_df, weights_dict, type="hh")
+    pp_df.to_csv(os.path.join(processed_data, f"ori_sample_pp.csv"), index=False)
+    hh_df.to_csv(os.path.join(processed_data, f"ori_sample_hh.csv"), index=False)
 
     # return dict statenames for hh
     dict_hh_state_names = {hh_cols: list(hh_df[hh_cols].unique()) for hh_cols in hh_df.columns if hh_cols not in ALL_RELA and hh_cols not in NOT_INCLUDED_IN_BN_LEARN}

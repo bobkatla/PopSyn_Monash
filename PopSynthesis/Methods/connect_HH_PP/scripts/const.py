@@ -26,7 +26,8 @@ HH_ATTS = [
     "dwelltype",
     "owndwell",
     "hhinc",
-    "totalvehs"
+    "totalvehs",
+    "hhsize"
 ]
 
 PP_ATTS = [
