@@ -83,7 +83,7 @@ def update_int_all(sub_df, total_seri):
     cols = sub_df.columns
     def f(r):
         vals = list(r)
-        poa = r.index
+        poa = r.name
         tot = total_seri[poa]
         return TRS(vals, tot)
     sub_df[cols] = sub_df.apply(f, axis=1, result_type="expand")
