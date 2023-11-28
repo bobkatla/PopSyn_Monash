@@ -14,7 +14,7 @@ from PopSynthesis.Methods.connect_HH_PP.paras_dir import processed_data, geo_lev
 from PopSynthesis.Methods.connect_HH_PP.scripts.const import *
 
 
-init_n_pool = 1000000
+init_n_pool = int(1e7) # 10 Mils
 
 
 def process_combine_df(combine_df):
