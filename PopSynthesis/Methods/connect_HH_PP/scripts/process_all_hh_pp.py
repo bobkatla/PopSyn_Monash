@@ -25,7 +25,7 @@ from PopSynthesis.Methods.connect_HH_PP.scripts.sample_pp import *
 # Process to have HH and Main Persons from the HH-Main pool
 # Process to have Main and Rela Persons, the results of this will update the HH again
 
-pool_sz = int(1e7) # 10 Mils
+pool_sz = int(1e6) # 10 Mils
 
 
 def get_hh_main_df(pool, marg_hh=None):

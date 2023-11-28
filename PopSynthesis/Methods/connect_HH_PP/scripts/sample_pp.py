@@ -92,20 +92,29 @@ def process_rela_fast(main_pp_df, rela, pool):
     dict_to_sample = {}
     to_delete = []
 
-    for val in all_val_in_rela_sub.index:
-        print(f"PROCESS main {val}")
-        if val in all_val_in_pool.index:
-            query = True
-            for i, col in enumerate(all_cols_main):
-                query &= pool[col] == val[i]
-            sub_pool_sample = pool[query]
-            dict_to_sample[val] = sub_pool_sample
-        else:
-            query = True
-            for i, col in enumerate(all_cols):
-                query &= sub_pp_df[col] == val[i]
-            sub_rela_de = sub_pp_df[query]
-            to_delete.append(sub_rela_de)
+    ls_val_rela = list(all_val_in_rela_sub.index)
+    ls_val_pool = list(all_val_in_pool.index)
+    ls_val_both = list(set(ls_val_rela) & set(ls_val_pool))
+    ls_val_not_in_pool = list(set(ls_val_rela) - set(ls_val_pool))
+
+    for val in ls_val_both:
+        print(f"PROCESS to keep {val}")
+        q = ""
+        for i, col in enumerate(all_cols_main):
+            if i != 0:
+                q += " & "
+            q += f"{col} == '{val[i]}'"
+        sub_pool_sample = pool.query(q)
+        dict_to_sample[val] = sub_pool_sample
+    for val in ls_val_not_in_pool:
+        print(f"PROCESS to del {val}")
+        q = ""
+        for i, col in enumerate(all_cols):
+            if i != 0:
+                q += " & "
+            q += f"{col} == '{val[i]}'"
+        sub_rela_de = sub_pp_df.query(q)
+        to_delete.append(sub_rela_de)
 
     print("GETTING the hhid that is hard to sample, maybe wrong")
     if len(to_delete) > 0:
