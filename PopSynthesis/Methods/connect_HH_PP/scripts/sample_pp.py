@@ -22,7 +22,7 @@ def process_combine_df(combine_df):
     hh_df = combine_df[HH_ATTS]
     all_rela_exist = ALL_RELA.copy()
     all_rela_exist.remove("Self")
-    pp_cols = PP_ATTS + all_rela_exist
+    pp_cols = PP_ATTS + all_rela_exist + [geo_lev]
     pp_cols.remove("relationship")
     pp_cols.remove("persid")
     pp_df = combine_df[pp_cols]
@@ -32,7 +32,7 @@ def process_combine_df(combine_df):
 def extra_pp_df(pp_df):
     to_drop_cols = [x  for x in pp_df.columns if x in ALL_RELA]
     pp_df = pp_df.drop(columns=to_drop_cols)
-    pp_df["relationsip"] = "Self"
+    pp_df["relationsip"] = "Main"
     return pp_df
 
 
@@ -71,8 +71,8 @@ def inference_model_get(ls_rela, state_names_base):
     return re_dict
 
 
-def process_rela_fast(main_pp_df, infer_model, rela):
-    pool = infer_model.forward_sample(size=init_n_pool, show_progress=True)
+def process_rela_fast(main_pp_df, infer_model, rela, pool_size):
+    pool = infer_model.forward_sample(size=pool_size, show_progress=True)
 
     all_cols = [x for x in main_pp_df.columns if x not in ALL_RELA]
     all_cols.remove("hhid")
@@ -145,7 +145,7 @@ def main():
     all_rela_exist = ALL_RELA.copy()
     all_rela_exist.remove("Self")
 
-    dict_model_inference = inference_model_get(all_rela_exist, state_names_pp)
+    dict_model_inference = inference_model_get(all_rela_exist, state_names_pp, init_n_pool)
 
     for rela in all_rela_exist:
         infer_model = dict_model_inference[rela]

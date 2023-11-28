@@ -12,8 +12,6 @@ for file in glob(os.path.join(processed_data, "del*")):
     del_df.append(df)
 del_df = pd.concat(del_df)
 
-ls_hhid = del_df["hhid"].unique()
-
 main_pp_df_hh = pd.read_csv(os.path.join(processed_data, f"SynPop_hh_main_{geo_lev}.csv"))
 main_pp_df_hh["hhid"] = main_pp_df_hh.index
 
