@@ -25,7 +25,7 @@ from PopSynthesis.Methods.connect_HH_PP.scripts.sample_pp import *
 # Process to have HH and Main Persons from the HH-Main pool
 # Process to have Main and Rela Persons, the results of this will update the HH again
 
-pool_sz = int(1e4) # 10 Mils
+pool_sz = int(1e7) # 10 Mils
 
 
 def get_hh_main_df(pool, marg_hh=None):
@@ -131,15 +131,15 @@ def main():
         i += 1
 
     # Process to combine final results of hh and df, mainly change id
+    print(f"DOING processing hhid after {i} ite")
     new_ls_hh = []
     new_ls_pp = []
     max_id = None
     for hh, pp in zip(ls_final_hh, ls_final_pp):
-        if max_id is None:
-            max_id = int(max(hh["hhid"]))
-        else:
+        if max_id is not None:
             hh["hhid"] = hh["hhid"] + max_id
             pp["hhid"] = pp["hhid"] + max_id
+        max_id = int(max(hh["hhid"]))
         new_ls_hh.append(hh)
         new_ls_pp.append(pp)
     
@@ -149,6 +149,8 @@ def main():
     # Outputing
     final_pp.to_csv(os.path.join(output_dir, f"syn_pp_final_{geo_lev}.csv"), index=False)
     final_hh.to_csv(os.path.join(output_dir, f"syn_hh_final_{geo_lev}.csv"), index=False)
+
+    print(re_check_to_show)
 
 
 if __name__ == "__main__":
