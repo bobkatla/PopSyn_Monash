@@ -32,7 +32,7 @@ def process_combine_df(combine_df):
 def extra_pp_df(pp_df):
     to_drop_cols = [x  for x in pp_df.columns if x in ALL_RELA]
     pp_df = pp_df.drop(columns=to_drop_cols)
-    pp_df["relationsip"] = "Main"
+    pp_df["relationship"] = "Main"
     return pp_df
 
 
@@ -74,7 +74,7 @@ def inference_model_get(ls_rela, state_names_base):
 def process_rela_fast(main_pp_df, infer_model, rela, pool_size):
     pool = infer_model.forward_sample(size=pool_size, show_progress=True)
 
-    all_cols = [x for x in main_pp_df.columns if x not in ALL_RELA]
+    all_cols = [x for x in main_pp_df.columns if x not in ALL_RELA and x != geo_lev]
     all_cols.remove("hhid")
     all_cols_main = [f"{x}_main" for x in all_cols]
     all_cols_rela_rename = {f"{x}_{rela}": x for x in all_cols}
@@ -102,15 +102,18 @@ def process_rela_fast(main_pp_df, infer_model, rela, pool_size):
             to_delete.append(sub_rela_de)
 
     print("GETTING the hhid that is hard to sample, maybe wrong")
-    to_del_df = pd.concat(to_delete)
-    check_df = sub_pp_df[~sub_pp_df["hhid"].isin(to_del_df["hhid"])]
+    if len(to_delete) > 0:
+        to_del_df = pd.concat(to_delete)
+        check_df = sub_pp_df[~sub_pp_df["hhid"].isin(to_del_df["hhid"])]
+    else:
+        to_del_df = None
+        check_df = sub_pp_df
     print(f"Final DF atm for {rela}")
 
     print("DOING sampling by rela now")
     gb_df_hhid = check_df.groupby(all_cols)["hhid"].apply(lambda x: list(x))
     gb_df_num_rela = check_df.groupby(all_cols)[rela].apply(lambda x: list(x))
     comb_df = pd.merge(gb_df_hhid, gb_df_num_rela, left_index=True, right_index=True)
-
     ls_to_com_df = []
     hold_ids = []
     for check_val, ls_hhid, ls_rela in zip(comb_df.index, comb_df["hhid"], comb_df[rela]):
