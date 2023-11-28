@@ -25,7 +25,7 @@ from PopSynthesis.Methods.connect_HH_PP.scripts.sample_pp import *
 # Process to have HH and Main Persons from the HH-Main pool
 # Process to have Main and Rela Persons, the results of this will update the HH again
 
-pool_sz = int(1e2) # 10 Mils
+pool_sz = int(1e4) # 10 Mils
 
 
 def get_hh_main_df(pool, marg_hh=None):
@@ -64,14 +64,20 @@ def main():
     df_seed = df_seed.drop(columns=id_cols)
     pool_hh_main = get_hh_main_pool(df_seed, state_names)
 
+    all_rela_exist = ALL_RELA.copy()
+    all_rela_exist.remove("Self")
+    dict_model_inference = inference_model_get(all_rela_exist, pp_state_names)
+    dict_pool_sample = pools_get(all_rela_exist, dict_model_inference, pool_sz)
+
     ls_final_hh = []
     ls_final_pp = []
 
     check = np.inf
     i = 0
     marg_hh = None
+    re_check_to_show = []
     while check > 100:
-        print(f"DOING ITE {i}")
+        print(f"DOING ITE {i} with err == {check}")
         combine_df_hh_main = get_hh_main_df(pool_hh_main, marg_hh)
         # combine_df_hh_main = pd.read_csv(os.path.join(processed_data, f"SynPop_hh_main_{geo_lev}.csv"))
         # final_syn.to_csv(os.path.join(processed_data, f"SynPop_hh_main_{geo_lev}.csv"), index=False)
@@ -82,51 +88,67 @@ def main():
         store_pp_df = extra_pp_df(main_pp_df_all)
         ls_df_pp = [store_pp_df]
 
-        all_rela_exist = ALL_RELA.copy()
-        all_rela_exist.remove("Self")
-        dict_model_inference = inference_model_get(all_rela_exist, pp_state_names)
-
         del_df = []
         for rela in all_rela_exist:
-            infer_model = dict_model_inference[rela]
-            to_del_df, pop_rela = process_rela_fast(main_pp_df_all, infer_model, rela, pool_sz)
-            cols_main = [f"{x}_main" for x in PP_ATTS if x not in["relationship", "persid", "hhid"]]
-            rename_cols = {f"{name}_{rela}": name for name in PP_ATTS if name not in["relationship", "persid", "hhid"]}
+            to_del_df, pop_rela = process_rela_fast(main_pp_df_all, rela, dict_pool_sample[rela])
+            cols_main = [f"{x}_main" for x in PP_ATTS if x not in["relationship", "persid", "hhid", geo_lev]]
+            rename_cols = {f"{name}_{rela}": name for name in PP_ATTS if name not in["relationship", "persid", "hhid", geo_lev]}
             pop_rela = pop_rela.drop(columns=cols_main)
             pop_rela = pop_rela.rename(columns=rename_cols)
             ls_df_pp.append(pop_rela)
             del_df.append(to_del_df)
 
         del_df_final = pd.concat(del_df)
-
         all_df_pp = pd.concat(ls_df_pp)
         all_df_pp_rm = all_df_pp[~all_df_pp["hhid"].isin(del_df_final["hhid"])] # remove those del
         hh_df_rm = hh_df[~hh_df["hhid"].isin(del_df_final["hhid"])]
-        print(all_df_pp_rm)
-        print(hh_df_rm)
 
         ls_final_hh.append(hh_df_rm)
         ls_final_pp.append(all_df_pp_rm)
 
         # Update the pool
-        get_comb = del_df_final.drop(columns=["hhid"]).value_counts()
+        get_comb = del_df_final.drop(columns=["hhid", "POA"]).value_counts()
+        pool_del_index = []
         for comb in get_comb.index:
             q = ""
+            idx_c = 0
             for att, state in zip(get_comb.index.names, comb):
-                if i != 0:
+                if idx_c != 0:
                     q += " & "
-                q += f"{att} != '{state}'"
-            print(q)
-            pool_hh_main = pool_hh_main.query(q)
-        print(pool_hh_main)
+                q += f"{att} == '{state}'"
+                idx_c += 1
+            pool_del_index += list(pool_hh_main.query(q).index)
+        pool_hh_main = pool_hh_main.loc[~pool_hh_main.index.isin(pool_del_index)]
+        # Get the new marg to handle the new df
+        del_hh = hh_df[hh_df["hhid"].isin(del_df_final["hhid"])]
+        marg_new_raw = del_hh.groupby('POA')['totalvehs'].value_counts().unstack().fillna(0)
+        convert_marg_dict = {(marg_new_raw.columns.name, state): marg_new_raw[state] for state in marg_new_raw.columns}
+        convert_marg_dict[("zone_id", None)] = marg_new_raw.index
+        marg_hh = pd.DataFrame(convert_marg_dict)
     
         check = len(del_df_final)
+        re_check_to_show.append(check)
         i += 1
-        break
+
+    # Process to combine final results of hh and df, mainly change id
+    new_ls_hh = []
+    new_ls_pp = []
+    max_id = None
+    for hh, pp in zip(ls_final_hh, ls_final_pp):
+        if max_id is None:
+            max_id = int(max(hh["hhid"]))
+        else:
+            hh["hhid"] = hh["hhid"] + max_id
+            pp["hhid"] = pp["hhid"] + max_id
+        new_ls_hh.append(hh)
+        new_ls_pp.append(pp)
+    
+    final_hh = pd.concat(new_ls_hh)
+    final_pp = pd.concat(new_ls_pp)
 
     # Outputing
-    # all_df_pp_rm.to_csv(os.path.join(output_dir, f"syn_pp_final_{geo_lev}.csv"), index=False)
-    # hh_df_rm.to_csv(os.path.join(output_dir, f"syn_hh_final_{geo_lev}.csv"), index=False)
+    final_pp.to_csv(os.path.join(output_dir, f"syn_pp_final_{geo_lev}.csv"), index=False)
+    final_hh.to_csv(os.path.join(output_dir, f"syn_hh_final_{geo_lev}.csv"), index=False)
 
 
 if __name__ == "__main__":

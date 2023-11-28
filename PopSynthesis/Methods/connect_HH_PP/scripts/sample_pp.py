@@ -19,7 +19,7 @@ init_n_pool = int(1e7) # 10 Mils
 
 def process_combine_df(combine_df):
     combine_df["hhid"] = combine_df.index
-    hh_df = combine_df[HH_ATTS]
+    hh_df = combine_df[HH_ATTS + [geo_lev]]
     all_rela_exist = ALL_RELA.copy()
     all_rela_exist.remove("Self")
     pp_cols = PP_ATTS + all_rela_exist + [geo_lev]
@@ -71,9 +71,15 @@ def inference_model_get(ls_rela, state_names_base):
     return re_dict
 
 
-def process_rela_fast(main_pp_df, infer_model, rela, pool_size):
-    pool = infer_model.forward_sample(size=pool_size, show_progress=True)
+def pools_get(ls_rela, dict_model_inference, pool_size):
+    re_dict = {}
+    for rela in ls_rela:
+        infer_model = dict_model_inference[rela]
+        pool = infer_model.forward_sample(size=pool_size, show_progress=True)
+        re_dict[rela] = pool
+    return re_dict
 
+def process_rela_fast(main_pp_df, rela, pool):
     all_cols = [x for x in main_pp_df.columns if x not in ALL_RELA and x != geo_lev]
     all_cols.remove("hhid")
     all_cols_main = [f"{x}_main" for x in all_cols]

@@ -113,12 +113,16 @@ def samp_from_pool_1layer(pool, df_marg, chosen_att, zone_lev):
     ls_all = []
     for state in ls_states:
         sub_pool = pool[pool[chosen_att]==state]
+        if len(sub_pool) == 0:
+            print(f"WARNING: cannot see {chosen_att}_{state} in the pool, sample by the rest")
+            sub_pool = pool # if there are none, we take all
         seri_state = census_vals_vehs[(chosen_att, state)]
         for zone in seri_state.index:
-            n = seri_state[zone]
-            sub_df_zone = sub_pool.sample(n=n, replace=True)
-            sub_df_zone[zone_lev] = zone
-            ls_all.append(sub_df_zone)
+            n = int(seri_state[zone])
+            if n > 0:
+                sub_df_zone = sub_pool.sample(n=n, replace=True)
+                sub_df_zone[zone_lev] = zone
+                ls_all.append(sub_df_zone)
     final_result = pd.concat(ls_all, axis=0)
     return final_result
 
