@@ -88,6 +88,10 @@ def process_hh_main_person(hh_df, main_pp_df, to_csv=False, name_file="connect_h
     assert len(hh_df) == len(main_pp_df)
     combine_df = hh_df.merge(main_pp_df, on="hhid", how="inner")
     combine_df = combine_df.drop(columns=["relationship"])
+    # For this we use the weights of the hh, we can change to main if we want to
+    if "_weight_x" in combine_df.columns:
+        combine_df = combine_df.rename(columns={"_weight_x": "_weight"})
+        combine_df = combine_df.drop(columns=["_weight_y"])
     if to_csv:
         combine_df.to_csv(os.path.join(processed_data ,f"{name_file}.csv"), index=False)
     return combine_df
@@ -104,6 +108,10 @@ def process_main_other(main_pp_df, sub_df, rela, to_csv=True):
 
     combine_df = main_pp_df.merge(sub_df, on="hhid", how="right")
     combine_df = combine_df.drop(columns=[f"relationship_{rela}", "relationship_main"])
+
+    if "_weight_main" in combine_df.columns:
+        combine_df = combine_df.rename(columns={"_weight_main": "_weight"})
+        combine_df = combine_df.drop(columns=[f"_weight_{rela}"])
     
     if to_csv:
         combine_df.to_csv(os.path.join(processed_data, f"connect_main_{rela}.csv"), index=False)
@@ -133,7 +141,7 @@ def add_weights_in_df(df, weights_dict, type="hh"):
     elif type == "pp":
         check_cols = [x for x in df.columns if "persid" in x]
         if len(check_cols) == 0:
-            raise ValueError("No persid to match witht the weights")
+            raise ValueError("No persid to match with the weights")
         elif len(check_cols) == 1:
             select_col = check_cols[0]
         else:
@@ -271,23 +279,27 @@ def convert_all_hh_atts(hh_df, pp_df):
 
 def main():
     # Import HH and PP samples (VISTA)
+    # Pre-processing
     hh_df_raw = pd.read_csv(os.path.join(data_dir ,"H_VISTA_1220_SA1.csv"))
     pp_df_raw = pd.read_csv(os.path.join(data_dir, "P_VISTA_1220_SA1.csv"))
-
     weights_dict = get_weights_dict(hh_df_raw[["hhid", "wdhhwgt_sa3", "wehhwgt_sa3"]], pp_df_raw[["persid", "wdperswgt_sa3", "weperswgt_sa3"]])
 
-    pp_df = process_rela(pp_df_raw[PP_ATTS])
-    pp_df = get_main_max_age(pp_df)
-    pp_df = convert_pp_age_gr(pp_df=pp_df)
+    files_exist = True
+    if files_exist:
+        hh_df = pd.read_csv(os.path.join(processed_data,"before_process_more_hh.csv"))
+        pp_df = pd.read_csv(os.path.join(processed_data,"before_process_more_pp.csv"))
+    else:
+        # Process pp
+        pp_df = process_rela(pp_df_raw[PP_ATTS])
+        pp_df = get_main_max_age(pp_df)
+        pp_df = convert_pp_age_gr(pp_df=pp_df)
+        
+        # Process hh
+        hh_df = convert_all_hh_atts(hh_df_raw[HH_ATTS], pp_df)
+
+        hh_df.to_csv(os.path.join(processed_data,"before_process_more_hh.csv"), index=False)
+        pp_df.to_csv(os.path.join(processed_data,"before_process_more_pp.csv"), index=False)
     
-    hh_df = convert_all_hh_atts(hh_df_raw[HH_ATTS], pp_df)
-
-    # This part is to create the just simple converted samples from hh and pp
-    pp_df = add_weights_in_df(pp_df, weights_dict, type="pp")
-    hh_df = add_weights_in_df(hh_df, weights_dict, type="hh")
-    pp_df.to_csv(os.path.join(processed_data, f"ori_sample_pp.csv"), index=False)
-    hh_df.to_csv(os.path.join(processed_data, f"ori_sample_hh.csv"), index=False)
-
     # return dict statenames for hh
     dict_hh_state_names = {hh_cols: list(hh_df[hh_cols].unique()) for hh_cols in hh_df.columns if hh_cols not in ALL_RELA and hh_cols not in NOT_INCLUDED_IN_BN_LEARN}
     with open(os.path.join(processed_data, 'dict_hh_states.pickle'), 'wb') as handle:
@@ -297,21 +309,22 @@ def main():
     dict_pp_state_names = {pp_cols: list(pp_df[pp_cols].unique()) for pp_cols in pp_df.columns if pp_cols not in NOT_INCLUDED_IN_BN_LEARN}
     with open(os.path.join(processed_data, 'dict_pp_states.pickle'), 'wb') as handle:
         pickle.dump(dict_pp_state_names, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    
-    main_pp_df = pp_df[pp_df["relationship"]=="Main"]
 
+    # This part is to create the just simple converted samples from hh and pp
+    pp_df = add_weights_in_df(pp_df, weights_dict, type="pp")
+    hh_df = add_weights_in_df(hh_df, weights_dict, type="hh")
+    pp_df.to_csv(os.path.join(processed_data, f"ori_sample_pp.csv"), index=False)
+    hh_df.to_csv(os.path.join(processed_data, f"ori_sample_hh.csv"), index=False)
+    
     # process hh_main
-    df_hh_main = process_hh_main_person(hh_df, main_pp_df, to_csv=False)
-    df_hh_main = add_weights_in_df(df_hh_main, weights_dict, type="hh")
-    df_hh_main.to_csv(os.path.join(processed_data, f"connect_hh_main.csv"), index=False)
+    main_pp_df = pp_df[pp_df["relationship"]=="Main"]
+    df_hh_main = process_hh_main_person(hh_df, main_pp_df, to_csv=True)
 
     for rela in ALL_RELA:
         if rela != "Self":
             print(f"DOING {rela}")
             sub_df = pp_df[pp_df["relationship"]==rela]
-            df_main_other = process_main_other(main_pp_df, sub_df, rela=rela, to_csv=False)
-            df_main_other = add_weights_in_df(df_main_other, weights_dict, type="pp")
-            df_main_other.to_csv(os.path.join(processed_data, f"connect_main_{rela}.csv"), index=False)
+            df_main_other = process_main_other(main_pp_df, sub_df, rela=rela, to_csv=True)
 
 
 if __name__ == "__main__":
