@@ -59,7 +59,7 @@ def TRS(initial_weights, know_tot=None):
         fractional_parts = initial_weights - truncated_weights
         
         # Replicate individuals in proportion to their fractional parts
-        replication_probs = fractional_parts / np.sum(fractional_parts)
+        replication_probs = fractional_parts / np.sum(fractional_parts) if np.sum(fractional_parts) != 0 else fractional_parts
         num_replications = np.random.multinomial(int(discrepancy), replication_probs)
         truncated_weights += num_replications
 
@@ -69,7 +69,7 @@ def TRS(initial_weights, know_tot=None):
         excess_weights = truncated_weights[excess_indices]
         
         # Calculate sampling probabilities based on truncated weights
-        sampling_probs = excess_weights / np.sum(excess_weights)
+        sampling_probs = excess_weights / np.sum(excess_weights) if np.sum(excess_weights) != 0 else excess_weights
         
         # Randomly sample individuals to reduce excess
         num_samples = np.random.multinomial(abs(discrepancy), sampling_probs)
