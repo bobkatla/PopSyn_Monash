@@ -6,7 +6,7 @@ from pgmpy.sampling import BayesianModelSampling
 from pgmpy.factors.discrete import State
 
 from PopSynthesis.Methods.connect_HH_PP.paras_dir import data_dir, processed_data, geo_lev
-
+from PopSynthesis.Methods.connect_HH_PP.scripts.const import ALL_RELA
 
 def reject_samp_veh(BN, df_marg, zone_lev):
     inference = BayesianModelSampling(BN)
@@ -79,5 +79,82 @@ def main():
     final_syn_pop.to_csv(os.path.join(processed_data, f"SynPop_hh_main_{geo_lev}.csv"), index=False)
 
 
+def filter_pool(pool):
+    # Removing some known impossible combinations, we can even incorp domain knownledge here
+    check_relas = ALL_RELA.copy()
+    check_relas.remove("Self")
+
+    # hhsize HAS to be equal the total of other rela (+1 because of main person)
+    pool["sum_by_rela"] = pool[check_relas].sum(axis=1) + 1
+    def f(r):
+        val_hhsize = r["hhsize"]
+        val_sum_rela = r["sum_by_rela"]
+        if val_hhsize.isnumeric():
+            return "Matched" if int(val_hhsize) == val_sum_rela else "Not matched"
+        else:
+            # Special case of "8+"
+            return "Matched" if val_sum_rela >= 8 else "Not matched"
+    pool["check_hhsize"] = pool.apply(f, axis=1)
+    pool = pool[pool["check_hhsize"]=="Matched"]
+    pool = pool.drop(columns=["sum_by_rela", "check_hhsize"])
+
+    return pool
+
+
+def samp_from_pool_1layer(pool, df_marg, chosen_att, zone_lev):
+    cols_df_hh_census = df_marg.columns
+    df_marg.index = df_marg[cols_df_hh_census[cols_df_hh_census.get_level_values(0)=="zone_id"][0]]
+
+    # Easy one of updating via samp 1 layer
+    cols_tot = cols_df_hh_census[cols_df_hh_census.get_level_values(0)==chosen_att]
+    #  df_marg_hh[cols_totvehs].columns.get_level_values(1)
+    census_vals_vehs = df_marg[cols_tot]
+    ls_states = census_vals_vehs.columns.get_level_values(1)
+    ls_all = []
+    for state in ls_states:
+        sub_pool = pool[pool[chosen_att]==state]
+        seri_state = census_vals_vehs[(chosen_att, state)]
+        for zone in seri_state.index:
+            n = seri_state[zone]
+            sub_df_zone = sub_pool.sample(n=n, replace=True)
+            sub_df_zone[zone_lev] = zone
+            ls_all.append(sub_df_zone)
+    final_result = pd.concat(ls_all, axis=0)
+    return final_result
+
+
+def new_run():
+    pool_sz = int(1e7) # 10 Mils
+    
+    #learning to get the HH only with main person
+    df_seed = pd.read_csv(os.path.join(processed_data, "connect_hh_main.csv"))
+    # drop all the ids as they are not needed for in BN learning
+    id_cols = [x for x in df_seed.columns if "hhid" in x or "persid" in x]
+    df_seed = df_seed.drop(columns=id_cols)
+
+    pp_state_names = None
+    with open(os.path.join(processed_data, 'dict_pp_states.pickle'), 'rb') as handle:
+        pp_state_names = pickle.load(handle)
+    hh_state_names = None
+    with open(os.path.join(processed_data, 'dict_hh_states.pickle'), 'rb') as handle:
+        hh_state_names = pickle.load(handle)
+    state_names = hh_state_names | pp_state_names
+
+    print("Learn BN")
+    model = learn_struct_BN_score(df_seed, show_struct=False, state_names=state_names)
+    model = learn_para_BN(model, df_seed)
+    print("Doing the sampling")
+    inference = BayesianModelSampling(model)
+    pool = inference.forward_sample(size=pool_sz, show_progress=True)
+
+    pool = filter_pool(pool)
+    
+    df_marg_hh = pd.read_csv(os.path.join(data_dir, "hh_marginals_ipu.csv"), header=[0,1])
+    final_syn = samp_from_pool_1layer(pool, df_marg_hh, "totalvehs", geo_lev)
+    print(final_syn)
+    final_syn.to_csv(os.path.join(processed_data, f"SynPop_hh_main_{geo_lev}.csv"), index=False)
+
+
 if __name__ == "__main__":
-    main()
+    # main()
+    new_run()
