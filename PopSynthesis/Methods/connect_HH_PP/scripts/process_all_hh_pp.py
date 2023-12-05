@@ -37,7 +37,7 @@ def get_hh_main_df(pool, marg_hh=None):
     return final_syn_hh_main
 
 
-def get_hh_main_pool(df_seed, state_names):
+def get_pool(df_seed, state_names):
     print("Learn BN")
     model = learn_struct_BN_score(df_seed, show_struct=False, state_names=state_names)
     model = learn_para_BN(model, df_seed)
@@ -62,7 +62,7 @@ def main():
     # drop all the ids as they are not needed for in BN learning
     id_cols = [x for x in df_seed.columns if "hhid" in x or "persid" in x]
     df_seed = df_seed.drop(columns=id_cols)
-    pool_hh_main = get_hh_main_pool(df_seed, state_names)
+    pool_hh_main = get_pool(df_seed, state_names)
 
     all_rela_exist = ALL_RELA.copy()
     all_rela_exist.remove("Self")

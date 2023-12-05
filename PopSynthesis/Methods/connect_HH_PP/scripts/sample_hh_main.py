@@ -103,7 +103,8 @@ def filter_pool(pool):
 
 def samp_from_pool_1layer(pool, df_marg, chosen_att, zone_lev):
     cols_df_hh_census = df_marg.columns
-    df_marg.index = df_marg[cols_df_hh_census[cols_df_hh_census.get_level_values(0)=="zone_id"][0]]
+    if "zone_id" in cols_df_hh_census.get_level_values(0):
+        df_marg.index = df_marg[cols_df_hh_census[cols_df_hh_census.get_level_values(0)=="zone_id"][0]]
 
     # Easy one of updating via samp 1 layer
     cols_tot = cols_df_hh_census[cols_df_hh_census.get_level_values(0)==chosen_att]
