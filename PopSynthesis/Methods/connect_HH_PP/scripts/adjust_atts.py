@@ -150,9 +150,9 @@ def process_data_general(census_data, pool, geo_lev):
             # Now we need to process from the syn pop
             dict_diff = cal_states_diff(att, syn_pop, census_data, geo_lev)
             syn_pop = wrapper_adjust_state(syn_pop, dict_diff, processed_atts, att, pool, geo_lev)
-            print(len(syn_pop)) # need to be matched
-            break
+            # I belive lol
         processed_atts.append(att)
+    return syn_pop
 
 
 def main():
@@ -168,6 +168,7 @@ def main():
     pool = get_pool(df_seed, hh_state_names)
     geo_lev = "POA"
     syn_pop = process_data_general(census_data, pool, geo_lev)
+    syn_pop.to_csv(os.path.join(data_dir, "testing_hh_hold_hope.csv"), index=False)
 
 
 if __name__ == "__main__":
