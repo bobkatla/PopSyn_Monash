@@ -74,9 +74,9 @@ def update_syn_pop(syn_pop, pool, n_adjust, prev_atts, main_att, comb, del_state
     # Filter to have sub_df of syn_pop about del
     q_based = ""
     for i, att in enumerate(prev_atts):
-        q_based += f"{att}=='{comb[i]}' & "
-    del_q = q_based + f"{main_att}=='{del_state}' & {geo_lev}=='{zone}'"
-    plus_q = q_based + f"{main_att}=='{plus_state}'"
+        q_based += f"{att}==\'{comb[i]}\' & "
+    del_q = q_based + f"{main_att}==\'{del_state}\' & {geo_lev}==\'{zone}\'"
+    plus_q = q_based + f"{main_att}==\'{plus_state}\'"
 
     sub_df_pop_syn = syn_pop.query(del_q)
     drop_indices = np.random.choice(sub_df_pop_syn.index, n_adjust, replace=False)
