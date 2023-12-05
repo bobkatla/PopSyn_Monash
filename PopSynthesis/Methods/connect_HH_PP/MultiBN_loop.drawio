@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2023-12-05T16:02:18.946Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36" etag="ChJ7GnVrbnTNMfD9vUwz" version="22.1.5" type="github">
+<mxfile host="app.diagrams.net" modified="2023-12-05T16:11:00.429Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36" etag="ww3ZWzJv8eGzOAMl6zSk" version="22.1.5" type="github">
   <diagram name="Page-1" id="M9G-T7zKxAfByAplEG5L">
     <mxGraphModel dx="2848" dy="897" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
@@ -53,22 +53,32 @@
           <mxGeometry x="250" y="440" width="120" height="80" as="geometry" />
         </mxCell>
         <mxCell id="O2sVtFKZEaCIQGKIPa2d-42" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="O2sVtFKZEaCIQGKIPa2d-16" target="O2sVtFKZEaCIQGKIPa2d-41">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="470" />
+              <mxPoint x="740" y="539" />
+            </Array>
+          </mxGeometry>
         </mxCell>
         <mxCell id="O2sVtFKZEaCIQGKIPa2d-47" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="O2sVtFKZEaCIQGKIPa2d-16" target="O2sVtFKZEaCIQGKIPa2d-25">
           <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="O2sVtFKZEaCIQGKIPa2d-60" value="Go through each att" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="O2sVtFKZEaCIQGKIPa2d-47">
+          <mxGeometry x="-0.2243" relative="1" as="geometry">
+            <mxPoint y="-1" as="offset" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="O2sVtFKZEaCIQGKIPa2d-16" value="Synthetic population" style="shape=card;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
           <mxGeometry x="610" y="420" width="80" height="100" as="geometry" />
         </mxCell>
         <mxCell id="O2sVtFKZEaCIQGKIPa2d-20" value="1st attribute&#39;s constraints" style="rhombus;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
-          <mxGeometry x="430" y="430" width="100" height="100" as="geometry" />
+          <mxGeometry x="430" y="420" width="100" height="100" as="geometry" />
         </mxCell>
         <mxCell id="O2sVtFKZEaCIQGKIPa2d-50" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="O2sVtFKZEaCIQGKIPa2d-25" target="O2sVtFKZEaCIQGKIPa2d-30">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="O2sVtFKZEaCIQGKIPa2d-25" value="Synthetic counts for each zone and each state of next att" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
-          <mxGeometry x="630" y="594" width="120" height="80" as="geometry" />
+        <mxCell id="O2sVtFKZEaCIQGKIPa2d-25" value="Synthetic counts for each zone and each state of the att" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+          <mxGeometry x="590" y="594" width="120" height="80" as="geometry" />
         </mxCell>
         <mxCell id="O2sVtFKZEaCIQGKIPa2d-51" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="O2sVtFKZEaCIQGKIPa2d-30" target="O2sVtFKZEaCIQGKIPa2d-41">
           <mxGeometry relative="1" as="geometry" />
@@ -76,11 +86,8 @@
         <mxCell id="O2sVtFKZEaCIQGKIPa2d-52" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="O2sVtFKZEaCIQGKIPa2d-30" target="O2sVtFKZEaCIQGKIPa2d-43">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="O2sVtFKZEaCIQGKIPa2d-30" value="Dictionary of differences between census and current synthetic population" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+        <mxCell id="O2sVtFKZEaCIQGKIPa2d-30" value="Differences between census and current synthetic population for the att" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
           <mxGeometry x="430" y="680" width="120" height="80" as="geometry" />
-        </mxCell>
-        <mxCell id="O2sVtFKZEaCIQGKIPa2d-34" value="Go through each att" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
-          <mxGeometry x="450" y="564" width="60" height="30" as="geometry" />
         </mxCell>
         <mxCell id="O2sVtFKZEaCIQGKIPa2d-55" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="O2sVtFKZEaCIQGKIPa2d-41" target="O2sVtFKZEaCIQGKIPa2d-54">
           <mxGeometry relative="1" as="geometry" />
@@ -97,6 +104,25 @@
         <mxCell id="O2sVtFKZEaCIQGKIPa2d-46" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.033;entryY=0.415;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;" edge="1" parent="1" source="O2sVtFKZEaCIQGKIPa2d-20" target="O2sVtFKZEaCIQGKIPa2d-16">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <mxCell id="O2sVtFKZEaCIQGKIPa2d-62" value="init" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="O2sVtFKZEaCIQGKIPa2d-46">
+          <mxGeometry x="-0.322" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="O2sVtFKZEaCIQGKIPa2d-65" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="O2sVtFKZEaCIQGKIPa2d-54" target="O2sVtFKZEaCIQGKIPa2d-30">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1100" y="380" />
+              <mxPoint x="1100" y="780" />
+              <mxPoint x="490" y="780" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="O2sVtFKZEaCIQGKIPa2d-66" value="Update the differences&lt;br&gt;Go through each negative state" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="O2sVtFKZEaCIQGKIPa2d-65">
+          <mxGeometry x="-0.3971" y="1" relative="1" as="geometry">
+            <mxPoint y="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
         <mxCell id="O2sVtFKZEaCIQGKIPa2d-54" value="Delete and plus matching" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="920" y="340" width="80" height="80" as="geometry" />
         </mxCell>
@@ -112,9 +138,6 @@
           <mxGeometry x="-0.0851" y="-1" relative="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
-        </mxCell>
-        <mxCell id="O2sVtFKZEaCIQGKIPa2d-59" value="Go through each state" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
-          <mxGeometry x="840" y="420" width="60" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
