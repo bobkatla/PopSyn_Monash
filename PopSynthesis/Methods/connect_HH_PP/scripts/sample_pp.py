@@ -18,7 +18,6 @@ init_n_pool = int(1e7) # 10 Mils
 
 
 def process_combine_df(combine_df):
-    combine_df["hhid"] = combine_df.index
     hh_df = combine_df[HH_ATTS + [geo_lev]]
     all_rela_exist = ALL_RELA.copy()
     all_rela_exist.remove("Self")
@@ -75,7 +74,7 @@ def pools_get(ls_rela, dict_model_inference, pool_size):
     re_dict = {}
     for rela in ls_rela:
         infer_model = dict_model_inference[rela]
-        pool = infer_model.forward_sample(size=pool_size, show_progress=True)
+        pool = infer_model.forward_sample(size=int(pool_size), show_progress=True)
         re_dict[rela] = pool
     return re_dict
 
@@ -149,7 +148,9 @@ def process_rela_fast(main_pp_df, rela, pool):
 
 def main():
     # Import the synthetic with main and households
-    combine_df = pd.read_csv(os.path.join(processed_data, f"SynPop_hh_main_{geo_lev}.csv"))
+    # combine_df = pd.read_csv(os.path.join(processed_data, f"SynPop_hh_main_{geo_lev}.csv"))
+    combine_df = pd.read_csv(os.path.join(processed_data, f"1e5_hh_main.csv"))
+    combine_df = combine_df[combine_df["age"].notna()]
     # Process the HH and main to have the HH with IDs and People in HH
     hh_df, main_pp_df_all = process_combine_df(combine_df)
     # Store the HH in df, Store the main in a list to handle later
@@ -163,13 +164,13 @@ def main():
     all_rela_exist = ALL_RELA.copy()
     all_rela_exist.remove("Self")
 
-    dict_model_inference = inference_model_get(all_rela_exist, state_names_pp, init_n_pool)
+    dict_model_inference = inference_model_get(all_rela_exist, state_names_pp)
+    dict_pool_sample = pools_get(all_rela_exist, dict_model_inference, 1e6)
 
     for rela in all_rela_exist:
-        infer_model = dict_model_inference[rela]
-        to_del_df, pop_rela = process_rela_fast(main_pp_df_all, infer_model, rela)
-        pop_rela.to_csv(os.path.join(processed_data, f"pp_{rela}.csv"), index=False)
-        to_del_df.to_csv(os.path.join(processed_data, f"del_main_pp_{rela}.csv"), index=False)
+        to_del_df, pop_rela = process_rela_fast(main_pp_df_all, rela, dict_pool_sample[rela])
+        pop_rela.to_csv(os.path.join(processed_data, f"1e5_test_pp_{rela}.csv"), index=False)
+        to_del_df.to_csv(os.path.join(processed_data, f"1e5_test_del_main_pp_{rela}.csv"), index=False)
         # ls_df_pp.append(pop_rela)
     # sample to have the pool
     # Group the available HH into diffrent group and get total number number
