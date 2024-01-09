@@ -25,7 +25,7 @@ from PopSynthesis.Methods.connect_HH_PP.scripts.sample_pp import *
 # Process to have HH and Main Persons from the HH-Main pool
 # Process to have Main and Rela Persons, the results of this will update the HH again
 
-pool_sz = int(1e7) # 10 Mils
+pool_sz = int(1e5) # 10 Mils
 
 
 def get_hh_main_df(pool, marg_hh=None):
@@ -78,6 +78,7 @@ def main():
     re_check_to_show = []
     while check > 100:
         print(f"DOING ITE {i} with err == {check}")
+        # Simple create a new func here and get the new marg already, NOTE that here it uses the totalvehs for 1 layer sample only
         combine_df_hh_main = get_hh_main_df(pool_hh_main, marg_hh)
         # combine_df_hh_main = pd.read_csv(os.path.join(processed_data, f"SynPop_hh_main_{geo_lev}.csv"))
         # final_syn.to_csv(os.path.join(processed_data, f"SynPop_hh_main_{geo_lev}.csv"), index=False)
