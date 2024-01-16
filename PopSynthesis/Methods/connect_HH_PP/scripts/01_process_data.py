@@ -83,7 +83,7 @@ def adding_pp_related_atts(hh_df, pp_df):
     return hh_df.drop(columns=["Main"])
 
 
-def process_hh_main_person(hh_df, main_pp_df, to_csv=False, name_file="connect_hh_main"):
+def process_hh_main_person(hh_df, main_pp_df, to_csv=False, name_file="connect_hh_main", include_weights=True):
     # they need to perfect match
     assert len(hh_df) == len(main_pp_df)
     combine_df = hh_df.merge(main_pp_df, on="hhid", how="inner")
@@ -92,12 +92,16 @@ def process_hh_main_person(hh_df, main_pp_df, to_csv=False, name_file="connect_h
     if "_weight_x" in combine_df.columns:
         combine_df = combine_df.rename(columns={"_weight_x": "_weight"})
         combine_df = combine_df.drop(columns=["_weight_y"])
+
+    if not include_weights:
+        combine_df = combine_df.drop(columns="_weight")
+    
     if to_csv:
         combine_df.to_csv(os.path.join(processed_data ,f"{name_file}.csv"), index=False)
     return combine_df
 
 
-def process_main_other(main_pp_df, sub_df, rela, to_csv=True):
+def process_main_other(main_pp_df, sub_df, rela, to_csv=True, include_weights=True):
     assert len(main_pp_df["relationship"].unique()) == 1 # It is Main
     assert len(sub_df["relationship"].unique()) == 1 # It is the relationship we checking
     # Change the name to avoid confusion
@@ -112,6 +116,9 @@ def process_main_other(main_pp_df, sub_df, rela, to_csv=True):
     if "_weight_main" in combine_df.columns:
         combine_df = combine_df.rename(columns={"_weight_main": "_weight"})
         combine_df = combine_df.drop(columns=[f"_weight_{rela}"])
+
+    if not include_weights:
+        combine_df = combine_df.drop(columns="_weight")
     
     if to_csv:
         combine_df.to_csv(os.path.join(processed_data, f"connect_main_{rela}.csv"), index=False)
@@ -318,13 +325,13 @@ def main():
     
     # process hh_main
     main_pp_df = pp_df[pp_df["relationship"]=="Main"]
-    df_hh_main = process_hh_main_person(hh_df, main_pp_df, to_csv=True)
+    df_hh_main = process_hh_main_person(hh_df, main_pp_df, to_csv=True, include_weights=False)
 
     for rela in ALL_RELA:
         if rela != "Self":
             print(f"DOING {rela}")
             sub_df = pp_df[pp_df["relationship"]==rela]
-            df_main_other = process_main_other(main_pp_df, sub_df, rela=rela, to_csv=True)
+            df_main_other = process_main_other(main_pp_df, sub_df, rela=rela, to_csv=True, include_weights=False)
 
 
 if __name__ == "__main__":

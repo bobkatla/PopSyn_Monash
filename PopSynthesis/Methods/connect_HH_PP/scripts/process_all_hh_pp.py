@@ -25,19 +25,21 @@ from PopSynthesis.Methods.connect_HH_PP.scripts.sample_pp import *
 # Process to have HH and Main Persons from the HH-Main pool
 # Process to have Main and Rela Persons, the results of this will update the HH again
 
-pool_sz = int(1e5) # 10 Mils
+POOL_SZ = int(1e7) # 10 Mils
 
 
-def get_hh_main_df(pool, marg_hh=None):
+def get_hh_main_df(pool, chosen_att, marg_hh=None):
     if marg_hh is None:
         df_marg_hh = pd.read_csv(os.path.join(data_dir, "hh_marginals_ipu.csv"), header=[0,1])
     else:
         df_marg_hh = marg_hh
-    final_syn_hh_main = samp_from_pool_1layer(pool, df_marg_hh, "totalvehs", geo_lev)
+    final_syn_hh_main = samp_from_pool_1layer(pool, df_marg_hh, chosen_att, geo_lev)
+    final_syn_hh_main = final_syn_hh_main.reset_index(drop=True)
+    final_syn_hh_main["hhid"] = final_syn_hh_main.index
     return final_syn_hh_main
 
 
-def get_pool(df_seed, state_names):
+def get_pool(df_seed, state_names, pool_sz):
     print("Learn BN")
     model = learn_struct_BN_score(df_seed, show_struct=False, state_names=state_names)
     model = learn_para_BN(model, df_seed)
@@ -62,24 +64,27 @@ def main():
     # drop all the ids as they are not needed for in BN learning
     id_cols = [x for x in df_seed.columns if "hhid" in x or "persid" in x]
     df_seed = df_seed.drop(columns=id_cols)
-    pool_hh_main = get_pool(df_seed, state_names)
+    pool_hh_main = get_pool(df_seed, state_names, pool_sz=POOL_SZ)
 
     all_rela_exist = ALL_RELA.copy()
     all_rela_exist.remove("Self")
     dict_model_inference = inference_model_get(all_rela_exist, pp_state_names)
-    dict_pool_sample = pools_get(all_rela_exist, dict_model_inference, pool_sz)
+    dict_pool_sample = pools_get(all_rela_exist, dict_model_inference, POOL_SZ)
 
     ls_final_hh = []
     ls_final_pp = []
+
+    adjust_att = "hhsize"
 
     check = np.inf
     i = 0
     marg_hh = None
     re_check_to_show = []
-    while check > 100:
+    while check > 10:
         print(f"DOING ITE {i} with err == {check}")
-        # Simple create a new func here and get the new marg already, NOTE that here it uses the totalvehs for 1 layer sample only
-        combine_df_hh_main = get_hh_main_df(pool_hh_main, marg_hh)
+        # Simple create a new func here and get the new marg already
+        combine_df_hh_main = get_hh_main_df(pool_hh_main, adjust_att, marg_hh)
+        print(combine_df_hh_main)
         # combine_df_hh_main = pd.read_csv(os.path.join(processed_data, f"SynPop_hh_main_{geo_lev}.csv"))
         # final_syn.to_csv(os.path.join(processed_data, f"SynPop_hh_main_{geo_lev}.csv"), index=False)
 
@@ -122,7 +127,7 @@ def main():
         pool_hh_main = pool_hh_main.loc[~pool_hh_main.index.isin(pool_del_index)]
         # Get the new marg to handle the new df
         del_hh = hh_df[hh_df["hhid"].isin(del_df_final["hhid"])]
-        marg_new_raw = del_hh.groupby('POA')['totalvehs'].value_counts().unstack().fillna(0)
+        marg_new_raw = del_hh.groupby('POA')[adjust_att].value_counts().unstack().fillna(0)
         convert_marg_dict = {(marg_new_raw.columns.name, state): marg_new_raw[state] for state in marg_new_raw.columns}
         convert_marg_dict[("zone_id", None)] = marg_new_raw.index
         marg_hh = pd.DataFrame(convert_marg_dict)
@@ -148,8 +153,8 @@ def main():
     final_pp = pd.concat(new_ls_pp)
 
     # Outputing
-    final_pp.to_csv(os.path.join(output_dir, f"syn_pp_final_{geo_lev}.csv"), index=False)
-    final_hh.to_csv(os.path.join(output_dir, f"syn_hh_final_{geo_lev}.csv"), index=False)
+    final_pp.to_csv(os.path.join(output_dir, f"syn_pp_bn_adjust1_{adjust_att}_{geo_lev}.csv"), index=False)
+    final_hh.to_csv(os.path.join(output_dir, f"syn_hh_bn_adjust1_{adjust_att}_{geo_lev}.csv"), index=False)
 
     print(re_check_to_show)
 
