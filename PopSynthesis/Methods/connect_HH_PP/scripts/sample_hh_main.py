@@ -85,6 +85,8 @@ def filter_pool(pool):
     check_relas.remove("Self")
 
     # hhsize HAS to be equal the total of other rela (+1 because of main person)
+    # we will have the max hhsize
+    max_hhsize = 11
     pool["sum_by_rela"] = pool[check_relas].sum(axis=1) + 1
     def f(r):
         val_hhsize = r["hhsize"]
@@ -93,7 +95,7 @@ def filter_pool(pool):
             return "Matched" if int(val_hhsize) == val_sum_rela else "Not matched"
         else:
             # Special case of "8+"
-            return "Matched" if val_sum_rela >= 8 else "Not matched"
+            return "Matched" if val_sum_rela >= 8 and val_sum_rela <= max_hhsize else "Not matched"
     pool["check_hhsize"] = pool.apply(f, axis=1)
     pool = pool[pool["check_hhsize"]=="Matched"]
     pool = pool.drop(columns=["sum_by_rela", "check_hhsize"])

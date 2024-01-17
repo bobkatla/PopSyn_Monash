@@ -101,14 +101,23 @@ def main():
             rename_cols = {f"{name}_{rela}": name for name in PP_ATTS if name not in["relationship", "persid", "hhid", geo_lev]}
             pop_rela = pop_rela.drop(columns=cols_main)
             pop_rela = pop_rela.rename(columns=rename_cols)
-            ls_df_pp.append(pop_rela)
-            del_df.append(to_del_df)
+            if pop_rela is not None:
+                ls_df_pp.append(pop_rela)
+            if to_del_df is not None:
+                del_df.append(to_del_df)
+
+        all_df_pp = pd.concat(ls_df_pp)
+        
+        if len(del_df) == 0:
+            ls_final_hh.append(hh_df)
+            ls_final_pp.append(all_df_pp)
+            re_check_to_show.append(0)
+            break
 
         del_df_final = pd.concat(del_df)
-        all_df_pp = pd.concat(ls_df_pp)
         all_df_pp_rm = all_df_pp[~all_df_pp["hhid"].isin(del_df_final["hhid"])] # remove those del
         hh_df_rm = hh_df[~hh_df["hhid"].isin(del_df_final["hhid"])]
-
+        
         ls_final_hh.append(hh_df_rm)
         ls_final_pp.append(all_df_pp_rm)
 
