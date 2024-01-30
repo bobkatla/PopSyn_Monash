@@ -53,7 +53,7 @@ def main():
     # p_marg = name_f("person_marginals")
     # hh_sample = name_f("household_sample")
     # p_sample = name_f("person_sample")
-    # a = test_run(hh_marg, p_marg, hh_sample, p_sample)
+    a = test_run(hh_marg, p_marg, hh_sample, p_sample)
 
 
 if __name__ == "__main__":
