@@ -2,6 +2,7 @@
 import synthpop.zone_synthesizer as zs
 import synthpop.ipu.ipu as ipu
 from synthpop import categorizer as cat
+import pathlib
 
 import os
 import pandas as pd
@@ -40,7 +41,8 @@ def test_run(hh_marg, p_marg, hh_sample, p_sample):
 
 
 def main():
-    name_f = lambda x: os.path.join(r'C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\IPU\data\testing_new', f'{x}.csv')
+    print()
+    name_f = lambda x: os.path.join(pathlib.Path(__file__).parent.parent.resolve(), r'data\testing_new', f'{x}.csv')
     hh_marg = name_f("hh_marginals_ipu")
     p_marg = name_f("person_marginals_ipu")
     hh_sample = name_f("hh_sample_ipu")
@@ -51,7 +53,7 @@ def main():
     # p_marg = name_f("person_marginals")
     # hh_sample = name_f("household_sample")
     # p_sample = name_f("person_sample")
-    a = test_run(hh_marg, p_marg, hh_sample, p_sample)
+    # a = test_run(hh_marg, p_marg, hh_sample, p_sample)
 
 
 if __name__ == "__main__":
