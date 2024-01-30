@@ -59,10 +59,11 @@ def learn_struct_BN_score(df, state_names=None, show_struct=False, method=HillCl
     return model
 
 
-def learn_para_BN(model, data_df, learn_method=BayesianEstimator):
+def learn_para_BN(model, data_df, learn_method=BayesianEstimator, state_names=None):
     para_learn = learn_method(
             model=model,
-            data=data_df
+            data=data_df,
+            state_names=state_names
         )
     ls_CPDs = para_learn.get_parameters(weighted='_weight' in data_df)
     model.add_cpds(*ls_CPDs)
