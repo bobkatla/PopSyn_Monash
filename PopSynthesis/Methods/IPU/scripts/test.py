@@ -42,7 +42,7 @@ def test_run(hh_marg, p_marg, hh_sample, p_sample):
 
 def main():
     print()
-    name_f = lambda x: os.path.join(pathlib.Path(__file__).parent.parent.resolve(), r'data\testing_new', f'{x}.csv')
+    name_f = lambda x: os.path.join(pathlib.Path(__file__).parent.parent.resolve(), 'data', 'testing_new', f'{x}.csv')
     hh_marg = name_f("hh_marginals_ipu")
     p_marg = name_f("person_marginals_ipu")
     hh_sample = name_f("hh_sample_ipu")
