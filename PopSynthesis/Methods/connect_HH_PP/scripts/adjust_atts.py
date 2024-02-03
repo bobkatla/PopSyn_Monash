@@ -130,18 +130,18 @@ def wrapper_adjust_state(syn_pop, dict_diff, processed_atts, main_att, pool, geo
     return syn_pop
 
 
-def process_data_general(census_data, pool, geo_lev):
+def process_data_general(census_data, pool, geo_lev, adjust_atts_order):
     # Census data will be in format of count with zone_id, and columns in 2 levels
     # Loop through each att
     census_data = census_data.set_index(census_data.columns[census_data.columns.get_level_values(0)=="zone_id"][0])
     cols_drop = census_data.columns[census_data.columns.get_level_values(0).isin(["zone_id", "sample_geog"])]
     census_data = census_data.drop(columns= cols_drop)
-    ls_atts_order = list(census_data.columns.get_level_values(0).unique()) #at the moment it is just by order from marginals file, will fix later
+    # ls_atts_order = list(census_data.columns.get_level_values(0).unique()) #at the moment it is just by order from marginals file, will fix later
     census_data.index = census_data.index.astype(str)
 
     syn_pop = None
     processed_atts = []
-    for att in ls_atts_order:
+    for att in adjust_atts_order:
         if syn_pop is None: # first time run, this should be perfect
             syn_pop = samp_from_pool_1layer(pool, census_data, att, geo_lev)
             syn_pop = syn_pop.astype(str)
@@ -168,7 +168,8 @@ def main():
     
     pool = get_pool(df_seed, hh_state_names)
     geo_lev = "POA"
-    syn_pop = process_data_general(census_data, pool, geo_lev)
+    adjust_atts_order = None
+    syn_pop = process_data_general(census_data, pool, geo_lev, adjust_atts_order)
     syn_pop.to_csv(os.path.join(output_dir, "Testing_hh_hold_hope.csv"), index=False)
 
 
