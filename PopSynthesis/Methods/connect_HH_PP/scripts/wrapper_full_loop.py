@@ -29,7 +29,7 @@ def main():
         pp_state_names = pickle.load(handle)
     state_names = hh_state_names | pp_state_names
     
-    pool = get_pool(df_seed, hh_state_names)
+    pool = get_pool(df_seed, hh_state_names, POOL_SZ)
     geo_lev = "POA"
     adjust_atts_order = ["hhsize", "totalvehs"]
 
