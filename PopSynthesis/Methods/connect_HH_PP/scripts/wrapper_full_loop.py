@@ -13,7 +13,7 @@ from PopSynthesis.Methods.connect_HH_PP.scripts.process_all_hh_pp import *
 from PopSynthesis.Methods.connect_HH_PP.scripts.get_hh_main_combine import *
 
 
-POOL_SZ = int(1e8)
+POOL_SZ = int(1e7)
 
 
 def main():
@@ -127,6 +127,8 @@ def main():
         max_id = int(max(hh["hhid"]))
         new_ls_hh.append(hh)
         new_ls_pp.append(pp)
+
+
     
     final_hh = pd.concat(new_ls_hh)
     final_pp = pd.concat(new_ls_pp)
