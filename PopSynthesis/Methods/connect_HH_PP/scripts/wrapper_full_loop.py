@@ -13,7 +13,7 @@ from PopSynthesis.Methods.connect_HH_PP.scripts.process_all_hh_pp import *
 from PopSynthesis.Methods.connect_HH_PP.scripts.get_hh_main_combine import *
 
 
-POOL_SZ = int(1e7)
+POOL_SZ = int(1e8)
 
 
 def main():
@@ -31,7 +31,7 @@ def main():
     
     pool = get_pool(df_seed, hh_state_names, POOL_SZ)
     geo_lev = "POA"
-    adjust_atts_order = ["hhsize", "totalvehs"]
+    adjust_atts_order = ["hhsize", "totalvehs", "hhinc", "dwelltype", "owndwell"]
 
     all_rela_exist = ALL_RELA.copy()
     all_rela_exist.remove("Self")
@@ -132,8 +132,8 @@ def main():
     final_pp = pd.concat(new_ls_pp)
 
     # Outputing
-    final_pp.to_csv(os.path.join(output_dir, f"syn_pp_testfun.csv"), index=False)
-    final_hh.to_csv(os.path.join(output_dir, f"syn_hh_testfun.csv"), index=False)
+    final_pp.to_csv(os.path.join(output_dir, f"syn_pp_final_{geo_lev}.csv"), index=False)
+    final_hh.to_csv(os.path.join(output_dir, f"syn_hh_final_{geo_lev}.csv"), index=False)
 
     print(re_check_to_show)
 
