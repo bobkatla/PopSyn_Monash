@@ -3,6 +3,7 @@ New way to do rejection sample, especially for the main to other
 Sample alot (like 10 mil) and select the needed sample from it, we can combine with sample method to randomly draw
 """
 import pandas as pd
+import numpy as np
 import pickle
 import os
 
@@ -139,9 +140,13 @@ def process_rela_fast(main_pp_df, rela, pool):
             tot += n
         re_df = to_sample_df.sample(n=tot, replace=True)
         ls_to_com_df.append(re_df)
-    final_rela_df = pd.concat(ls_to_com_df)
-    final_rela_df["hhid"] = hold_ids
-    final_rela_df["relationship"] = rela
+    if len(ls_to_com_df) == 0:
+        print("Weird this has nothing")
+        final_rela_df = None
+    else:
+        final_rela_df = pd.concat(ls_to_com_df)
+        final_rela_df["hhid"] = hold_ids
+        final_rela_df["relationship"] = rela
     
     return to_del_df, final_rela_df
 
