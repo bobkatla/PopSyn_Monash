@@ -25,14 +25,14 @@ def main():
         pp_state_names = pickle.load(handle)
     state_names = hh_state_names | pp_state_names
 
-    pool = get_pool(df_seed, hh_state_names, POOL_SZ)
+    # pool = get_pool(df_seed, hh_state_names, POOL_SZ)
     geo_lev = "POA"
     processed_already = ["hhsize", "totalvehs", "hhinc", "dwelltype"]
 
     all_rela_exist = ALL_RELA.copy()
     all_rela_exist.remove("Self")
-    dict_model_inference = inference_model_get(all_rela_exist, pp_state_names)
-    dict_pool_sample = pools_get(all_rela_exist, dict_model_inference, POOL_SZ)
+    # dict_model_inference = inference_model_get(all_rela_exist, pp_state_names)
+    # dict_pool_sample = pools_get(all_rela_exist, dict_model_inference, POOL_SZ)
     
 
     ls_final_hh = []
@@ -43,9 +43,9 @@ def main():
     marg_hh = None
     re_check_to_show = []
 
-    # with open(os.path.join(processed_data, 'dict_pool_sample.pickle'), 'rb') as handle:
-    #     dict_pool_sample = pickle.load(handle)
-    # pool = pd.read_csv(os.path.join(processed_data, 'hh_pool.csv'))
+    with open(os.path.join(processed_data, 'dict_pool_sample.pickle'), 'rb') as handle:
+        dict_pool_sample = pickle.load(handle)
+    pool = pd.read_csv(os.path.join(processed_data, 'hh_pool.csv'))
 
     print("SAVING incase")
     pool.to_csv(os.path.join(processed_data, 'hh_pool.csv'))
