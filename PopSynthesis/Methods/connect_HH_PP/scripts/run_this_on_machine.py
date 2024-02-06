@@ -47,10 +47,10 @@ def main():
     #     dict_pool_sample = pickle.load(handle)
     # pool = pd.read_csv(os.path.join(processed_data, 'hh_pool.csv'))
 
-    # print("SAVING incase")
-    # pool.to_csv(os.path.join(processed_data, 'hh_pool.csv'))
-    # with open(os.path.join(processed_data, 'dict_pool_sample.pickle'), 'wb') as handle:
-    #     pickle.dump(dict_pool_sample, handle)
+    print("SAVING incase")
+    pool.to_csv(os.path.join(processed_data, 'hh_pool.csv'))
+    with open(os.path.join(processed_data, 'dict_pool_sample.pickle'), 'wb') as handle:
+        pickle.dump(dict_pool_sample, handle)
 
     while check > 10 and i < 20:
         print(f"DOING ITE {i} with err == {check}")
@@ -103,6 +103,7 @@ def main():
         ls_final_hh.append(hh_df_rm)
         ls_final_pp.append(all_df_pp_rm)
 
+        del_df_final.to_csv(os.path.join(processed_data, "keep_check", f"del_hh_df_{i}.csv"), index=False)
         hh_df_rm.to_csv(os.path.join(processed_data, "keep_check", f"hh_df_{i}.csv"), index=False)
         all_df_pp_rm.to_csv(os.path.join(processed_data, "keep_check", f"pp_df_{i}.csv"), index=False)
 
