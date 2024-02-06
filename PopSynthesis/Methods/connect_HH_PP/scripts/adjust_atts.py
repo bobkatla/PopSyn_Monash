@@ -79,12 +79,12 @@ def update_syn_pop(syn_pop, pool, n_adjust, prev_atts, main_att, comb, del_state
     plus_q = q_based + f"{main_att}==\'{plus_state}\'"
 
     sub_df_pop_syn = syn_pop.query(del_q)
-    drop_indices = np.random.choice(sub_df_pop_syn.index, n_adjust, replace=False)
+    drop_indices = np.random.choice(sub_df_pop_syn.index, int(n_adjust), replace=False)
     kept_pop_syn = syn_pop.drop(drop_indices)
     assert len(syn_pop) - len(drop_indices) == len(kept_pop_syn)
 
     sub_pool = pool.query(plus_q)
-    plus_df = sub_pool.sample(n=n_adjust, replace=True)
+    plus_df = sub_pool.sample(n=int(n_adjust), replace=True)
     plus_df[geo_lev] = zone
     assert len(kept_pop_syn) + len(plus_df) == len(syn_pop)
 
