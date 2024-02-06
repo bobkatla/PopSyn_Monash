@@ -30,12 +30,15 @@ def get_combine_df(hh_df):
     # drop all the ids as they are not needed for in BN learning
     id_cols = [x for x in df_seed.columns if "hhid" in x or "persid" in x]
     df_seed = df_seed.drop(columns=id_cols)
+    print("GETTING the pool HH and Main")
     pool_hh_main = get_pool(df_seed, state_names, POOL_SZ)
+    print("PROCESSING the pool for later process")
     pool_hh_main = pool_hh_main.astype(str)
     count_pool = pool_hh_main.value_counts()
     count_pool = count_pool.reset_index()
     count_pool["id_pool"] = count_pool.index
 
+    print("Process the given HH df")
     hh_df = hh_df.astype(str)
     ls_match = list(hh_df.columns)
     ls_match.remove("hhid")
@@ -44,6 +47,7 @@ def get_combine_df(hh_df):
     gb_df = gb_df.reset_index()
 
     # Concat first then explode, it will save run time
+    print("Start combining to connect hh and pp")
     combine = gb_df.merge(count_pool, on=ls_match, how="left")
     combine["hhid"] = combine["hhid"].astype(str)
 
@@ -53,6 +57,7 @@ def get_combine_df(hh_df):
     df_com = c_ls_com.reset_index()
     df_com["hhid"] = df_com["hhid"].apply(lambda x: eval(x))
 
+    print("Start select based on distribution in the pool")
     def ran_sam(r):
         ids_choose_from = r["id_pool"]
         if str(ids_choose_from[0]) == "nan":
@@ -67,6 +72,7 @@ def get_combine_df(hh_df):
     del_df = df_com[df_com["selection"].isna()]
     keep_df = df_com[~df_com["selection"].isna()]
 
+    print("Final processing before outputting the syn hh-main connect")
     # Process keeping
     keep_df = keep_df.drop(columns=["id_pool", "count"])
     keep_df = keep_df.explode(["hhid", "selection"])
