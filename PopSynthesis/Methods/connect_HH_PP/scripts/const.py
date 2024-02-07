@@ -1,3 +1,25 @@
+import logging
+import os
+from PopSynthesis.Methods.connect_HH_PP.paras_dir import log_dir
+import datetime;
+
+# ct stores current time
+ct = datetime.datetime.now()
+ct = str(ct).replace(".", "-").replace(":", "-").replace(" ", "-")
+
+# create logger
+logging.basicConfig(format='%(asctime)s - %(levelname)s: %(message)s')
+logger = logging.getLogger('connect_hh_pp')
+logger.setLevel(logging.DEBUG)
+# create file handler which logs even debug messages
+fh = logging.FileHandler(os.path.join(log_dir, f'connect_hh_pp_{ct}.log'))
+fh.setLevel(logging.DEBUG)
+# create formatter and add it to the handlers
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+# add the handlers to the logger
+logger.addHandler(fh)
+
 LS_HH_INC = [
     "$1-$149 ($1-$7,799)",
     "$150-$299 ($7,800-$15,599)",
