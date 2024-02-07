@@ -65,9 +65,13 @@ def get_combine_df(hh_df, pool_hh_main):
     keep_df = keep_df.drop(columns=["id_pool", "count"])
     keep_df = keep_df.explode(["hhid", "selection"])
     keep_df = keep_df.rename(columns={"selection": "id_pool"})
-    com_df_hh = keep_df.merge(hh_df, on="hhid")
+
+    sub_hh_df = hh_df[hh_df["hhid"].isin(keep_df["hhid"])]
+    com_df_hh = keep_df.merge(sub_hh_df, on="hhid")
+
     count_pool = count_pool.drop(columns=hh_df.columns, errors="ignore")
-    com_df_hh_main = com_df_hh.merge(count_pool, on="id_pool")
+    sub_count_pool = count_pool[count_pool["id_pool"].isin(keep_df["id_pool"])]
+    com_df_hh_main = com_df_hh.merge(sub_count_pool, on="id_pool")
     com_df_hh_main = com_df_hh_main.drop(columns=["id_pool", "count"])
 
     # process del
