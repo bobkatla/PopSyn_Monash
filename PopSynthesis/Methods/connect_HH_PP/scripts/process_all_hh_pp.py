@@ -39,7 +39,7 @@ def get_hh_main_df(pool, chosen_att, marg_hh=None):
     return final_syn_hh_main
 
 
-def get_pool(df_seed, state_names, pool_sz):
+def get_pool(df_seed, state_names, pool_sz, special=True):
     print("Learn BN")
     model = learn_struct_BN_score(df_seed, show_struct=False, state_names=state_names)
     model = learn_para_BN(model, df_seed, state_names=state_names)
@@ -49,11 +49,12 @@ def get_pool(df_seed, state_names, pool_sz):
     pool = filter_pool(pool)
 
     # Special case, I will fix this to be dynamic later
-    while "Negative income" not in list(pool["hhinc"].unique()):
-        print(list(pool["hhinc"].unique()))
-        print("Not yet have it, gotta sample negative inc again")
-        pool = inference.forward_sample(size=pool_sz, show_progress=True)
-        pool = filter_pool(pool)
+    if special:
+        while "Negative income" not in list(pool["hhinc"].unique()):
+            print(list(pool["hhinc"].unique()))
+            print("Not yet have it, gotta sample negative inc again")
+            pool = inference.forward_sample(size=pool_sz, show_progress=True)
+            pool = filter_pool(pool)
     return pool
 
 
