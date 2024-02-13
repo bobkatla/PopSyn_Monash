@@ -22,8 +22,8 @@ logger = logging.getLogger('connect_hh_pp')
 def get_combine_df(hh_df, pool_hh_main):
     logger.info("PROCESSING the pool for later process")
     pool_hh_main = pool_hh_main.astype(str)
-    count_pool = pool_hh_main.value_counts()
-    count_pool = count_pool.reset_index()
+    pool_hh_main["count"] = pool_hh_main["count"].astype("int64")
+    count_pool = pool_hh_main
     count_pool["id_pool"] = count_pool.index
 
     logger.info("Process the given HH df")
@@ -98,6 +98,7 @@ def main():
     df_seed_hh_main = df_seed_hh_main.drop(columns=id_cols_hh_main)
     logger.info("GETTING the pool HH and Main")
     pool_hh_main = get_pool(df_seed_hh_main, state_names, int(1e5))
+    pool_hh_main = pool_hh_main.value_counts().reset_index()
 
     hh_df = pd.read_csv(os.path.join(output_dir, "adjust", "final", "saving_hh_dwelltype.csv"), low_memory=False)
     hh_df["hhid"] = hh_df.index
