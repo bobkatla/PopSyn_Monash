@@ -111,22 +111,26 @@ def samp_from_pool_1layer(pool, df_marg, chosen_att, zone_lev):
     # Easy one of updating via samp 1 layer
     cols_tot = cols_df_hh_census[cols_df_hh_census.get_level_values(0)==chosen_att]
     #  df_marg_hh[cols_totvehs].columns.get_level_values(1)
-    census_vals_vehs = df_marg[cols_tot]
-    ls_states = census_vals_vehs.columns.get_level_values(1)
+    census_vals = df_marg[cols_tot]
+    ls_states = census_vals.columns.get_level_values(1)
     ls_all = []
+    w_sam = "count" if "count" in pool.columns else None
     for state in ls_states:
         sub_pool = pool[pool[chosen_att]==state]
         if len(sub_pool) == 0:
             print(f"WARNING: cannot see {chosen_att}_{state} in the pool, sample by the rest")
             sub_pool = pool # if there are none, we take all
-        seri_state = census_vals_vehs[(chosen_att, state)]
+        seri_state = census_vals[(chosen_att, state)]
         for zone in seri_state.index:
+            print(f"Doing {zone} for 1 simple layer sampling")
             n = int(seri_state[zone])
             if n > 0:
-                sub_df_zone = sub_pool.sample(n=n, replace=True)
+                sub_df_zone = sub_pool.sample(n=n, replace=True, weights=w_sam)
                 sub_df_zone[zone_lev] = zone
                 ls_all.append(sub_df_zone)
     final_result = pd.concat(ls_all, axis=0)
+    if w_sam is not None:
+        final_result = final_result.drop(columns=[w_sam])
     return final_result
 
 

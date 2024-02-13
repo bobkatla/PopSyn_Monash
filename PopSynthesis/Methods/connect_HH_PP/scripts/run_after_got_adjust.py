@@ -32,6 +32,7 @@ def main():
         dict_pool_sample = pickle.load(handle)
     pool = pd.read_csv(os.path.join(processed_data, "save_pools",'final_pool_count.csv'), index_col=0)
     pool = pool.astype(str)
+    pool["count"] = pool["count"].astype(int)
     cols_pool = [x for x in pool.columns if x != "count"]
 
     while check > 10 and i < 20:

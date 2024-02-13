@@ -44,17 +44,21 @@ def get_neg_pos_ls(count_vals):
     return ls_neg_states, ls_pos_states
 
 
-def get_comb_count(main_att, to_change_state, to_maintain_atts, pool, normalize=True):
+def get_comb_count(main_att, to_change_state, to_maintain_atts, pool: pd.DataFrame, normalize=True):
     sub_pool = pool[pool[main_att]==to_change_state]
-    sub_pool = sub_pool[to_maintain_atts]
-    comb_counts = sub_pool.value_counts(normalize=normalize, ascending=True) # if it is from the syn_pop that this is already perfected
+    sub_pool = sub_pool[to_maintain_atts + ["count"]]
+    sub_pool["count"] = sub_pool["count"].astype(int)
+    comb_counts = sub_pool.groupby(to_maintain_atts)["count"].sum()
+    if normalize:
+        comb_counts = comb_counts / comb_counts.sum()
+    comb_counts = comb_counts.sort_values()
     return comb_counts
 
 
-def process_pos_states_counts(main_att, ls_pos_states, to_maintain_atts, pool):
+def process_pos_states_counts(main_att, ls_pos_states, to_maintain_atts, pool_count):
     re_dict = {}
     for state in ls_pos_states:
-        comb_counts = get_comb_count(main_att, state, to_maintain_atts, pool)
+        comb_counts = get_comb_count(main_att, state, to_maintain_atts, pool_count)
         re_dict[state] = comb_counts
         # Will think maybe will create the sample dict here as well
     return re_dict
@@ -70,12 +74,13 @@ def get_ls_ranked_comb(comb, dict_comb):
     return sorted(re_ls, key=lambda x: hold_dict[x], reverse=True)
 
 
-def update_syn_pop(syn_pop, pool, n_adjust, prev_atts, main_att, comb, del_state, plus_state, geo_lev, zone):
+def update_syn_pop(syn_pop, pool_count, n_adjust, prev_atts, main_att, comb, del_state, plus_state, geo_lev, zone):
     syn_pop = syn_pop.reset_index(drop=True)
     # Filter to have sub_df of syn_pop about del
     q_based = ""
     for i, att in enumerate(prev_atts):
-        q_based += f"{att}==\'{comb[i]}\' & "
+        comb_state = comb if len(prev_atts) == 1 else comb[i]
+        q_based += f"{att}==\'{comb_state}\' & "
     del_q = q_based + f"{main_att}==\'{del_state}\' & {geo_lev}==\'{zone}\'"
     plus_q = q_based + f"{main_att}==\'{plus_state}\'"
 
@@ -84,23 +89,24 @@ def update_syn_pop(syn_pop, pool, n_adjust, prev_atts, main_att, comb, del_state
     kept_pop_syn = syn_pop.drop(drop_indices)
     assert len(syn_pop) - len(drop_indices) == len(kept_pop_syn)
 
-    sub_pool = pool.query(plus_q)
-    plus_df = sub_pool.sample(n=int(n_adjust), replace=True)
+    sub_pool = pool_count.query(plus_q)
+    plus_df = sub_pool.sample(n=int(n_adjust), replace=True, weights="count")
     plus_df[geo_lev] = zone
+    plus_df = plus_df.drop(columns=["count"])
     assert len(kept_pop_syn) + len(plus_df) == len(syn_pop)
 
     new_syn_pop = pd.concat([kept_pop_syn, plus_df])
     return new_syn_pop
 
 
-def wrapper_adjust_state(syn_pop, dict_diff, processed_atts, main_att, pool, geo_lev):
+def wrapper_adjust_state(syn_pop, dict_diff, processed_atts, main_att, pool_count, geo_lev):
     # Doing zone by zone
     for zone in dict_diff:
         count_vals = dict_diff[zone]
-        sub_syn_pop = syn_pop[syn_pop[geo_lev]==zone]
+        sub_syn_pop = syn_pop[syn_pop[geo_lev]==zone].value_counts().reset_index()
         # Process the pos_states counts from the pool
         ls_neg_states, ls_pos_states = get_neg_pos_ls(count_vals)
-        dict_pos_comb_counts = process_pos_states_counts(main_att, ls_pos_states, processed_atts, pool)
+        dict_pos_comb_counts = process_pos_states_counts(main_att, ls_pos_states, processed_atts, pool_count)
         
         # Now, will start the adjustment
         for neg_state in ls_neg_states:
@@ -119,7 +125,7 @@ def wrapper_adjust_state(syn_pop, dict_diff, processed_atts, main_att, pool, geo
                     to_plus_val = count_vals[pos_state]
                     n_adjust = min(to_del_val, to_plus_val)
                     if n_adjust > 0:
-                        syn_pop = update_syn_pop(syn_pop, pool, n_adjust, processed_atts, main_att, comb, neg_state, pos_state, geo_lev, zone)
+                        syn_pop = update_syn_pop(syn_pop, pool_count, n_adjust, processed_atts, main_att, comb, neg_state, pos_state, geo_lev, zone)
                         # Update
                         count_vals[neg_state] += n_adjust
                         count_vals[pos_state] -= n_adjust
@@ -144,8 +150,7 @@ def process_data_general(census_data, pool_count, geo_lev, adjust_atts_order):
     processed_atts = []
     for att in adjust_atts_order:
         if syn_pop is None: # first time run, this should be perfect
-            pool = round_to_realise_df(pool_count, weight_col="count")
-            syn_pop = samp_from_pool_1layer(pool, census_data, att, geo_lev)
+            syn_pop = samp_from_pool_1layer(pool_count, census_data, att, geo_lev)
             syn_pop = syn_pop.astype(str)
             syn_pop.index = syn_pop.index.astype(str)
         else:
