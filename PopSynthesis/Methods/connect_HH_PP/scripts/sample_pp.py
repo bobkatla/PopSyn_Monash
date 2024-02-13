@@ -113,6 +113,7 @@ def process_rela_using_count(main_pp_df, rela, pool_count, geo_lev):
         rela_df[geo_lev] = rela_df.apply(lambda r: dict_hhid_geo[r["hhid"]], axis=1)
     else:
         rela_df[geo_lev] = None
+    rela_df["relationship"] = rela
     rename_rela_to = {x: x.replace(f"_{rela}", "") for x in cols_rela}
     rela_df = rela_df.rename(columns=rename_rela_to)
 
