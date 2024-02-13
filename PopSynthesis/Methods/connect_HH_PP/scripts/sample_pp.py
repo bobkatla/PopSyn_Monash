@@ -79,6 +79,51 @@ def pools_get(ls_rela, dict_model_inference, pool_size):
         re_dict[rela] = pool
     return re_dict
 
+def process_rela_using_count(main_pp_df, rela, pool_count, geo_lev):
+    dict_hhid_geo = dict(zip(main_pp_df["hhid"], main_pp_df[geo_lev]))
+
+    cols_main = [x for x in pool_count if "_main" in x]
+    cols_rela = [x for x in pool_count if f"_{rela}" in x]
+    rename_to_main = {x.replace("_main", ""): x for x in cols_main}
+
+    sub_pp_df = main_pp_df[main_pp_df[rela] > 0]
+    sub_pp_df = sub_pp_df.drop(columns=ALL_RELA, errors='ignore')
+    main_pp_df = main_pp_df.rename(columns=rename_to_main)
+    
+    pool_count["comb_rela"] = pool_count.apply(lambda r: ([r[c] for c in cols_rela], r["count"]), axis=1)
+    gb_pool = pool_count.groupby(cols_main)["comb_rela"].apply(lambda x: list(x)).reset_index()
+    gb_main = main_pp_df.groupby(cols_main)["hhid"].apply(lambda x: list(x)).reset_index()
+    merge_df = gb_main.merge(gb_pool, on=cols_main, how="left")
+
+    # Process keep df, this is the rela
+    keep_df = merge_df[~merge_df["comb_rela"].isna()]
+    def select_ran_sam(r):
+        ls_hhids = r["hhid"]
+        ls_pos_choose = r["comb_rela"]
+        temp_df = pd.DataFrame(ls_pos_choose, columns=["comb", "weight"])
+        temp_df["weight"] = temp_df["weight"] / temp_df["weight"].sum()
+        selected_df = temp_df.sample(n=len(ls_hhids), replace=True, weights="weight")
+        selected_combs = list(selected_df["comb"])
+        return selected_combs
+    keep_df["selected"] = keep_df.apply(select_ran_sam, axis=1)
+    rela_df = keep_df[["hhid", "selected"]].explode(["hhid", "selected"])
+    rela_df[cols_rela] = pd.DataFrame(rela_df["selected"].tolist())
+    rela_df = rela_df.drop(columns=["selected"])
+    rela_df[geo_lev] = rela_df.apply(lambda r: dict_hhid_geo[r["hhid"]], axis=1)
+    rela_df["relationship"] = rela
+    rename_rela_to = {x: x.replace(f"_{rela}", "") for x in cols_rela}
+    rela_df = rela_df.rename(columns=rename_rela_to)
+
+    # Process del df, this is Main
+    del_df_main = merge_df[merge_df["comb_rela"].isna()]
+    del_df_main = del_df_main.drop(columns=["comb_rela"])
+    del_df_main = del_df_main.explode(["hhid"])
+    del_df_main[geo_lev] = del_df_main.apply(lambda r: dict_hhid_geo[r["hhid"]], axis=1)
+    del_df_main["relationship"] = "Self"
+
+    return del_df_main, rela_df
+
+
 def process_rela_fast(main_pp_df, rela, pool):
     all_cols = [x for x in main_pp_df.columns if x not in ALL_RELA and x != geo_lev]
     all_cols.remove("hhid")
