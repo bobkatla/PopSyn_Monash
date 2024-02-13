@@ -109,8 +109,10 @@ def process_rela_using_count(main_pp_df, rela, pool_count, geo_lev):
     rela_df = keep_df[["hhid", "selected"]].explode(["hhid", "selected"])
     rela_df[cols_rela] = pd.DataFrame(rela_df["selected"].tolist())
     rela_df = rela_df.drop(columns=["selected"])
-    rela_df[geo_lev] = rela_df.apply(lambda r: dict_hhid_geo[r["hhid"]], axis=1)
-    rela_df["relationship"] = rela
+    if len(rela_df) != 0:
+        rela_df[geo_lev] = rela_df.apply(lambda r: dict_hhid_geo[r["hhid"]], axis=1)
+    else:
+        rela_df[geo_lev] = None
     rename_rela_to = {x: x.replace(f"_{rela}", "") for x in cols_rela}
     rela_df = rela_df.rename(columns=rename_rela_to)
 
@@ -118,8 +120,11 @@ def process_rela_using_count(main_pp_df, rela, pool_count, geo_lev):
     del_df_main = merge_df[merge_df["comb_rela"].isna()]
     del_df_main = del_df_main.drop(columns=["comb_rela"])
     del_df_main = del_df_main.explode(["hhid"])
-    del_df_main[geo_lev] = del_df_main.apply(lambda r: dict_hhid_geo[r["hhid"]], axis=1)
     del_df_main["relationship"] = "Self"
+    if len(del_df_main) != 0:
+        del_df_main[geo_lev] = del_df_main.apply(lambda r: dict_hhid_geo[r["hhid"]], axis=1)
+    else:
+        del_df_main[geo_lev] = None
 
     return del_df_main, rela_df
 
