@@ -87,26 +87,33 @@ def process_rela_using_count(main_pp_df, rela, pool_count, geo_lev):
     rename_to_main = {x.replace("_main", ""): x for x in cols_main}
 
     sub_pp_df = main_pp_df[main_pp_df[rela] > 0]
-    sub_pp_df = sub_pp_df.drop(columns=ALL_RELA, errors='ignore')
-    main_pp_df = main_pp_df.rename(columns=rename_to_main)
+    pp_cols = [x for x in sub_pp_df.columns if x not in ALL_RELA]
+    sub_pp_df = sub_pp_df[pp_cols + [rela]]
+    sub_pp_df = sub_pp_df.rename(columns=rename_to_main)
     
     pool_count["comb_rela"] = pool_count.apply(lambda r: ([r[c] for c in cols_rela], r["count"]), axis=1)
     gb_pool = pool_count.groupby(cols_main)["comb_rela"].apply(lambda x: list(x)).reset_index()
-    gb_main = main_pp_df.groupby(cols_main)["hhid"].apply(lambda x: list(x)).reset_index()
+    gb_main_id = sub_pp_df.groupby(cols_main)["hhid"].apply(lambda x: list(x))
+    gb_main_re = sub_pp_df.groupby(cols_main)[rela].apply(lambda x: list(x))
+    gb_main = pd.concat([gb_main_id, gb_main_re], axis=1).reset_index()
     merge_df = gb_main.merge(gb_pool, on=cols_main, how="left")
 
     # Process keep df, this is the rela
     keep_df = merge_df[~merge_df["comb_rela"].isna()]
     def select_ran_sam(r):
-        ls_hhids = r["hhid"]
+        ls_num = r[rela] # this match with ls hhid
         ls_pos_choose = r["comb_rela"]
         temp_df = pd.DataFrame(ls_pos_choose, columns=["comb", "weight"])
         temp_df["weight"] = temp_df["weight"] / temp_df["weight"].sum()
-        selected_df = temp_df.sample(n=len(ls_hhids), replace=True, weights="weight")
-        selected_combs = list(selected_df["comb"])
-        return selected_combs
+        final_list = []
+        for num in ls_num:
+            selected_df = temp_df.sample(n=num, replace=True, weights="weight")
+            selected_combs = list(selected_df["comb"])
+            final_list.append(selected_combs)
+        return final_list
     keep_df["selected"] = keep_df.apply(select_ran_sam, axis=1)
     rela_df = keep_df[["hhid", "selected"]].explode(["hhid", "selected"])
+    rela_df = rela_df.explode(["selected"])
     rela_df[cols_rela] = pd.DataFrame(rela_df["selected"].tolist())
     rela_df = rela_df.drop(columns=["selected"])
     if len(rela_df) != 0:
