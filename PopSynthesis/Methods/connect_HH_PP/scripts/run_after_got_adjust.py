@@ -100,6 +100,7 @@ def main():
         temp_pool = pool.set_index(cols_pool)
         temp_keep = hh_df_got_rm.set_index(cols_pool)
         pool = temp_pool[~temp_pool.index.isin(temp_keep.index)]
+        pool = pool.reset_index()
         logger.info("Done updating the pool")
         # Get the new marg to handle the new df
         
