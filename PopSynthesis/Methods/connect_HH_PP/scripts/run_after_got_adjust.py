@@ -30,7 +30,7 @@ def main():
     # Only importing now
     with open(os.path.join(processed_data, 'dict_pool_counts.pickle'), 'rb') as handle:
         dict_pool_sample = pickle.load(handle)
-    pool = pd.read_csv(os.path.join(processed_data, "save_pools",'final_pool_count.csv'), index_col=0)
+    pool = pd.read_csv(os.path.join(processed_data, "save_pools",'final_pool_count.csv'))
     pool = pool.astype(str)
     pool["count"] = pool["count"].astype(int)
     cols_pool = [x for x in pool.columns if x != "count"]
@@ -40,9 +40,8 @@ def main():
         if marg_hh is None:
             hh_df = pd.read_csv(os.path.join(output_dir, "adjust", "final", "saving_hh_dwelltype.csv"), low_memory=False)
         else:
-            raise ValueError("No this is GOOD, you got here")
             # Simple create a new func here and get the new marg already
-            hh_df = process_data_general(marg_hh, pool, geo_lev, processed_already) # fix this
+            hh_df = process_data_general(marg_hh, pool, geo_lev, processed_already)
         
         if "hhid" not in hh_df.columns:
             hh_df["hhid"] = hh_df.index
