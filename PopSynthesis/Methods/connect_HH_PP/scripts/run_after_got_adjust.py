@@ -28,7 +28,7 @@ def main():
     re_check_to_show = []
 
     # Only importing now
-    with open(os.path.join(processed_data, 'dict_pool_counts.pickle'), 'rb') as handle:
+    with open(os.path.join(processed_data, 'dict_pool_sample.pickle'), 'rb') as handle:
         dict_pool_sample = pickle.load(handle)
     pool = pd.read_csv(os.path.join(processed_data, "save_pools",'final_pool_count.csv'))
     pool = pool.astype(str)
@@ -42,13 +42,14 @@ def main():
         else:
             # Simple create a new func here and get the new marg already
             hh_df = process_data_general(marg_hh, pool, geo_lev, processed_already)
+            hh_df.to_csv(os.path.join(processed_data, "keep_check", f"adjusted_hh_new_{i}.csv"), index=False)
         
         if "hhid" not in hh_df.columns:
             hh_df["hhid"] = hh_df.index
         
         # Sample hh main
         logger.info("GETTING the main people")
-        combine_df_hh_main, del_hh = get_combine_df(hh_df, dict_pool_sample["Main"].copy()) # fix this
+        combine_df_hh_main, del_hh = get_combine_df(hh_df, dict_pool_sample["Main"].copy().value_counts().reset_index())
         # Process the HH and main to have the HH with IDs and People in HH
         logger.info("SOME EXTRA PROCESS PP")
         _, main_pp_df_all = process_combine_df(combine_df_hh_main)
@@ -63,9 +64,15 @@ def main():
         del_df = []
         for rela in all_rela_exist:
             logger.info(f"Doing {rela} now lah~")
-            to_del_df, pop_rela = process_rela_using_count(main_pp_df_all, rela, dict_pool_sample[rela].copy(), geo_lev) # fix this
+            to_del_df, pop_rela = process_rela_fast(main_pp_df_all, rela, dict_pool_sample[rela].copy()) # fix this
 
             if len(pop_rela) > 0:
+                dict_hhid = dict(zip(hh_df["hhid"], hh_df[geo_lev]))
+                pop_rela[geo_lev] = pop_rela.apply(lambda r: dict_hhid[int(r["hhid"])],axis=1)
+                cols_main = [f"{x}_main" for x in PP_ATTS if x not in["relationship", "persid", "hhid", geo_lev]]
+                rename_cols = {f"{name}_{rela}": name for name in PP_ATTS if name not in["relationship", "persid", "hhid", geo_lev]}
+                pop_rela = pop_rela.drop(columns=cols_main)
+                pop_rela = pop_rela.rename(columns=rename_cols)
                 ls_df_pp.append(pop_rela)
             if len(to_del_df) > 0:
                 del_df.append(to_del_df)
@@ -118,21 +125,23 @@ def main():
     
         check = len(hh_df_got_rm)
         re_check_to_show.append(check)
-        i += 1
 
         pool.to_csv(os.path.join(processed_data, "keep_check", f"updated_pool_{i}.csv"), index=False)
         marg_hh.to_csv(os.path.join(processed_data, "keep_check", f"updated_marg_{i}.csv"), index=False)
+        
+        i += 1
 
     # Process to combine final results of hh and df, mainly change id
     logger.info(f"DOING processing hhid after {i} ite")
     new_ls_hh = []
     new_ls_pp = []
-    max_id = None
+    max_id = 1
     for hh, pp in zip(ls_final_hh, ls_final_pp):
-        if max_id is not None:
-            hh["hhid"] = hh["hhid"] + max_id
-            pp["hhid"] = pp["hhid"] + max_id
-        max_id = int(max(hh["hhid"]))
+        hh["hhid"] = hh["hhid"].astype(int)
+        pp["hhid"] = pp["hhid"].astype(int)
+        hh["hhid"] = hh["hhid"] + max_id
+        pp["hhid"] = pp["hhid"] + max_id
+        max_id = int(max(hh["hhid"])) + 1
         new_ls_hh.append(hh)
         new_ls_pp.append(pp)
     
