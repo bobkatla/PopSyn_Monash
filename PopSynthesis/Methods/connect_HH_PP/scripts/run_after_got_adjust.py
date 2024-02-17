@@ -74,7 +74,7 @@ def main():
                 pop_rela = pop_rela.drop(columns=cols_main)
                 pop_rela = pop_rela.rename(columns=rename_cols)
                 ls_df_pp.append(pop_rela)
-            if len(to_del_df) > 0:
+            if to_del_df is not None:
                 del_df.append(to_del_df)
 
         if len(ls_df_pp) == 0:
