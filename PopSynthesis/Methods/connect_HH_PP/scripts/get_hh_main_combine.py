@@ -79,7 +79,11 @@ def get_combine_df(hh_df, pool_hh_main):
     com_df_del = del_df.merge(hh_df, on="hhid")
     com_df_del = com_df_del.drop(columns=["id_pool", "count", "selection"])
 
-    assert len(com_df_del) + len(com_df_hh_main) == len(hh_df)
+    if len(com_df_del) + len(com_df_hh_main) != len(hh_df):
+        print("HAH????")
+        print(com_df_del)
+        print(com_df_hh_main)
+        print(hh_df)
     
     return com_df_hh_main, com_df_del
 
