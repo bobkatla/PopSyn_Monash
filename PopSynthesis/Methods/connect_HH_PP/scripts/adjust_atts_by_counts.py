@@ -173,10 +173,10 @@ def main():
     with open(os.path.join(processed_data, 'dict_hh_states.pickle'), 'rb') as handle:
         hh_state_names = pickle.load(handle)
     
-    pool = get_pool(df_seed, hh_state_names)
+    pool_count = pd.read_csv(os.path.join(processed_data, "save_pools",'final_pool_count.csv'))
     geo_lev = "POA"
     adjust_atts_order = ["hhsize", "hhinc"]
-    syn_pop = process_data_general(census_data, pool, geo_lev, adjust_atts_order)
+    syn_pop = process_data_general(census_data, pool_count, geo_lev, adjust_atts_order)
     print(syn_pop)
 
 
