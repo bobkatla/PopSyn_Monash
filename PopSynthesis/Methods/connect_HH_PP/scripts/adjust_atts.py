@@ -152,7 +152,7 @@ def process_data_general(census_data, pool, geo_lev, adjust_atts_order):
             syn_pop = wrapper_adjust_state(syn_pop, dict_diff, processed_atts, att, pool, geo_lev)
             # I belive lol
         processed_atts.append(att)
-        syn_pop.to_csv(os.path.join(output_dir, "testland", f"saving_hh_{att}.csv"), index=False)
+        syn_pop.to_csv(os.path.join(output_dir, "testland", f"saving_hh_test2_{att}.csv"), index=False)
     return syn_pop
 
 
@@ -168,9 +168,10 @@ def main():
     
     pool = get_pool(df_seed, hh_state_names)
     geo_lev = "POA"
-    adjust_atts_order = None
+    adjust_atts_order = ["hhsize", "hhinc"]
     syn_pop = process_data_general(census_data, pool, geo_lev, adjust_atts_order)
-    syn_pop.to_csv(os.path.join(output_dir, "Testing_hh_hold_hope.csv"), index=False)
+    print(syn_pop)
+    # syn_pop.to_csv(os.path.join(output_dir, "test_new_just_hhinc.csv"), index=False)
 
 
 if __name__ == "__main__":

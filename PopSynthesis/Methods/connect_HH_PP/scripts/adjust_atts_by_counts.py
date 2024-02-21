@@ -159,12 +159,25 @@ def process_data_general(census_data, pool_count, geo_lev, adjust_atts_order):
             syn_pop = wrapper_adjust_state(syn_pop, dict_diff, processed_atts, att, pool_count, geo_lev)
             # I belive lol
         processed_atts.append(att)
-        syn_pop.to_csv(os.path.join(output_dir, "testland", f"saving_hh_{att}.csv"), index=False)
+        syn_pop.to_csv(os.path.join(output_dir, "testland", f"saving_hh_test2_{att}.csv"), index=False)
     return syn_pop
 
 
 def main():
-    NotImplemented
+    census_data = pd.read_csv(os.path.join(data_dir, "hh_marginals_ipu.csv"), header=[0,1])
+    df_seed = pd.read_csv(os.path.join(processed_data, "ori_sample_hh.csv"))
+    # drop all the ids as they are not needed for in BN learning
+    id_cols = [x for x in df_seed.columns if "hhid" in x or "persid" in x]
+    df_seed = df_seed.drop(columns=id_cols)
+
+    with open(os.path.join(processed_data, 'dict_hh_states.pickle'), 'rb') as handle:
+        hh_state_names = pickle.load(handle)
+    
+    pool = get_pool(df_seed, hh_state_names)
+    geo_lev = "POA"
+    adjust_atts_order = ["hhsize", "hhinc"]
+    syn_pop = process_data_general(census_data, pool, geo_lev, adjust_atts_order)
+    print(syn_pop)
 
 
 if __name__ == "__main__":
