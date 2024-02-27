@@ -166,7 +166,7 @@ def main():
     with open(os.path.join(processed_data, 'dict_hh_states.pickle'), 'rb') as handle:
         hh_state_names = pickle.load(handle)
     
-    pool = get_pool(df_seed, hh_state_names)
+    pool = get_pool(df_seed, hh_state_names, pool_sz=POOL_SZ)
     geo_lev = "POA"
     adjust_atts_order = ["hhsize", "hhinc"]
     syn_pop = process_data_general(census_data, pool, geo_lev, adjust_atts_order)
@@ -174,5 +174,39 @@ def main():
     # syn_pop.to_csv(os.path.join(output_dir, "test_new_just_hhinc.csv"), index=False)
 
 
+def sample_without_adjustments():
+    import random
+    from itertools import chain
+    census_data = pd.read_csv(os.path.join(data_dir, "hh_marginals_ipu.csv"), header=[0,1])
+    df_seed = pd.read_csv(os.path.join(processed_data, "ori_sample_hh.csv"))
+    # drop all the ids as they are not needed for in BN learning
+    id_cols = [x for x in df_seed.columns if "hhid" in x or "persid" in x]
+    df_seed = df_seed.drop(columns=id_cols)
+
+    with open(os.path.join(processed_data, 'dict_hh_states.pickle'), 'rb') as handle:
+        hh_state_names = pickle.load(handle)
+
+    # Sample without adjustment
+    tot = census_data[census_data.columns[census_data.columns.get_level_values(0)=="hhsize"]].sum(axis=1)
+    ls_zones = census_data[census_data.columns[census_data.columns.get_level_values(0)=="zone_id"]]
+    combine = pd.concat([tot, ls_zones], axis=1)
+    combine.columns = ["tot", "zones"]
+    check = tot.sum()
+    ls_df = []
+    while check > 0:
+        print(check)
+        sample = get_pool(df_seed, hh_state_names, pool_sz=check, special=False)
+        ls_df.append(sample)
+        check -= len(sample)
+    fin_no_ad = pd.concat(ls_df)
+    combine["ls_zones"] = combine.apply(lambda r: [r["zones"]] * r["tot"], axis=1)
+    ls_vals_zone = list(chain.from_iterable(combine["ls_zones"]))
+    random.shuffle(ls_vals_zone)
+    fin_no_ad["POA"] = ls_vals_zone
+    print(fin_no_ad)
+    fin_no_ad.to_csv(os.path.join(output_dir, "hh_no_adjustments.csv"), index=False)
+
+
 if __name__ == "__main__":
-    main()
+    # main()
+    sample_without_adjustments()
