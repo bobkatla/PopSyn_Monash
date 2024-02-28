@@ -27,12 +27,19 @@ def get_combine_df(hh_df, pool_hh_main):
     count_pool["id_pool"] = count_pool.index
 
     logger.info("Process the given HH df")
-    hh_df = hh_df.astype(str)
+
     ls_match = list(hh_df.columns)
     ls_match.remove("hhid")
-    gb_df = hh_df.groupby(ls_match)["hhid"].apply(lambda x: list(x))
+
+    if isinstance(hh_df["hhid"].iloc[0], list):
+        print("we received the count_df not hh_df")
+        gb_df = hh_df # already given
+        ori_hh_df = hh_df.explode("hhid")
+    else:
+        ori_hh_df = hh_df.astype(str)
+        gb_df = ori_hh_df.groupby(ls_match)["hhid"].apply(lambda x: list(x)).reset_index()
+    
     ls_match.remove("POA")
-    gb_df = gb_df.reset_index()
 
     # Concat first then explode, it will save run time
     logger.info("Start combining to connect hh and pp")
@@ -51,7 +58,7 @@ def get_combine_df(hh_df, pool_hh_main):
         if str(ids_choose_from[0]) == "nan":
             return None
         else:
-            counts = r["count"]
+            counts = np.nan_to_num(r["count"])
             p = [x/ sum(counts) for x in counts]
             sz = len(r["hhid"])
             return np.random.choice(ids_choose_from, size=sz, p=p)
@@ -66,24 +73,29 @@ def get_combine_df(hh_df, pool_hh_main):
     keep_df = keep_df.explode(["hhid", "selection"])
     keep_df = keep_df.rename(columns={"selection": "id_pool"})
 
-    sub_hh_df = hh_df[hh_df["hhid"].isin(keep_df["hhid"])]
+    sub_hh_df = ori_hh_df[ori_hh_df["hhid"].isin(keep_df["hhid"])]
     com_df_hh = keep_df.merge(sub_hh_df, on="hhid")
 
-    count_pool = count_pool.drop(columns=hh_df.columns, errors="ignore")
+    count_pool = count_pool.drop(columns=ori_hh_df.columns, errors="ignore")
     sub_count_pool = count_pool[count_pool["id_pool"].isin(keep_df["id_pool"])]
     com_df_hh_main = com_df_hh.merge(sub_count_pool, on="id_pool")
     com_df_hh_main = com_df_hh_main.drop(columns=["id_pool", "count"])
 
     # process del
     del_df = del_df.explode("hhid")
-    com_df_del = del_df.merge(hh_df, on="hhid")
+    com_df_del = del_df.merge(ori_hh_df, on="hhid")
     com_df_del = com_df_del.drop(columns=["id_pool", "count", "selection"])
 
-    if len(com_df_del) + len(com_df_hh_main) != len(hh_df):
-        print("HAH????")
-        print(com_df_del)
-        print(com_df_hh_main)
-        print(hh_df)
+    com_df_del = com_df_del.drop_duplicates(subset=['hhid'])
+    com_df_hh_main = com_df_hh_main.drop_duplicates(subset=['hhid'])
+
+    if len(com_df_del) + len(com_df_hh_main) != len(ori_hh_df):
+        hhid_created = set(com_df_del["hhid"]) & set(com_df_hh_main["hhid"])
+        hhid_ori = set(ori_hh_df["hhid"])
+        hhid_in_created_only = hhid_created - hhid_ori
+        print("hhid not in ori, which is weird: ", hhid_in_created_only)
+        hhid_in_ori_only = hhid_ori - hhid_created
+        print("hhid in ori only: ", hhid_in_ori_only)
     
     return com_df_hh_main, com_df_del
 
