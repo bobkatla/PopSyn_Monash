@@ -86,6 +86,7 @@ def main():
         # To reduce the memory issue, we need to segment the hh_df, the whole point of this is just assigning anw
         ls_to_gb = [x for x in hh_df.columns if x != "hhid"]
         hh_df = hh_df.astype(str)
+        hh_df.to_csv(os.path.join(processed_data, "keep_check", "first_hh.csv"), index=False)
         # count_hh_df = hh_df.groupby(ls_to_gb)["hhid"].apply(lambda x: list(x)).reset_index()
         # print(len(count_hh_df))
         ls_sub_df = segment_df(hh_df, chunk_sz=100000)
@@ -100,13 +101,15 @@ def main():
         combine_df_hh_main = pd.concat(_ls_df_com)
         del_hh = pd.concat(_init_del)
         # Process the HH and main to have the HH with IDs and People in HH
+        combine_df_hh_main.to_csv(os.path.join(processed_data, "keep_check", "noad_hh_main.csv"), index=False)
+        del_hh.to_csv(os.path.join(processed_data, "keep_check", "noad_init_del.csv"), index=False)
         _, main_pp_df_all = process_combine_df(combine_df_hh_main)
 
         store_pp_df = extra_pp_df(main_pp_df_all)
         ls_df_pp = [store_pp_df]
 
         del_df = []
-        main_pp_df_all[all_rela_exist] = main_pp_df_all[all_rela_exist].astype(int)
+        main_pp_df_all[all_rela_exist + ["hhid"]] = main_pp_df_all[all_rela_exist].astype(int)
         for rela in all_rela_exist:
             logger.info(f"Doing {rela} now lah~")
             to_del_df, pop_rela = process_rela_fast(main_pp_df_all, rela, dict_pool_sample[rela].copy()) # fix this
