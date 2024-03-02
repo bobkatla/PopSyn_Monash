@@ -109,7 +109,7 @@ def main():
         ls_df_pp = [store_pp_df]
 
         del_df = []
-        main_pp_df_all[all_rela_exist + ["hhid"]] = main_pp_df_all[all_rela_exist].astype(int)
+        main_pp_df_all[all_rela_exist + ["hhid"]] = main_pp_df_all[all_rela_exist + ["hhid"]].astype(int)
         for rela in all_rela_exist:
             logger.info(f"Doing {rela} now lah~")
             to_del_df, pop_rela = process_rela_fast(main_pp_df_all, rela, dict_pool_sample[rela].copy()) # fix this
