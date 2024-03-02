@@ -93,9 +93,9 @@ def get_combine_df(hh_df, pool_hh_main):
         hhid_created = set(com_df_del["hhid"]) & set(com_df_hh_main["hhid"])
         hhid_ori = set(ori_hh_df["hhid"])
         hhid_in_created_only = hhid_created - hhid_ori
-        print("hhid not in ori, which is weird: ", hhid_in_created_only)
+        print("hhid not in ori, which is weird: ", len(hhid_in_created_only))
         hhid_in_ori_only = hhid_ori - hhid_created
-        print("hhid in ori only: ", hhid_in_ori_only)
+        print("hhid in ori only: ", len(hhid_in_ori_only))
     
     return com_df_hh_main, com_df_del
 
@@ -120,6 +120,14 @@ def main():
     hh_df["hhid"] = hh_df.index
 
     combine_df, del_df = get_combine_df(hh_df, pool_hh_main)
+
+    # with open(os.path.join(processed_data, 'dict_pool_sample.pickle'), 'rb') as handle:
+    #     dict_pool_sample = pickle.load(handle)
+    # hh_df = pd.read_csv("./to_test_combine.csv")
+    # hh_df = hh_df.astype(str)
+    # hh_df["hhid"] = hh_df["hhid"].apply(lambda x: eval(x))
+    # pool_hh_main = dict_pool_sample["Main"].value_counts().reset_index()
+    # combine_df, del_df = get_combine_df(hh_df, pool_hh_main)
     print(combine_df)
     print(len(hh_df))
     print(del_df)

@@ -86,9 +86,10 @@ def main():
         # To reduce the memory issue, we need to segment the hh_df, the whole point of this is just assigning anw
         ls_to_gb = [x for x in hh_df.columns if x != "hhid"]
         hh_df = hh_df.astype(str)
-        count_hh_df = hh_df.groupby(ls_to_gb)["hhid"].apply(lambda x: list(x)).reset_index()
-        print(len(count_hh_df))
-        ls_sub_df = segment_df(count_hh_df, chunk_sz=200000)
+        # count_hh_df = hh_df.groupby(ls_to_gb)["hhid"].apply(lambda x: list(x)).reset_index()
+        # print(len(count_hh_df))
+        ls_sub_df = segment_df(hh_df, chunk_sz=100000)
+        # ls_sub_df[0].to_csv("to_test_combine.csv", index=False)
 
         _ls_df_com, _init_del = [], []
         for sub_df in ls_sub_df:
@@ -105,6 +106,7 @@ def main():
         ls_df_pp = [store_pp_df]
 
         del_df = []
+        main_pp_df_all[all_rela_exist] = main_pp_df_all[all_rela_exist].astype(int)
         for rela in all_rela_exist:
             logger.info(f"Doing {rela} now lah~")
             to_del_df, pop_rela = process_rela_fast(main_pp_df_all, rela, dict_pool_sample[rela].copy()) # fix this
