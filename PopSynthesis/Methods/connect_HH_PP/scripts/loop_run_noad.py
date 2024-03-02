@@ -36,6 +36,7 @@ def get_the_noad_hh(combine_df, df_seed, hh_state_names):
     ls_vals_zone = list(chain.from_iterable(combine_df["ls_zones"]))
     random.shuffle(ls_vals_zone)
     fin_no_ad[geo_lev] = ls_vals_zone
+    fin_no_ad = fin_no_ad.reset_index(drop=True)
     return fin_no_ad
 
 
@@ -80,16 +81,15 @@ def main():
         hh_df = get_the_noad_hh(combine_df, df_seed, hh_state_names)
         if "hhid" not in hh_df.columns:
             hh_df["hhid"] = hh_df.index
-        
-        # Sample hh main
+
+        # # Sample hh main
         logger.info("GETTING the main people")
         # To reduce the memory issue, we need to segment the hh_df, the whole point of this is just assigning anw
         ls_to_gb = [x for x in hh_df.columns if x != "hhid"]
         hh_df = hh_df.astype(str)
         hh_df.to_csv(os.path.join(processed_data, "keep_check", "first_hh.csv"), index=False)
-        # count_hh_df = hh_df.groupby(ls_to_gb)["hhid"].apply(lambda x: list(x)).reset_index()
-        # print(len(count_hh_df))
-        ls_sub_df = segment_df(hh_df, chunk_sz=100000)
+        count_hh_df = hh_df.groupby(ls_to_gb)["hhid"].apply(lambda x: list(x)).reset_index()
+        ls_sub_df = segment_df(count_hh_df, chunk_sz=100000)
         # ls_sub_df[0].to_csv("to_test_combine.csv", index=False)
 
         _ls_df_com, _init_del = [], []
@@ -103,20 +103,22 @@ def main():
         # Process the HH and main to have the HH with IDs and People in HH
         combine_df_hh_main.to_csv(os.path.join(processed_data, "keep_check", "noad_hh_main.csv"), index=False)
         del_hh.to_csv(os.path.join(processed_data, "keep_check", "noad_init_del.csv"), index=False)
+        
         _, main_pp_df_all = process_combine_df(combine_df_hh_main)
 
         store_pp_df = extra_pp_df(main_pp_df_all)
         ls_df_pp = [store_pp_df]
 
         del_df = []
-        main_pp_df_all[all_rela_exist + ["hhid"]] = main_pp_df_all[all_rela_exist + ["hhid"]].astype(int)
+        main_pp_df_all[all_rela_exist] = main_pp_df_all[all_rela_exist].astype(int)
+        dict_hhid = dict(zip(hh_df["hhid"], hh_df[geo_lev]))
+
         for rela in all_rela_exist:
             logger.info(f"Doing {rela} now lah~")
             to_del_df, pop_rela = process_rela_fast(main_pp_df_all, rela, dict_pool_sample[rela].copy()) # fix this
 
             if len(pop_rela) > 0:
-                dict_hhid = dict(zip(hh_df["hhid"], hh_df[geo_lev]))
-                pop_rela[geo_lev] = pop_rela.apply(lambda r: dict_hhid[int(r["hhid"])],axis=1)
+                pop_rela[geo_lev] = pop_rela.apply(lambda r: dict_hhid[str(r["hhid"])],axis=1)
                 cols_main = [f"{x}_main" for x in PP_ATTS if x not in["relationship", "persid", "hhid", geo_lev]]
                 rename_cols = {f"{name}_{rela}": name for name in PP_ATTS if name not in["relationship", "persid", "hhid", geo_lev]}
                 pop_rela = pop_rela.drop(columns=cols_main)
