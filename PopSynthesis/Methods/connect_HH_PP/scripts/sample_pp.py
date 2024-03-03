@@ -200,7 +200,7 @@ def process_rela_fast(main_pp_df, rela, pool):
         ls_to_com_df.append(re_df)
     if len(ls_to_com_df) == 0:
         print("Weird this has nothing")
-        final_rela_df = None
+        final_rela_df = []
     else:
         final_rela_df = pd.concat(ls_to_com_df)
         final_rela_df["hhid"] = hold_ids
