@@ -104,7 +104,7 @@ def main():
             if len(_del_sub) > 0: _init_del.append(_del_sub)
 
         combine_df_hh_main = pd.concat(_ls_df_com)
-        if len(del_hh) > 0:
+        if len(_init_del) > 0:
             del_hh = pd.concat(_init_del)
         else:
             del_hh = []
