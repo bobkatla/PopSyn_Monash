@@ -76,7 +76,7 @@ def main():
     ls_final_hh = []
     ls_final_pp = []
 
-    while check > 0:
+    while check > 5:
         print(f"DOING ITE {i} with err == {check}")
         # if i == 0:
         #     hh_df = pd.read_csv(os.path.join(processed_data, "keep_check", "first_hh.csv"))
@@ -92,7 +92,7 @@ def main():
         # To reduce the memory issue, we need to segment the hh_df, the whole point of this is just assigning anw
         ls_to_gb = [x for x in hh_df.columns if x != "hhid"]
         hh_df = hh_df.astype(str)
-        hh_df.to_csv(os.path.join(processed_data, "keep_check", "first_hh.csv"), index=False)
+        # hh_df.to_csv(os.path.join(processed_data, "keep_check", "first_hh.csv"), index=False)
 
         count_hh_df = hh_df.groupby(ls_to_gb)["hhid"].apply(lambda x: list(x)).reset_index()
         ls_sub_df = segment_df(count_hh_df, chunk_sz=100000)
@@ -104,10 +104,13 @@ def main():
             if len(_del_sub) > 0: _init_del.append(_del_sub)
 
         combine_df_hh_main = pd.concat(_ls_df_com)
-        del_hh = pd.concat(_init_del)
+        if len(del_hh) > 0:
+            del_hh = pd.concat(_init_del)
+        else:
+            del_hh = []
         # Process the HH and main to have the HH with IDs and People in HH
-        combine_df_hh_main.to_csv(os.path.join(processed_data, "keep_check", "noad_hh_main.csv"), index=False)
-        del_hh.to_csv(os.path.join(processed_data, "keep_check", "noad_init_del.csv"), index=False)
+        # combine_df_hh_main.to_csv(os.path.join(processed_data, "keep_check", "noad_hh_main.csv"), index=False)
+        # del_hh.to_csv(os.path.join(processed_data, "keep_check", "noad_init_del.csv"), index=False)
         
         _, main_pp_df_all = process_combine_df(combine_df_hh_main)
 
@@ -139,11 +142,15 @@ def main():
         if len(del_df) == 0:
             ls_final_hh.append(hh_df)
             ls_final_pp.append(all_df_pp)
-            re_check_to_show.append(0)
+            re_check_to_show.append(len(del_hh))
             break
 
+        if len(del_hh) == 0:
+            ls_del_init = []
+        else:
+            ls_del_init = list(del_hh["hhid"].astype(str))
         del_df_final = pd.concat(del_df)
-        ls_del_id = list(del_df_final["hhid"].astype(str)) + list(del_hh["hhid"].astype(str))
+        ls_del_id = list(del_df_final["hhid"].astype(str)) + ls_del_init
         hh_df["hhid"] = hh_df["hhid"].astype(str)
         
         hh_df_keep = hh_df[~hh_df["hhid"].isin(ls_del_id)]
