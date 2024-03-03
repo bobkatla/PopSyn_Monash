@@ -76,33 +76,38 @@ def main():
     ls_final_hh = []
     ls_final_pp = []
 
-    while check > 5:
+    while check > 0:
         print(f"DOING ITE {i} with err == {check}")
-        hh_df = get_the_noad_hh(combine_df, df_seed, hh_state_names)
-        if "hhid" not in hh_df.columns:
-            hh_df["hhid"] = hh_df.index
+        if i == 0:
+            hh_df = pd.read_csv(os.path.join(processed_data, "keep_check", "first_hh.csv"))
+            combine_df_hh_main = pd.read_csv(os.path.join(processed_data, "keep_check", "noad_hh_main.csv"))
+            del_hh = pd.read_csv(os.path.join(processed_data, "keep_check", "noad_init_del.csv"))
+        else:
+            hh_df = get_the_noad_hh(combine_df, df_seed, hh_state_names)
+            if "hhid" not in hh_df.columns:
+                hh_df["hhid"] = hh_df.index
 
-        # # Sample hh main
-        logger.info("GETTING the main people")
-        # To reduce the memory issue, we need to segment the hh_df, the whole point of this is just assigning anw
-        ls_to_gb = [x for x in hh_df.columns if x != "hhid"]
-        hh_df = hh_df.astype(str)
-        hh_df.to_csv(os.path.join(processed_data, "keep_check", "first_hh.csv"), index=False)
-        count_hh_df = hh_df.groupby(ls_to_gb)["hhid"].apply(lambda x: list(x)).reset_index()
-        ls_sub_df = segment_df(count_hh_df, chunk_sz=100000)
-        # ls_sub_df[0].to_csv("to_test_combine.csv", index=False)
+            # # Sample hh main
+            logger.info("GETTING the main people")
+            # To reduce the memory issue, we need to segment the hh_df, the whole point of this is just assigning anw
+            ls_to_gb = [x for x in hh_df.columns if x != "hhid"]
+            hh_df = hh_df.astype(str)
+            # hh_df.to_csv(os.path.join(processed_data, "keep_check", "first_hh.csv"), index=False)
 
-        _ls_df_com, _init_del = [], []
-        for sub_df in ls_sub_df:
-            _df_com, _del_sub = get_combine_df(sub_df, dict_pool_sample["Main"].value_counts().reset_index())
-            if len(_df_com) > 0: _ls_df_com.append(_df_com)
-            if len(_del_sub) > 0: _init_del.append(_del_sub)
+            count_hh_df = hh_df.groupby(ls_to_gb)["hhid"].apply(lambda x: list(x)).reset_index()
+            ls_sub_df = segment_df(count_hh_df, chunk_sz=100000)
 
-        combine_df_hh_main = pd.concat(_ls_df_com)
-        del_hh = pd.concat(_init_del)
+            _ls_df_com, _init_del = [], []
+            for sub_df in ls_sub_df:
+                _df_com, _del_sub = get_combine_df(sub_df, dict_pool_sample["Main"].value_counts().reset_index())
+                if len(_df_com) > 0: _ls_df_com.append(_df_com)
+                if len(_del_sub) > 0: _init_del.append(_del_sub)
+
+            combine_df_hh_main = pd.concat(_ls_df_com)
+            del_hh = pd.concat(_init_del)
         # Process the HH and main to have the HH with IDs and People in HH
-        combine_df_hh_main.to_csv(os.path.join(processed_data, "keep_check", "noad_hh_main.csv"), index=False)
-        del_hh.to_csv(os.path.join(processed_data, "keep_check", "noad_init_del.csv"), index=False)
+        # combine_df_hh_main.to_csv(os.path.join(processed_data, "keep_check", "noad_hh_main.csv"), index=False)
+        # del_hh.to_csv(os.path.join(processed_data, "keep_check", "noad_init_del.csv"), index=False)
         
         _, main_pp_df_all = process_combine_df(combine_df_hh_main)
 
@@ -164,9 +169,12 @@ def main():
     new_ls_pp = []
     max_id = 1
     for hh, pp in zip(ls_final_hh, ls_final_pp):
-        if max_id is not None:
-            hh["hhid"] = hh["hhid"] + max_id
-            pp["hhid"] = pp["hhid"] + max_id
+        hh["hhid"] = hh["hhid"].astype(int)
+        pp["hhid"] = pp["hhid"].astype(int)
+
+        hh["hhid"] = hh["hhid"] + max_id
+        pp["hhid"] = pp["hhid"] + max_id
+
         max_id = int(max(hh["hhid"])) + 1
         new_ls_hh.append(hh)
         new_ls_pp.append(pp)
