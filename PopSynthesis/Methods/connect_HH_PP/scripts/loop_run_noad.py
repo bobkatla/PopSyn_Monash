@@ -24,7 +24,7 @@ def segment_df(df, chunk_sz) -> list[pd.DataFrame]:
 
 def get_the_noad_hh(combine_df, df_seed, hh_state_names):
     geo_lev = [x for x in combine_df.columns if x != "count"][0]
-    check = 100
+    check = combine_df["count"].sum()
     ls_df = []
     while check > 0:
         print(check)
@@ -76,7 +76,7 @@ def main():
     ls_final_hh = []
     ls_final_pp = []
 
-    while check > 5 and i < 3:
+    while check > 5 or i < 25:
         print(f"DOING ITE {i} with err == {check}")
         # if i == 0:
         #     hh_df = pd.read_csv(os.path.join(processed_data, "keep_check", "first_hh.csv"))
