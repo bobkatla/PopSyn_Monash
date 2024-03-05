@@ -77,7 +77,7 @@ def convert_to_dict_ls(tup: tuple[any]):
 
 def adjust_kept_hh_match_census(kept_hh, diff_census, geo_lev):
     # The point is to remove the chosen in
-    count_kept = kept_hh.drop(columns=["hhid"]).value_counts()
+    count_kept = kept_hh.value_counts()
     # diff_census = diff_census.head(10) # sample to check smaller
     for zone, r in diff_census.iterrows():
         logger.info(f"DOING deleting to match cencus diff for {zone}")
