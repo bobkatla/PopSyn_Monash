@@ -15,7 +15,7 @@ logger = logging.getLogger("connect_hh_pp")
 
 def main():
     geo_lev = "POA"
-    processed_already = ["hhsize", "totalvehs", "hhinc", "dwelltype"]
+    processed_already = ["hhsize", "totalvehs", "hhinc", "dwelltype", "owndwell"]
 
     all_rela_exist = ALL_RELA.copy()
     all_rela_exist.remove("Self")
