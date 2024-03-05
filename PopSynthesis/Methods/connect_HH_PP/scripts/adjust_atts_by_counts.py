@@ -3,6 +3,7 @@ This scripts will loop use the pools from BNs and update each atts to match with
 """
 import pandas as pd
 import numpy as np
+import random
 
 from PopSynthesis.Methods.connect_HH_PP.scripts.sample_hh_main import *
 from PopSynthesis.Methods.connect_HH_PP.scripts.process_all_hh_pp import *
@@ -27,11 +28,11 @@ def cal_states_diff(att, pop_df, census_data, geo_lev):
     return re_dict
 
 
-def get_neg_pos_ls(count_vals):
+def get_neg_pos_ls(count_vals: dict[str, int]):
     ls_neg_states = []
     ls_pos_states = []
-    for state in count_vals:
-        if count_vals[state] < 0:
+    for state, val in count_vals.items():
+        if val < 0:
             ls_neg_states.append(state)
         else:
             ls_pos_states.append(state)
@@ -39,7 +40,9 @@ def get_neg_pos_ls(count_vals):
     # rank the list neg to have the priority order
     # at the moment it is just from the largest number
     # but maybe will create to rank from least likely to make combinations
-    ls_neg_states = sorted(ls_neg_states, key=lambda x: count_vals[x])
+    # ls_neg_states = sorted(ls_neg_states, key=lambda x: count_vals[x])
+    # Make it random
+    random.shuffle(ls_neg_states)
 
     return ls_neg_states, ls_pos_states
 
@@ -137,12 +140,13 @@ def wrapper_adjust_state(syn_pop, dict_diff, processed_atts, main_att, pool_coun
     return syn_pop
 
 
-def process_data_general(census_data, pool_count, geo_lev, adjust_atts_order):
+def process_data_general(census_data, pool_count, geo_lev, adjust_atts_order, is_ipu_data=True):
     # Census data will be in format of count with zone_id, and columns in 2 levels
     # Loop through each att
-    census_data = census_data.set_index(census_data.columns[census_data.columns.get_level_values(0)=="zone_id"][0])
-    cols_drop = census_data.columns[census_data.columns.get_level_values(0).isin(["zone_id", "sample_geog"])]
-    census_data = census_data.drop(columns= cols_drop)
+    if is_ipu_data:
+        census_data = census_data.set_index(census_data.columns[census_data.columns.get_level_values(0)=="zone_id"][0])
+        cols_drop = census_data.columns[census_data.columns.get_level_values(0).isin(["zone_id", "sample_geog"])]
+        census_data = census_data.drop(columns= cols_drop)
     # ls_atts_order = list(census_data.columns.get_level_values(0).unique()) #at the moment it is just by order from marginals file, will fix later
     census_data.index = census_data.index.astype(str)
 
