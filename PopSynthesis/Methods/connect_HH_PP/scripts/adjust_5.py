@@ -15,7 +15,7 @@ logger = logging.getLogger("connect_hh_pp")
 
 def main():
     geo_lev = "POA"
-    processed_already = ["hhsize", "totalvehs", "hhinc", "dwelltype"]
+    processed_already = ["hhsize", "totalvehs", "hhinc", "dwelltype", "owndwell"]
 
     all_rela_exist = ALL_RELA.copy()
     all_rela_exist.remove("Self")
@@ -46,11 +46,11 @@ def main():
     while check > 10 and i < 50:
         logger.info(f"DOING ITE {i} with err == {check}")
         if i == 0: #init begin by having the adjust hh_df
-            hh_df = pd.read_csv(os.path.join(output_dir, "adjust", "final", "saving_hh_dwelltype.csv"), low_memory=False)
+            hh_df = pd.read_csv(os.path.join(output_dir, "adjust", "final", "saving_hh_owndwell.csv"), low_memory=False)
         else:
             # Simple create a new func here and get the new marg already
             hh_df = process_data_general(marg_hh, pool, geo_lev, processed_already, is_ipu_data=False)
-            hh_df.to_csv(os.path.join(processed_data, "keep_check", f"adjusted_hh_new_{i}.csv"), index=False)
+            hh_df.to_csv(os.path.join(processed_data, "keep_check", f"adjusted5_hh_new_{i}.csv"), index=False)
         
         if "hhid" not in hh_df.columns:
             hh_df = hh_df.reset_index(drop=True)
@@ -78,8 +78,8 @@ def main():
         _, main_pp_df_all = process_combine_df(combine_df_hh_main)
         main_pp_df_all[all_rela_exist] = main_pp_df_all[all_rela_exist].astype(float).astype(int)
 
-        del_hh.to_csv(os.path.join(processed_data, "keep_check", f"del_first_{i}.csv"), index=False)
-        main_pp_df_all.to_csv(os.path.join(processed_data, "keep_check", f"main_pp_df_{i}.csv"), index=False)
+        del_hh.to_csv(os.path.join(processed_data, "keep_check", f"del5_first_{i}.csv"), index=False)
+        main_pp_df_all.to_csv(os.path.join(processed_data, "keep_check", f"main5_pp_df_{i}.csv"), index=False)
 
         store_pp_df = extra_pp_df(main_pp_df_all)
         ls_df_pp = [store_pp_df]
@@ -127,9 +127,9 @@ def main():
         ls_final_hh.append(hh_df_keep)
         ls_final_pp.append(all_df_pp)
 
-        hh_df_got_rm.to_csv(os.path.join(processed_data, "keep_check", f"del_df_hh_{i}.csv"), index=False)
-        hh_df_keep.to_csv(os.path.join(processed_data, "keep_check", f"hh_keep_df_{i}.csv"), index=False)
-        all_df_pp.to_csv(os.path.join(processed_data, "keep_check", f"pp_df_{i}.csv"), index=False)
+        hh_df_got_rm.to_csv(os.path.join(processed_data, "keep_check", f"del5_df_hh_{i}.csv"), index=False)
+        hh_df_keep.to_csv(os.path.join(processed_data, "keep_check", f"hh5_keep_df_{i}.csv"), index=False)
+        all_df_pp.to_csv(os.path.join(processed_data, "keep_check", f"pp5_df_{i}.csv"), index=False)
 
         logger.info("Updating the pool")
         temp_pool = pool.set_index(cols_pool)
@@ -157,8 +157,8 @@ def main():
         check = len(hh_df) - len(new_kept_hh)
         re_check_to_show.append(check)
 
-        pool.to_csv(os.path.join(processed_data, "keep_check", f"updated_pool_{i}.csv"), index=False)
-        marg_hh.to_csv(os.path.join(processed_data, "keep_check", f"updated_marg_{i}.csv"), index=False)
+        pool.to_csv(os.path.join(processed_data, "keep_check", f"updated5_pool_{i}.csv"), index=False)
+        marg_hh.to_csv(os.path.join(processed_data, "keep_check", f"updated5_marg_{i}.csv"), index=False)
         
         i += 1
 
@@ -182,8 +182,8 @@ def main():
     # # Outputing
     print(final_hh)
     print(final_hh)
-    final_pp.to_csv(os.path.join(output_dir, f"syn_pp_final_{geo_lev}_ad4.csv"), index=False)
-    final_hh.to_csv(os.path.join(output_dir, f"syn_hh_final_{geo_lev}_ad4.csv"), index=False)
+    final_pp.to_csv(os.path.join(output_dir, f"syn_pp_final_{geo_lev}_ad5.csv"), index=False)
+    final_hh.to_csv(os.path.join(output_dir, f"syn_hh_final_{geo_lev}_ad5.csv"), index=False)
 
     print(re_check_to_show)
 
