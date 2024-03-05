@@ -121,9 +121,9 @@ def samp_from_pool_1layer(pool, df_marg, chosen_att, zone_lev):
             print(f"WARNING: cannot see {chosen_att}_{state} in the pool, sample by the rest")
             sub_pool = pool # if there are none, we take all
         seri_state = census_vals[(chosen_att, state)]
-        for zone in seri_state.index:
+        for zone, val in seri_state.items():
             print(f"Doing {zone} for 1 simple layer sampling")
-            n = int(seri_state[zone])
+            n = int(val)
             if n > 0:
                 sub_df_zone = sub_pool.sample(n=n, replace=True, weights=w_sam)
                 sub_df_zone[zone_lev] = zone
