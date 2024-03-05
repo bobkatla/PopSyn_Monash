@@ -53,6 +53,8 @@ def add_0_to_missing(df, ls_missing, axis):
 
 def get_diff_marg(converted_census_marg, converted_new_hh_marg):
     logger.info("getting the diff marg df")
+    converted_census_marg.index = converted_census_marg.index.astype(str)
+    converted_new_hh_marg.index = converted_new_hh_marg.index.astype(str)
     # make sure they both have the same rows and cols, if not it means 0
     missing_cols_ori = set(converted_new_hh_marg.columns) - set(converted_census_marg.columns)
     missing_cols_kept = set(converted_census_marg.columns) - set(converted_new_hh_marg.columns)
