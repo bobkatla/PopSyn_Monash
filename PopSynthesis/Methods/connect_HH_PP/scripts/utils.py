@@ -52,7 +52,7 @@ def add_0_to_missing(df, ls_missing, axis):
 
 
 def get_diff_marg(converted_census_marg, converted_new_hh_marg):
-    logging.info("getting the diff marg df")
+    logger.info("getting the diff marg df")
     # make sure they both have the same rows and cols, if not it means 0
     missing_cols_ori = set(converted_new_hh_marg.columns) - set(converted_census_marg.columns)
     missing_cols_kept = set(converted_census_marg.columns) - set(converted_new_hh_marg.columns)
@@ -78,7 +78,7 @@ def adjust_kept_hh_match_census(kept_hh, diff_census, geo_lev):
     count_kept = kept_hh.drop(columns=["hhid"]).value_counts()
     # diff_census = diff_census.head(10) # sample to check smaller
     for zone, r in diff_census.iterrows():
-        logging.info(f"DOING deleting to match cencus diff for {zone}")
+        logger.info(f"DOING deleting to match cencus diff for {zone}")
         before_sum = count_kept.loc[count_kept.index.get_level_values(geo_lev) == zone].sum()
         sub_count_kept = count_kept.loc[count_kept.index.get_level_values(geo_lev) == zone]
         prev_indexs = sub_count_kept.index
@@ -134,5 +134,5 @@ def adjust_kept_hh_match_census(kept_hh, diff_census, geo_lev):
         count_kept.loc[list(zero_indexes)] = 0
         assert neg_cols.sum() == 0
         after_sum = count_kept.loc[count_kept.index.get_level_values(geo_lev) == zone].sum()
-        logging.info(f"FNISHED deleting {before_sum - after_sum} HHs to match cencus diff for {zone}")
-    return convert_count_to_full(count_kept)
+        logger.info(f"FNISHED deleting {before_sum - after_sum} HHs to match cencus diff for {zone}")
+    return convert_count_to_full(count_kept.reset_index())
