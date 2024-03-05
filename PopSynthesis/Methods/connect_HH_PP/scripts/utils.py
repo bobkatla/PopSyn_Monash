@@ -5,6 +5,16 @@ import logging
 logger = logging.getLogger("connect_hh_pp")
 
 
+def segment_df(df, chunk_sz) -> list[pd.DataFrame]:
+    start = 0
+    ls_df = []
+    while start < len(df):
+        sub_df = df.iloc[start:start+chunk_sz]
+        ls_df.append(sub_df)
+        start += chunk_sz
+    return ls_df
+
+
 def convert_count_to_full(count_df: pd.DataFrame) -> pd.DataFrame:
     assert "count" in count_df.columns
     repeated_idx = list(count_df.index.repeat(count_df["count"]))
