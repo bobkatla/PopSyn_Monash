@@ -123,13 +123,6 @@ def main():
         
         hh_df_keep = hh_df[~hh_df["hhid"].isin(ls_del_id)]
         hh_df_got_rm = hh_df[hh_df["hhid"].isin(ls_del_id)]
-        
-        ls_final_hh.append(hh_df_keep)
-        ls_final_pp.append(all_df_pp)
-
-        hh_df_got_rm.to_csv(os.path.join(processed_data, "keep_check", f"del5_df_hh_{i}.csv"), index=False)
-        hh_df_keep.to_csv(os.path.join(processed_data, "keep_check", f"hh5_keep_df_{i}.csv"), index=False)
-        all_df_pp.to_csv(os.path.join(processed_data, "keep_check", f"pp5_df_{i}.csv"), index=False)
 
         logger.info("Updating the pool")
         temp_pool = pool.set_index(cols_pool)
@@ -153,6 +146,15 @@ def main():
 
         # now get the new marg
         marg_hh = new_diff_marg
+
+        # Updating the kept
+        new_fin_pp = all_df_pp[all_df_pp["hhid"].isin(new_kept_hh["hhid"])]
+        ls_final_hh.append(new_kept_hh)
+        ls_final_pp.append(new_fin_pp)
+
+        hh_df_got_rm.to_csv(os.path.join(processed_data, "keep_check", f"del5_df_hh_{i}.csv"), index=False)
+        new_kept_hh.to_csv(os.path.join(processed_data, "keep_check", f"hh5_keep_df_{i}.csv"), index=False)
+        new_fin_pp.to_csv(os.path.join(processed_data, "keep_check", f"pp5_df_{i}.csv"), index=False)
     
         check = len(hh_df) - len(new_kept_hh)
         re_check_to_show.append(check)
@@ -181,7 +183,7 @@ def main():
 
     # # Outputing
     print(final_hh)
-    print(final_hh)
+    print(final_pp)
     final_pp.to_csv(os.path.join(output_dir, f"syn_pp_final_{geo_lev}_ad5.csv"), index=False)
     final_hh.to_csv(os.path.join(output_dir, f"syn_hh_final_{geo_lev}_ad5.csv"), index=False)
 
