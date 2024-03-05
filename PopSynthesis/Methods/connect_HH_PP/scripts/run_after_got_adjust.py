@@ -159,6 +159,8 @@ def main():
         
         # We do not convert the deleted to new marg anymore
         # We created the new ones based on kept and update the kept
+        ls_cols_not_marg = [x for x in hh_df_keep if x not in processed_already] # not used yet, will think should I make it aim for only the needed cols for faster converge
+
         marg_from_kept_hh = convert_full_to_marg_count(hh_df_keep, geo_lev, ALL_RELA + ["POA", "hhid"])
         diff_marg = get_diff_marg(marg_hh, marg_from_kept_hh)
         new_kept_hh = adjust_kept_hh_match_census(hh_df_keep, diff_marg, geo_lev)
