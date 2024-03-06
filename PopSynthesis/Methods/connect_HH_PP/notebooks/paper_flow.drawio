@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2024-03-06T01:03:19.291Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" etag="cVJn2J7OzgFnIeSHM0zS" version="24.0.2" type="github">
+<mxfile host="app.diagrams.net" modified="2024-03-06T01:27:16.560Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" etag="q9ZBs9zWtmjTbbdv9yfM" version="24.0.2" type="github">
   <diagram name="Page-1" id="E3KpyPitjYsLN0GZDoVW">
-    <mxGraphModel dx="1695" dy="838" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+    <mxGraphModel dx="990" dy="2643" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -149,7 +149,7 @@
         <mxCell id="kDhQ7Uan6P-qZiMI29yH-155" value="Inherit the powers of SL-based while removing weakness" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="kDhQ7Uan6P-qZiMI29yH-147">
           <mxGeometry x="125" y="30" width="80" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="kDhQ7Uan6P-qZiMI29yH-159" value="Robust and flexible, designed to customised" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="kDhQ7Uan6P-qZiMI29yH-147">
+        <mxCell id="kDhQ7Uan6P-qZiMI29yH-159" value="Robust and flexible, designed to customised, modularity" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="kDhQ7Uan6P-qZiMI29yH-147">
           <mxGeometry x="240" y="30" width="80" height="70" as="geometry" />
         </mxCell>
         <mxCell id="kDhQ7Uan6P-qZiMI29yH-161" value="Paper structure" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="9JcZxiStbfQCe7SZ0dCE-2">
@@ -203,6 +203,9 @@
         <mxCell id="kDhQ7Uan6P-qZiMI29yH-192" value="Household structure and why it is important, how thing is being done" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="9JcZxiStbfQCe7SZ0dCE-9">
           <mxGeometry x="15" y="320" width="400" height="90" as="geometry" />
         </mxCell>
+        <mxCell id="kDhQ7Uan6P-qZiMI29yH-217" value="Joint activites diffrent for hh struct" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="kDhQ7Uan6P-qZiMI29yH-192">
+          <mxGeometry x="15" y="24" width="120" height="60" as="geometry" />
+        </mxCell>
         <mxCell id="kDhQ7Uan6P-qZiMI29yH-209" value="SL-based weakness of impossible combinations, not well census" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="9JcZxiStbfQCe7SZ0dCE-9">
           <mxGeometry x="10" y="425" width="400" height="65" as="geometry" />
         </mxCell>
@@ -213,13 +216,13 @@
           <mxGeometry x="1150" y="10" width="420" height="690" as="geometry" />
         </mxCell>
         <mxCell id="kDhQ7Uan6P-qZiMI29yH-211" value="SAA" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="9JcZxiStbfQCe7SZ0dCE-10">
-          <mxGeometry x="15" y="40" width="390" height="100" as="geometry" />
+          <mxGeometry x="15" y="140" width="390" height="100" as="geometry" />
         </mxCell>
         <mxCell id="kDhQ7Uan6P-qZiMI29yH-212" value="BNC" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="9JcZxiStbfQCe7SZ0dCE-10">
-          <mxGeometry x="15" y="180" width="390" height="100" as="geometry" />
+          <mxGeometry x="10" y="280" width="390" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="kDhQ7Uan6P-qZiMI29yH-213" value="Loop back" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="9JcZxiStbfQCe7SZ0dCE-10">
-          <mxGeometry x="30" y="310" width="390" height="100" as="geometry" />
+        <mxCell id="kDhQ7Uan6P-qZiMI29yH-213" value="Final framework (IPSF)" style="swimlane;whiteSpace=wrap;html=1;startSize=23;" vertex="1" parent="9JcZxiStbfQCe7SZ0dCE-10">
+          <mxGeometry x="10" y="404" width="390" height="100" as="geometry" />
         </mxCell>
         <mxCell id="9JcZxiStbfQCe7SZ0dCE-11" value="Results and discussion" style="swimlane;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1760" y="10" width="420" height="710" as="geometry" />
