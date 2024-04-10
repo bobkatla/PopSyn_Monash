@@ -1,9 +1,48 @@
-<mxfile host="app.diagrams.net" modified="2024-04-10T02:44:21.120Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36" version="24.2.1" etag="Jw8OZiM3BKk6UujMxOdj" type="github">
+<mxfile host="app.diagrams.net" modified="2024-04-10T02:49:17.118Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36" etag="-KAXVZDorKL0B8cN_47E" version="24.2.1" type="github">
   <diagram name="Page-1" id="GcLynW6Bm_qK1KajZ2lx">
-    <mxGraphModel>
+    <mxGraphModel dx="699" dy="1866" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-1" value="Research aim:&lt;div&gt;To develop a new approach to Population Synthesis and study the impact of emerging technology&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="10" y="450" width="120" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-2" value="Task 1: Generating the population considering all 3 diversities" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;align=center;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="160" y="298" width="500" height="116" as="geometry" />
+        </mxCell>
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-3" value="Method:&amp;nbsp;" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;whiteSpace=wrap;html=1;" vertex="1" parent="DFPLayo4z6RkdoQgYkVW-2">
+          <mxGeometry y="26" width="500" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-4" value="Item 2" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;whiteSpace=wrap;html=1;" vertex="1" parent="DFPLayo4z6RkdoQgYkVW-2">
+          <mxGeometry y="56" width="500" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-5" value="Item 3" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;whiteSpace=wrap;html=1;" vertex="1" parent="DFPLayo4z6RkdoQgYkVW-2">
+          <mxGeometry y="86" width="500" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-6" value="Task 2: Improving the activity generation together with a population synthesis" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;align=center;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="160" y="450" width="500" height="116" as="geometry" />
+        </mxCell>
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-7" value="Item 1" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;whiteSpace=wrap;html=1;" vertex="1" parent="DFPLayo4z6RkdoQgYkVW-6">
+          <mxGeometry y="26" width="500" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-8" value="Item 2" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;whiteSpace=wrap;html=1;" vertex="1" parent="DFPLayo4z6RkdoQgYkVW-6">
+          <mxGeometry y="56" width="500" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-9" value="Item 3" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;whiteSpace=wrap;html=1;" vertex="1" parent="DFPLayo4z6RkdoQgYkVW-6">
+          <mxGeometry y="86" width="500" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-10" value="Task 3: Evaluating the impact of emerging technologies" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;align=center;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="160" y="590" width="500" height="116" as="geometry" />
+        </mxCell>
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-11" value="Item 1" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;whiteSpace=wrap;html=1;" vertex="1" parent="DFPLayo4z6RkdoQgYkVW-10">
+          <mxGeometry y="26" width="500" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-12" value="Item 2" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;whiteSpace=wrap;html=1;" vertex="1" parent="DFPLayo4z6RkdoQgYkVW-10">
+          <mxGeometry y="56" width="500" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-13" value="Item 3" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;whiteSpace=wrap;html=1;" vertex="1" parent="DFPLayo4z6RkdoQgYkVW-10">
+          <mxGeometry y="86" width="500" height="30" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
