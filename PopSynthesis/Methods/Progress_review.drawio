@@ -1,11 +1,11 @@
-<mxfile host="app.diagrams.net" modified="2024-04-10T03:15:01.399Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36" etag="8rvWoxL4KdRarqPc3bVj" version="24.2.1" type="github">
+<mxfile host="app.diagrams.net" modified="2024-04-10T03:16:42.973Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36" etag="25QL3xc1-OFVe-j7BPN-" version="24.2.1" type="github">
   <diagram name="Page-1" id="GcLynW6Bm_qK1KajZ2lx">
     <mxGraphModel dx="1687" dy="878" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="DFPLayo4z6RkdoQgYkVW-1" value="&lt;b&gt;&lt;i&gt;Research aim:&lt;/i&gt;&lt;/b&gt;&lt;div&gt;&lt;br&gt;&lt;div style=&quot;font-size: 16px;&quot;&gt;&lt;i&gt;To develop a new approach to Population Synthesis and study the impact of emerging technology&lt;/i&gt;&lt;/div&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;fontSize=16;fillColor=#b1ddf0;strokeColor=#10739e;" vertex="1" parent="1">
-          <mxGeometry x="10" y="300" width="130" height="400" as="geometry" />
+          <mxGeometry x="10" y="300" width="130" height="370" as="geometry" />
         </mxCell>
         <mxCell id="DFPLayo4z6RkdoQgYkVW-2" value="Task 1: Generating the population considering all 3 diversities" style="swimlane;fontStyle=3;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;align=center;fontSize=16;" vertex="1" parent="1">
           <mxGeometry x="160" y="298" width="620" height="112" as="geometry" />
@@ -33,7 +33,7 @@
           <mxGeometry y="82" width="620" height="30" as="geometry" />
         </mxCell>
         <mxCell id="DFPLayo4z6RkdoQgYkVW-6" value="Task 2: Improving the activity generation together with a population synthesis" style="swimlane;fontStyle=3;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;align=center;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="160" y="440" width="620" height="113" as="geometry" />
+          <mxGeometry x="160" y="430" width="620" height="113" as="geometry" />
         </mxCell>
         <mxCell id="DFPLayo4z6RkdoQgYkVW-62" value="" style="shape=table;startSize=0;container=1;collapsible=0;childLayout=tableLayout;fontSize=16;" vertex="1" parent="DFPLayo4z6RkdoQgYkVW-6">
           <mxGeometry y="26" width="620" height="27" as="geometry" />
@@ -58,7 +58,7 @@
           <mxGeometry y="83" width="620" height="30" as="geometry" />
         </mxCell>
         <mxCell id="DFPLayo4z6RkdoQgYkVW-10" value="Task 3: Evaluating the impact of emerging technologies" style="swimlane;fontStyle=3;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;align=center;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="160" y="590" width="620" height="110" as="geometry" />
+          <mxGeometry x="160" y="560" width="620" height="110" as="geometry" />
         </mxCell>
         <mxCell id="DFPLayo4z6RkdoQgYkVW-44" value="" style="shape=table;startSize=0;container=1;collapsible=0;childLayout=tableLayout;fontSize=16;" vertex="1" parent="DFPLayo4z6RkdoQgYkVW-10">
           <mxGeometry y="26" width="620" height="24" as="geometry" />
