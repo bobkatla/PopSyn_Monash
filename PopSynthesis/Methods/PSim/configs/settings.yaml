@@ -15,8 +15,8 @@ max_expansion_factor: 30
 
 # Geographic Settings
 # ------------------------------------------------------------------
-geographies: [SA3, SA1]
-seed_geography: SA3
+geographies: [State, POA]
+seed_geography: State
 
 
 # Tracing
@@ -34,7 +34,7 @@ data_dir: data
 # input_pre_processor input_table_list
 input_table_list:
   - tablename: households
-    filename : H_sample.csv
+    filename : HH_seed.csv
     index_col: hh_id
     rename_columns:
       # not sure what SERIALNO is, but it is not unique
@@ -42,20 +42,20 @@ input_table_list:
       hh_num: hh_id
   - tablename: persons
     # expression_filename: seed_persons_expressions.csv
-    filename : P_sample.csv
+    filename : PP_seed.csv
     rename_columns:
       hh_num: hh_id
   - tablename: geo_cross_walk
     filename : geo_cross.csv
-  - tablename: SA3_control_data
-    filename : census_SA3.csv
-  - tablename: SA1_control_data
-    filename : census_SA1.csv
+  # - tablename: State_control_data
+  #   filename : con_census_State.csv
+  - tablename: POA_control_data
+    filename : con_census_POA.csv
 
 
 # Reserved Column Names
 # ------------------------------------------------------------------
-household_weight_col: wdhhwgt_sa3
+household_weight_col: _weight
 household_id_col: hh_id
 total_hh_control: num_hh
 
@@ -73,7 +73,7 @@ control_file_name: controls.csv
 output_tables:
   action: include
   tables:
-    - summary_SA1
+    - summary_POA
     - expanded_household_ids
 
 
@@ -88,11 +88,17 @@ output_synthetic_population:
     columns:
       - totalvehs
       - hhsize
+      - dwelltype
+      - hhinc
+      - owndwell
   persons:
     filename: synthetic_persons.csv
     columns:
+      - age
       - sex
       - persinc
+      - anywork
+      - relationship
 
 
 # Model steps for base mode
@@ -104,7 +110,7 @@ models:
     - meta_control_factoring
     - final_seed_balancing
     - integerize_final_seed_weights
-    - sub_balancing.geography=SA1
+    - sub_balancing.geography=POA
     - expand_households
     - write_data_dictionary
     - summarize
