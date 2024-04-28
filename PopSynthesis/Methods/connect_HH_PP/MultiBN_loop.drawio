@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2024-04-28T11:34:32.217Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" etag="8y-_jsIvN1lRi9RRg8DO" version="24.3.1" type="github">
+<mxfile host="app.diagrams.net" modified="2024-04-28T11:34:38.100Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" etag="wBiC_nsd00dk3-Ud_Ztf" version="24.3.1" type="github">
   <diagram name="Page-1" id="M9G-T7zKxAfByAplEG5L">
-    <mxGraphModel dx="3661" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+    <mxGraphModel dx="4323" dy="1050" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -1430,7 +1430,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="ZjnAigqAQlpUPxYiaDzP-31" value="Sample for each household and remove &quot;unlikely&quot; ones" style="rhombus;whiteSpace=wrap;html=1;fontSize=20;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
-          <mxGeometry x="2274" y="1250" width="240" height="163" as="geometry" />
+          <mxGeometry x="2263.5" y="1246" width="240" height="163" as="geometry" />
         </mxCell>
         <mxCell id="ZjnAigqAQlpUPxYiaDzP-33" value="" style="shape=card;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=18;" parent="1" vertex="1">
           <mxGeometry x="2730" y="1246" width="110" height="140" as="geometry" />
