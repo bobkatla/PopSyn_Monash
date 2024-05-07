@@ -81,7 +81,6 @@ def eval_based_on_full_pop(loc_data, tolerance=1e-5,  max_iterations=10000, rang
 
 
 def simple_synthesize(marg, joint_dist, marginal_zero_sub=.01, jd_zero_sub=.001):
-
     # this is the zero marginal problem
     marg = marg.replace(0, marginal_zero_sub)
 
@@ -89,18 +88,20 @@ def simple_synthesize(marg, joint_dist, marginal_zero_sub=.01, jd_zero_sub=.001)
     joint_dist.frequency = joint_dist.frequency.replace(0, jd_zero_sub)
 
     # IPF
-    constraint, _ = ipf.calculate_constraints(marg, joint_dist.frequency)
-    constraint.index = joint_dist.cat_id
+    constraint, iterations = ipf.calculate_constraints(marg, joint_dist.frequency)
+    # constraint.index = joint_dist.cat_id
     result = IPF_sampling(constraint)
-    return result
+    return result, iterations
 
 
 def simple_synthesize_all_zones(marg, samples, xwalk):
     syn_list = []
     for geogs in xwalk:
-        _, joint_dist = cat.joint_distribution(samples[samples.sample_geog == geogs[1]], cat.category_combinations(marg.columns))
-        synthetic_results = simple_synthesize(marg.loc[geogs[0]], joint_dist)
+        print(f"Doing zone {geogs[0]}")
+        hhs, joint_dist = cat.joint_distribution(samples[samples.sample_geog == geogs[1]], cat.category_combinations(marg.columns))
+        synthetic_results, iterations = simple_synthesize(marg.loc[geogs[0]], joint_dist)
         syn_list.append(synthetic_results)
+        print(f"Finished zone {geogs[0]} with {iterations} iters")
     all_re = pd.concat(syn_list)
     return all_re
 
