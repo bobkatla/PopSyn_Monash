@@ -2,8 +2,11 @@
 The main file to do the work of generating using IPF-based
 """
 from paras import loc_data, loc_controls, loc_output
-from PopSynthesis.Methods.IPF.src.IPF import eval_based_on_full_pop
+from PopSynthesis.Methods.IPF.src.IPF import eval_based_on_full_pop, simple_synthesize_all_zones
+from PopSynthesis.Methods.IPF.src.data_process import simple_load_data
 import numpy as np
+import os
+import pathlib
 
 
 def main():
@@ -15,5 +18,16 @@ def main():
     print(results_rmse)
 
 
+def test_new_only_hh():
+    name_f = lambda x: os.path.join(pathlib.Path(__file__).parent.resolve(), loc_data, f'{x}.csv')
+    hh_marg_file = name_f("hh_marginals_ipu")
+    hh_sample_file = name_f("hh_sample_ipu")
+    hh_marg, hh_sample, xwalks = simple_load_data(hh_marg_file, hh_sample_file)
+    synthetic_hh = simple_synthesize_all_zones(hh_marg, hh_sample, xwalks)
+    print(synthetic_hh)
+    synthetic_hh.to_csv("just_make_sure.csv")
+    synthetic_hh.to_csv(os.path.join(pathlib.Path(__file__).parent.resolve(), loc_output, "IPF_re_HH_only.csv"), index=False)
+
 if __name__ == "__main__":
-    main()
+    # main()
+    test_new_only_hh()

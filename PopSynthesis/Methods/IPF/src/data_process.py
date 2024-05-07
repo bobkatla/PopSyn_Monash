@@ -143,5 +143,18 @@ def test():
     print(a)
 
 
+def simple_load_data(marginal_file, sample_file):
+    sample = pd.read_csv(sample_file)
+
+    marg = pd.read_csv(marginal_file, header=[0, 1], index_col=0)
+    marg.columns.levels[0].set_names('cat_name', inplace=True)
+    marg.columns.levels[1].set_names('cat_values', inplace=True)
+
+    xwalk = list(zip(marg.index, marg.sample_geog.unstack().values))
+    marg = marg.drop('sample_geog', axis=1, level=0)
+
+    return marg, sample, xwalk
+
+
 if __name__ == "__main__":
     test()

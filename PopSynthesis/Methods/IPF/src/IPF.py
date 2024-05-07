@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import synthpop.ipf.ipf as ipf
+from synthpop import categorizer as cat
 from PopSynthesis.Methods.IPF.src.data_process import process_data, get_test_data, get_marg_val_from_full, get_joint_dist_from_sample, get_marg_from_constraints
 from PopSynthesis.Benchmark.CompareFullPop.utils import wrapper_get_all, sampling_from_full_pop, realise_full_pop_based_on_weight
 from PopSynthesis.Benchmark.CompareFullPop.compare import full_pop_SRMSE, SRMSE_based_on_counts
@@ -77,6 +78,31 @@ def eval_based_on_full_pop(loc_data, tolerance=1e-5,  max_iterations=10000, rang
         results_rmse.append(compare_RMS_census(marginals, marg_syn=marg_syn))
         print(f"Done rate {rate} with {iterations} iters, got score of {SRMSE}")
     return results, results_rmse
+
+
+def simple_synthesize(marg, joint_dist, marginal_zero_sub=.01, jd_zero_sub=.001):
+
+    # this is the zero marginal problem
+    marg = marg.replace(0, marginal_zero_sub)
+
+    # zero cell problem
+    joint_dist.frequency = joint_dist.frequency.replace(0, jd_zero_sub)
+
+    # IPF
+    constraint, _ = ipf.calculate_constraints(marg, joint_dist.frequency)
+    constraint.index = joint_dist.cat_id
+    result = IPF_sampling(constraint)
+    return result
+
+
+def simple_synthesize_all_zones(marg, samples, xwalk):
+    syn_list = []
+    for geogs in xwalk:
+        _, joint_dist = cat.joint_distribution(samples[samples.sample_geog == geogs[1]], cat.category_combinations(marg.columns))
+        synthetic_results = simple_synthesize(marg.loc[geogs[0]], joint_dist)
+        syn_list.append(synthetic_results)
+    all_re = pd.concat(syn_list)
+    return all_re
 
 
 if __name__ == "__main__":
