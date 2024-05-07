@@ -6,10 +6,18 @@ from PopSynthesis.Methods.IPF.src.data_process import process_data, get_test_dat
 from PopSynthesis.Benchmark.CompareFullPop.utils import wrapper_get_all, sampling_from_full_pop, realise_full_pop_based_on_weight
 from PopSynthesis.Benchmark.CompareFullPop.compare import full_pop_SRMSE, SRMSE_based_on_counts
 from PopSynthesis.Benchmark.CompareCensus.compare import compare_RMS_census
+from PopSynthesis.Generator_data.generate_combine_census.utils import TRS
 
 
-def IPF_sampling(constraints, rounding=None):
+def IPF_sampling(constraints, round_basic=True, tot=None):
     # constraints.to_csv('./Joint_dist_result_IPF.csv')
+    round_vals = None
+    if round_basic:
+        constraints = constraints.apply(lambda x: int(x))
+    else:
+        ls_vals = constraints.to_list()
+        round_vals = TRS(ls_vals, int(tot))
+
     ls = None
     for count, i in enumerate(constraints.index):
         if count % int(len(constraints.index)/10) == 0:
@@ -18,7 +26,8 @@ def IPF_sampling(constraints, rounding=None):
 
         if constraints[i]: 
             # TODO: instead of just rounding like this, use the papers method of int rounding
-            ls_repeat = np.repeat([i], int(constraints[i]), axis=0)
+            to_sample = constraints[i] if round_basic else round_vals[count]
+            ls_repeat = np.repeat([i], to_sample, axis=0)
             if ls is None: ls = ls_repeat
             else: ls = np.concatenate((ls, ls_repeat), axis=0)
     return pd.DataFrame(ls, columns=constraints.index.names)
@@ -89,8 +98,16 @@ def simple_synthesize(marg, joint_dist, marginal_zero_sub=.01, jd_zero_sub=.001)
 
     # IPF
     constraint, iterations = ipf.calculate_constraints(marg, joint_dist.frequency)
+    tot = constraint.sum()
+
+    idx_temp = constraint.index.names
+    temp = constraint.reset_index()
+    temp = temp[temp["hhinc"]!="Negative income"] # this does not make sense or we can keep this as well
+    constraint = temp.set_index(idx_temp)
+    constraint = constraint[0]
+
     # constraint.index = joint_dist.cat_id
-    result = IPF_sampling(constraint)
+    result = IPF_sampling(constraint, round_basic=False, tot=tot)
     return result, iterations
 
 
