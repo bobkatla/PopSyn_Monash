@@ -100,6 +100,7 @@ def simple_synthesize_all_zones(marg, samples, xwalk):
         print(f"Doing zone {geogs[0]}")
         hhs, joint_dist = cat.joint_distribution(samples[samples.sample_geog == geogs[1]], cat.category_combinations(marg.columns))
         synthetic_results, iterations = simple_synthesize(marg.loc[geogs[0]], joint_dist)
+        synthetic_results["zone"] = geogs[0]
         syn_list.append(synthetic_results)
         print(f"Finished zone {geogs[0]} with {iterations} iters")
     all_re = pd.concat(syn_list)

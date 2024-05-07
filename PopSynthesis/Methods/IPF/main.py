@@ -25,7 +25,6 @@ def test_new_only_hh():
     hh_marg, hh_sample, xwalks = simple_load_data(hh_marg_file, hh_sample_file)
     synthetic_hh = simple_synthesize_all_zones(hh_marg, hh_sample, xwalks)
     print(synthetic_hh)
-    synthetic_hh.to_csv("just_make_sure.csv")
     synthetic_hh.to_csv(os.path.join(pathlib.Path(__file__).parent.resolve(), loc_output, "IPF_re_HH_only.csv"), index=False)
 
 if __name__ == "__main__":
