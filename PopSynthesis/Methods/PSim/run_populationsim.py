@@ -4,11 +4,9 @@
 import sys
 import argparse
 
-from activitysim.core.config import setting
 from activitysim.core import inject
 
 from activitysim.cli.run import add_run_args, run
-from populationsim import steps
 
 
 @inject.injectable()

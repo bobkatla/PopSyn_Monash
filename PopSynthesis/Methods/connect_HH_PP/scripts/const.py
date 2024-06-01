@@ -1,7 +1,7 @@
 import logging
 import os
 from PopSynthesis.Methods.connect_HH_PP.paras_dir import log_dir
-import datetime;
+import datetime
 
 # ct stores current time
 ct = datetime.datetime.now()

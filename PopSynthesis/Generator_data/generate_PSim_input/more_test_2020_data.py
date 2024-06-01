@@ -1,6 +1,5 @@
 import pandas as pd
 import geopandas as gpd
-import matplotlib.pyplot as plt
 
 
 def get_census_popsim(ls_atts, ls_zones=[]):

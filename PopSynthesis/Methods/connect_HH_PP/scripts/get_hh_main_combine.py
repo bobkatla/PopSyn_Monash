@@ -9,7 +9,7 @@ maybe I need to group the generating results into 1 place (census, samples, IPU 
 
 import pandas as pd
 import numpy as np
-from PopSynthesis.Methods.connect_HH_PP.paras_dir import processed_data, geo_lev, output_dir
+from PopSynthesis.Methods.connect_HH_PP.paras_dir import processed_data, output_dir
 from PopSynthesis.Methods.connect_HH_PP.scripts.const import *
 from PopSynthesis.Methods.connect_HH_PP.scripts.sample_hh_main import *
 from PopSynthesis.Methods.connect_HH_PP.scripts.sample_pp import *

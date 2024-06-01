@@ -7,7 +7,6 @@ import random
 
 from PopSynthesis.Methods.connect_HH_PP.scripts.sample_hh_main import *
 from PopSynthesis.Methods.connect_HH_PP.scripts.process_all_hh_pp import *
-from PopSynthesis.Generator_data.script.generate_for_fullpop import round_to_realise_df
 
 
 def cal_states_diff(att, pop_df, census_data, geo_lev):

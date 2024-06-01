@@ -1,11 +1,8 @@
 # from synthpop.recipes.tests import test_starter
 import synthpop.zone_synthesizer as zs
-import synthpop.ipu.ipu as ipu
-from synthpop import categorizer as cat
 import pathlib
 
 import os
-import pandas as pd
 
 
 def test_run(hh_marg, p_marg, hh_sample, p_sample):

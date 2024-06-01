@@ -3,7 +3,6 @@ import numpy as np
 from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator
 from pgmpy.sampling import BayesianModelSampling
 from pgmpy.models import BayesianNetwork
-import networkx as nx
 import pylab as plt
 from benchmark import SRMSE
 import matplotlib.pyplot as plt

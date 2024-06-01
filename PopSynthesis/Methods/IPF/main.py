@@ -1,7 +1,7 @@
 """
 The main file to do the work of generating using IPF-based
 """
-from paras import loc_data, loc_controls, loc_output
+from paras import loc_data, loc_output
 from PopSynthesis.Methods.IPF.src.IPF import eval_based_on_full_pop, simple_synthesize_all_zones
 from PopSynthesis.Methods.IPF.src.data_process import simple_load_data
 import numpy as np

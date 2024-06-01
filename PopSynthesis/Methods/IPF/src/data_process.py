@@ -2,7 +2,6 @@
 Process data to have the formated input for the IPF
 """
 import pandas as pd
-import numpy as np
 
 
 def get_sample_counts(df, ls_to_rm=None, ls_to_have=None):

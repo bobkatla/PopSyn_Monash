@@ -1,5 +1,5 @@
 import pandas as pd
-from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator, MaximumLikelihoodEstimator
+from pgmpy.estimators import HillClimbSearch, BayesianEstimator
 from pgmpy.factors.discrete.CPD import TabularCPD
 from pgmpy.sampling import BayesianModelSampling
 from pgmpy.models import BayesianNetwork

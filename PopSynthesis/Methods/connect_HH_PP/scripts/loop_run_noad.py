@@ -190,8 +190,8 @@ def main():
     final_pp = pd.concat(new_ls_pp)
 
     # Outputing
-    final_pp.to_csv(os.path.join(output_dir, f"hh_no_adjustments.csv"), index=False)
-    final_hh.to_csv(os.path.join(output_dir, f"pp_no_adjustments.csv"), index=False)
+    final_pp.to_csv(os.path.join(output_dir, "hh_no_adjustments.csv"), index=False)
+    final_hh.to_csv(os.path.join(output_dir, "pp_no_adjustments.csv"), index=False)
 
     print(re_check_to_show)
 

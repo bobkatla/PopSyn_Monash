@@ -1,4 +1,3 @@
-from PopSynthesis.Methods.BN.newBN.BNlearn import BN_learn_combine
 
 
 def main():

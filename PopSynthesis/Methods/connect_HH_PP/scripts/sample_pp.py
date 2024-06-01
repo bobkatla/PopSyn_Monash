@@ -3,7 +3,6 @@ New way to do rejection sample, especially for the main to other
 Sample alot (like 10 mil) and select the needed sample from it, we can combine with sample method to randomly draw
 """
 import pandas as pd
-import numpy as np
 import pickle
 import os
 
@@ -212,7 +211,7 @@ def process_rela_fast(main_pp_df, rela, pool):
 def main():
     # Import the synthetic with main and households
     # combine_df = pd.read_csv(os.path.join(processed_data, f"SynPop_hh_main_{geo_lev}.csv"))
-    combine_df = pd.read_csv(os.path.join(processed_data, f"1e5_hh_main.csv"))
+    combine_df = pd.read_csv(os.path.join(processed_data, "1e5_hh_main.csv"))
     combine_df = combine_df[combine_df["age"].notna()]
     # Process the HH and main to have the HH with IDs and People in HH
     hh_df, main_pp_df_all = process_combine_df(combine_df)

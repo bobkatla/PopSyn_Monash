@@ -1,10 +1,9 @@
 import pandas as pd
-from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator, MaximumLikelihoodEstimator
+from pgmpy.estimators import BayesianEstimator
 from pgmpy.sampling import BayesianModelSampling
 from pgmpy.factors.discrete import State
 
-from PopSynthesis.Benchmark.legacy.checker import total_RMSE_flat, update_SRMSE
-from PopSynthesis.Methods.BN.newBN.process_data import get_hh_census, get_hh_census_sa1, get_hh_seed, get_hh_seed_sa1
+from PopSynthesis.Methods.BN.newBN.process_data import get_hh_census_sa1, get_hh_seed_sa1
 from PopSynthesis.Methods.BN.TBN.utils import learn_struct_BN_score
 
 

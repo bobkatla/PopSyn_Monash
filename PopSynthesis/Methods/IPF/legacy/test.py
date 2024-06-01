@@ -1,4 +1,3 @@
-import synthpop.ipf.ipf as ipf
 import synthpop.ipu.ipu as ipu
 import pandas as pd
 

@@ -1,6 +1,5 @@
 import geopandas as gpd
 import pandas as pd
-import matplotlib.pyplot as plt
 pd.options.mode.chained_assignment = None  # default='warn'
 
 

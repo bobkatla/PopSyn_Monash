@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import torch
 from pomegranate.bayesian_network import BayesianNetwork
-from PopSynthesis.Methods.connect_HH_PP.paras_dir import data_dir, processed_data
+from PopSynthesis.Methods.connect_HH_PP.paras_dir import data_dir
 
 
 def main():

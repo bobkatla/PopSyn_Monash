@@ -7,13 +7,11 @@ import numpy as np
 import networkx as nx
 import pylab as plt
 
-from pgmpy.estimators import HillClimbSearch, BicScore, BayesianEstimator, MaximumLikelihoodEstimator
-from pgmpy.factors.discrete.CPD import TabularCPD
+from pgmpy.estimators import BayesianEstimator
 from pgmpy.sampling import BayesianModelSampling
-from pgmpy.models import BayesianNetwork
 from pgmpy.factors.discrete import State
 
-from PopSynthesis.Methods.BN.TBN.utils import learn_struct_BN_score, compare_dist, get_prior, get_state_names, cal_count_states
+from PopSynthesis.Methods.BN.TBN.utils import learn_struct_BN_score, get_prior, get_state_names, cal_count_states
 from PopSynthesis.Benchmark.legacy.checker import total_RMSE_flat, update_SRMSE
 
 """

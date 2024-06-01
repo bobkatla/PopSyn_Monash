@@ -14,7 +14,6 @@ import os
 
 from PopSynthesis.Methods.BN.utils.learn_BN import learn_struct_BN_score
 from pgmpy.sampling import BayesianModelSampling
-from pgmpy.estimators import BayesianEstimator
 
 from PopSynthesis.Methods.connect_HH_PP.paras_dir import processed_data, geo_lev, output_dir
 from PopSynthesis.Methods.connect_HH_PP.scripts.const import *

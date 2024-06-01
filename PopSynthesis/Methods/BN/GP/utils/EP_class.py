@@ -6,10 +6,8 @@ from abc import ABC, abstractmethod
 import pandas as pd
 import networkx as nx
 import pylab as plt
-from pgmpy.models import BayesianNetwork
 from PopSynthesis.Methods.BN.utils.learn_BN import learn_struct_BN_score, sample_BN
 from PopSynthesis.Methods.BN.TBN.test_GA import partition_df
-from PopSynthesis.Methods.BN.utils.data_process import sample_from_full_pop
 
 
 class EP_base(ABC):

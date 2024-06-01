@@ -1,7 +1,6 @@
 import os
 from glob import glob
 import pandas as pd
-import numpy as np
 
 from PopSynthesis.Methods.connect_HH_PP.paras_dir import processed_data, output_dir, geo_lev
 from PopSynthesis.Methods.connect_HH_PP.scripts.const import *

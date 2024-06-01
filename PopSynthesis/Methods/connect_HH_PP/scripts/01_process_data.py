@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from collections import defaultdict 
 import pickle
 import os
@@ -320,8 +319,8 @@ def main():
     # This part is to create the just simple converted samples from hh and pp
     pp_df = add_weights_in_df(pp_df, weights_dict, type="pp")
     hh_df = add_weights_in_df(hh_df, weights_dict, type="hh")
-    pp_df.to_csv(os.path.join(processed_data, f"ori_sample_pp.csv"), index=False)
-    hh_df.to_csv(os.path.join(processed_data, f"ori_sample_hh.csv"), index=False)
+    pp_df.to_csv(os.path.join(processed_data, "ori_sample_pp.csv"), index=False)
+    hh_df.to_csv(os.path.join(processed_data, "ori_sample_hh.csv"), index=False)
     
     # process hh_main
     main_pp_df = pp_df[pp_df["relationship"]=="Main"]

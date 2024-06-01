@@ -2,7 +2,6 @@
 Implementing the idea of rejection BN and connect with DL
 """
 
-import pandas as pd
 
 
 def main():

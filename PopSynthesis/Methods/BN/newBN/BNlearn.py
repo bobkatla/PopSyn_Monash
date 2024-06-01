@@ -1,5 +1,5 @@
 from PopSynthesis.Methods.BN.newBN import process_data
-from PopSynthesis.Methods.BN.TBN.utils import get_prior,get_state_names
+from PopSynthesis.Methods.BN.TBN.utils import get_state_names
 
 
 def get_state_names(con_df):

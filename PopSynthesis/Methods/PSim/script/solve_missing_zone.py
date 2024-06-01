@@ -6,7 +6,6 @@ each zone should be calibrated to fit with the census (or some other data)
 """
 
 import pandas as pd
-import bnlearn as bn
 from pgmpy.estimators import HillClimbSearch, BayesianEstimator
 from pgmpy.models import BayesianNetwork
 from pgmpy.sampling import BayesianModelSampling
@@ -64,7 +63,6 @@ def _sampling_BN(BN, ls_zone, df_marg):
         # evidence
         # syn = inference.rejection_sample(evidence=evidence, size=n, show_progress=False)
 
-import random
 from numpy.random import multinomial
 def _constrained_sum_sample_pos(n, total):
     # print(n, total)

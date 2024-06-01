@@ -3,7 +3,7 @@ import os
 
 from PopSynthesis.Methods.BN.utils.learn_BN import learn_struct_BN_score, learn_para_BN
 from pgmpy.sampling import BayesianModelSampling
-from PopSynthesis.Methods.connect_HH_PP.paras_dir import data_dir, processed_data
+from PopSynthesis.Methods.connect_HH_PP.paras_dir import processed_data
 
 
 def main():

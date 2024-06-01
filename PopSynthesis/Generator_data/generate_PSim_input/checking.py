@@ -10,7 +10,6 @@ Something todo, defo:
 3. Deal with zero cell (aggre how, maybe just combine with nearest SA)
 """
 
-import pandas as pd
 import geopandas as gpd
 from paras import loc_file_census
 
