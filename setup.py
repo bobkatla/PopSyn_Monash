@@ -1,3 +1,3 @@
 from setuptools import setup, find_packages
 
-setup(name='SoA', version='1.0', packages=find_packages())
+setup(packages=find_packages())

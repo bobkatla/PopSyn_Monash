@@ -12,3 +12,5 @@
 paras_dir.py
 pool_all_samples.csv
 test.csv
+**/.venv
+_version.py
