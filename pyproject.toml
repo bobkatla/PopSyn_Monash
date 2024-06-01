@@ -4,7 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "SoA"
+authors = [
+  {name = "Bob La", email = "duc.la@monash.edu"}
+]
 dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/bobkatla/PopSyn_Monash"
 
 [tool.setuptools_scm]
 version_file = "PopSynthesis/_version.py"
