@@ -15,7 +15,8 @@ class DataProcessorGeneric:
         NotImplemented
     
     def process_households_seed():
-        NotImplemented
+        # Import the hh seed data
+        
 
     def process_persons_seed():
         NotImplemented
