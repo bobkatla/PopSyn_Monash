@@ -1,0 +1,65 @@
+<mxfile host="app.diagrams.net" modified="2024-07-03T02:16:29.312Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" etag="4msQUffcpZvdIMOgHWRE" version="24.6.4" type="github">
+  <diagram name="Page-1" id="hnhhLKA37qJ1NmWjemfi">
+    <mxGraphModel dx="1406" dy="780" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="w7V2vxLGS4Cwz19cSFHG-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="w7V2vxLGS4Cwz19cSFHG-1" target="w7V2vxLGS4Cwz19cSFHG-2" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="w7V2vxLGS4Cwz19cSFHG-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="w7V2vxLGS4Cwz19cSFHG-1" target="w7V2vxLGS4Cwz19cSFHG-3" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="w7V2vxLGS4Cwz19cSFHG-1" value="Articles from databases (Total, n = 330):&lt;br&gt;&lt;b&gt;&lt;i&gt;Scopus &lt;/i&gt;&lt;/b&gt;= 152,&lt;div&gt;&lt;b&gt;&lt;i&gt;Web of Science&lt;/i&gt;&lt;/b&gt; = 178&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="220" y="160" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="w7V2vxLGS4Cwz19cSFHG-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="w7V2vxLGS4Cwz19cSFHG-2" target="w7V2vxLGS4Cwz19cSFHG-5" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="w7V2vxLGS4Cwz19cSFHG-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="w7V2vxLGS4Cwz19cSFHG-2" target="w7V2vxLGS4Cwz19cSFHG-4" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="w7V2vxLGS4Cwz19cSFHG-2" value="Unique articles&lt;br&gt;(n = 235)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="220" y="270" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="w7V2vxLGS4Cwz19cSFHG-3" value="Duplication removed&lt;br&gt;(n = 95)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" parent="1" vertex="1">
+          <mxGeometry x="500" y="165" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="w7V2vxLGS4Cwz19cSFHG-4" value="Articles rejected based on titles, abstracts, and keywords screening&lt;br&gt;(n = 166)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" parent="1" vertex="1">
+          <mxGeometry x="500" y="275" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="w7V2vxLGS4Cwz19cSFHG-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="w7V2vxLGS4Cwz19cSFHG-5" target="w7V2vxLGS4Cwz19cSFHG-6" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UgS2vLM9cohCKUIERa9m-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="w7V2vxLGS4Cwz19cSFHG-5" target="w7V2vxLGS4Cwz19cSFHG-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="w7V2vxLGS4Cwz19cSFHG-5" value="PopSyn related articles&lt;br&gt;(n = 69)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="220" y="378.5" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="w7V2vxLGS4Cwz19cSFHG-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="w7V2vxLGS4Cwz19cSFHG-6" target="w7V2vxLGS4Cwz19cSFHG-9" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="w7V2vxLGS4Cwz19cSFHG-6" value="Qualified articles&lt;br&gt;(n = 34)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="220" y="480" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="w7V2vxLGS4Cwz19cSFHG-7" value="Articles rejected based on full-text review&lt;br&gt;(n = 35)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" parent="1" vertex="1">
+          <mxGeometry x="500" y="383.5" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="UgS2vLM9cohCKUIERa9m-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="w7V2vxLGS4Cwz19cSFHG-8" target="w7V2vxLGS4Cwz19cSFHG-9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="100" y="615" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="w7V2vxLGS4Cwz19cSFHG-8" value="Articles from snowballing&lt;div&gt;(n = 21)&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="30" y="410" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="w7V2vxLGS4Cwz19cSFHG-9" value="Final articles&lt;br&gt;(n = 55)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="220" y="580" width="230" height="70" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
