@@ -11,7 +11,10 @@ from PopSynthesis.DataProcessor.utils.const_files import (
     processed_data_dir,
     output_dir,
 )
+from PopSynthesis.DataProcessor.utils.const_process import HH_ATTS, LS_GR_RELA, LS_HH_INC
 from PopSynthesis.DataProcessor.utils.general_utils import find_file
+from PopSynthesis.DataProcessor.utils.seed.hh.process_general_hh import convert_hh_totvehs, convert_hh_size, convert_hh_dwell, convert_hh_inc
+import polars as pl
 
 
 class DataProcessorGeneric:
@@ -31,7 +34,12 @@ class DataProcessorGeneric:
     def process_households_seed(self):
         # Import the hh seed data
         hh_file = find_file(base_path=self.raw_data_path, filename=hh_seed_file)
-        print(hh_file)
+        raw_hh_seed = pl.read_csv(hh_file)
+        hh_df = convert_hh_totvehs(raw_hh_seed)
+        hh_df = convert_hh_inc(hh_df, check_states=LS_HH_INC)
+        hh_df = convert_hh_dwell(hh_df)
+        hh_df = convert_hh_size(hh_df)
+        return hh_df
 
     def process_persons_seed(self):
         NotImplemented
@@ -47,4 +55,5 @@ class DataProcessorGeneric:
 
 
 if __name__ == "__main__":
-    a = DataProcessorGeneric()
+    a = DataProcessorGeneric(raw_data_dir, processed_data_dir, output_dir)
+    a.process_households_seed()
