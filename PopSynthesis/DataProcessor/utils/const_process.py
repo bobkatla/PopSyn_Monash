@@ -8,14 +8,14 @@ ct = datetime.datetime.now()
 ct = str(ct).replace(".", "-").replace(":", "-").replace(" ", "-")
 
 # create logger
-logging.basicConfig(format='%(asctime)s - %(levelname)s: %(message)s')
-logger = logging.getLogger('process inputs data')
+logging.basicConfig(format="%(asctime)s - %(levelname)s: %(message)s")
+logger = logging.getLogger("process inputs data")
 logger.setLevel(logging.DEBUG)
 # create file handler which logs even debug messages
-fh = logging.FileHandler(os.path.join(log_dir, f'process_data_{ct}.log'))
+fh = logging.FileHandler(os.path.join(log_dir, f"process_data_{ct}.log"))
 fh.setLevel(logging.DEBUG)
 # create formatter and add it to the handlers
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 fh.setFormatter(formatter)
 # add the handlers to the logger
 logger.addHandler(fh)
@@ -43,14 +43,7 @@ LS_HH_INC = [
     "$8,000 or more ($416,000 or more)",
 ]
 
-HH_ATTS = [
-    "hhid",
-    "dwelltype",
-    "owndwell",
-    "hhinc",
-    "totalvehs",
-    "hhsize"
-]
+HH_ATTS = ["hhid", "dwelltype", "owndwell", "hhinc", "totalvehs", "hhsize"]
 
 PP_ATTS = [
     "persid",
@@ -60,10 +53,15 @@ PP_ATTS = [
     "relationship",
     "persinc",
     "nolicence",
-    "anywork"
+    "anywork",
 ]
 
-LS_GR_RELA = ["Self", "Spouse", "Child", "Grandchild"] # For the rest we will make them Others
+LS_GR_RELA = [
+    "Self",
+    "Spouse",
+    "Child",
+    "Grandchild",
+]  # For the rest we will make them Others
 HANDLE_THE_REST_RELA = "Others"
 ALL_RELA = LS_GR_RELA + [HANDLE_THE_REST_RELA]
 NOT_INCLUDED_IN_BN_LEARN = ["hhid", "persid", "relationship"]

@@ -1,4 +1,3 @@
-
 def add_converted_inc(pp_df):
     def process_inc(row):
         r_check = row["persinc"]
@@ -21,6 +20,6 @@ def add_converted_inc(pp_df):
         else:
             raise ValueError(f"Dunno I never seen this lol {r_check}")
         return val
-    
+
     pp_df["inc_dummy"] = pp_df.apply(process_inc, axis=1)
     return pp_df
