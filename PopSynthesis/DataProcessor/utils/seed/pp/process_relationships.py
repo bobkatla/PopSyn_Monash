@@ -1,6 +1,6 @@
 from collections import defaultdict
-from PopSynthesis.Methods.connect_HH_PP.scripts.const import *
-
+from PopSynthesis.Methods.connect_HH_PP.scripts.const import LS_GR_RELA, HANDLE_THE_REST_RELA
+import polars as pl
 
 def check_rela_gb(gb_df):
     for hhid, rela_gr in zip(gb_df.index, gb_df):
@@ -14,26 +14,27 @@ def check_rela_gb(gb_df):
             print("NOOOOOOOOOO", hhid, rela_gr)
 
 
-def process_rela(pp_df):
+def process_rela(pp_df: pl.DataFrame):
     # We will have 4 groups: spouse, child, grandchild and others
     # First we need to make sure each HH has 1 Self
-
-    gb_df = pp_df.groupby("hhid")["relationship"].apply(lambda x: list(x))
+    gb_df = pp_df.groupby("hhid").agg(pl.col("relationship"))
     # check_rela_gb(gb_df)
+    print(gb_df.filter(pl.col("hhid")=="Y16H2080218"))
 
     # There are various cases, requires some manual works
     # In order of replacement: 1 person, 2 spouses, 1 spouse, no spouse then pick the oldest
     # Thus we have 2 way of replacement: oldest (apply for 1 person and others) and spouse
     ls_to_replace = []
-    for hhid, rela_gr in zip(gb_df.index, gb_df):
+    for hhid, rela_gr in gb_df.rows():
         check_dict = defaultdict(lambda: 0)
         for i in rela_gr:
             check_dict[i] += 1
         if check_dict["Self"] == 0:
+            # There are actual cases of missing the Self person
             replace_method = "oldest" if check_dict["Spouse"] == 0 else "spouse"
             ls_to_replace.append((hhid, replace_method))
 
-    # start to replace to fix errors
+    # start to replace to fix errors of no Self
     for hhid, replace_method in ls_to_replace:
         sub_df = pp_df[pp_df["hhid"] == hhid]
         idx_to_replace = None
@@ -45,14 +46,14 @@ def process_rela(pp_df):
         assert idx_to_replace is not None
         pp_df.at[idx_to_replace, "relationship"] = "Self"
 
-    # check again
-    gb_df_2 = pp_df.groupby("hhid")["relationship"].apply(lambda x: list(x))
-    check_rela_gb(gb_df_2)  # Should print nothing
+    # # check again
+    # gb_df_2 = pp_df.groupby("hhid")["relationship"].apply(lambda x: list(x))
+    # check_rela_gb(gb_df_2)  # Should print nothing
 
-    # replace values in columns
-    pp_df.loc[
-        ~pp_df["relationship"].isin(LS_GR_RELA), "relationship"
-    ] = HANDLE_THE_REST_RELA
-    # print(pp_df["relationship"].unique())
+    # # replace values in columns
+    # pp_df.loc[
+    #     ~pp_df["relationship"].isin(LS_GR_RELA), "relationship"
+    # ] = HANDLE_THE_REST_RELA
+    # # print(pp_df["relationship"].unique())
 
-    return pp_df
+    # return pp_df

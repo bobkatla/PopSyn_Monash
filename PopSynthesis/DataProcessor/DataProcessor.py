@@ -13,6 +13,7 @@ from PopSynthesis.DataProcessor.utils.const_files import (
 )
 from PopSynthesis.DataProcessor.utils.const_process import (
     HH_ATTS,
+    PP_ATTS,
     LS_GR_RELA,
     LS_HH_INC,
 )
@@ -23,6 +24,10 @@ from PopSynthesis.DataProcessor.utils.seed.hh.process_general_hh import (
     convert_hh_dwell,
     convert_hh_inc,
 )
+from PopSynthesis.DataProcessor.utils.seed.pp.process_relationships import process_rela
+from PopSynthesis.DataProcessor.utils.seed.pp.process_main_others import process_main_other
+from PopSynthesis.DataProcessor.utils.seed.pp.convert_age import convert_pp_age_gr, get_main_max_age
+from PopSynthesis.DataProcessor.utils.seed.pp.convert_inc import add_converted_inc
 import polars as pl
 
 
@@ -38,7 +43,8 @@ class DataProcessorGeneric:
         self.output_data_path = Path(output_data_src)
 
     def process_all_seed(self):
-        NotImplemented
+        hh_df = self.process_households_seed()
+        pp_df = self.process_persons_seed()
 
     def process_households_seed(self):
         # Import the hh seed data
@@ -52,7 +58,15 @@ class DataProcessorGeneric:
         return hh_df
 
     def process_persons_seed(self):
-        NotImplemented
+        pp_file = find_file(base_path=self.raw_data_path, filename=pp_seed_file)
+        raw_hh_seed = pl.read_csv(pp_file)
+        pp_df = raw_hh_seed[PP_ATTS]
+        pp_df = process_rela(pp_df)
+        # print(pp_df)
+        # pp_df = get_main_max_age(pp_df)
+        # pp_df = convert_pp_age_gr(pp_df)
+        # pp_df = add_converted_inc(pp_df)
+
 
     def process_all_census(self):
         NotImplemented
@@ -66,4 +80,4 @@ class DataProcessorGeneric:
 
 if __name__ == "__main__":
     a = DataProcessorGeneric(raw_data_dir, processed_data_dir, output_dir)
-    a.process_households_seed()
+    a.process_persons_seed()

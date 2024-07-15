@@ -8,13 +8,6 @@ pd.options.mode.chained_assignment = None  # default='warn'
 from PopSynthesis.Methods.connect_HH_PP.paras_dir import data_dir, processed_data
 from PopSynthesis.Methods.connect_HH_PP.scripts.const import *
 
-def convert_all_hh_atts(hh_df, pp_df):
-    hh_df = adding_pp_related_atts(hh_df, pp_df)
-    hh_df = convert_hh_totvehs(hh_df)
-    hh_df = convert_hh_inc(hh_df, check_states=LS_HH_INC)
-    hh_df = convert_hh_dwell(hh_df)
-    hh_df = convert_hh_size(hh_df)
-    return hh_df
 
 
 def main():
