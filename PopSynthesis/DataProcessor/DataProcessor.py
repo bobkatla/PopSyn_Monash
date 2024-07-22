@@ -24,7 +24,7 @@ from PopSynthesis.DataProcessor.utils.seed.hh.process_general_hh import (
     convert_hh_dwell,
     convert_hh_inc,
 )
-from PopSynthesis.DataProcessor.utils.seed.pp.process_relationships import process_rela
+from PopSynthesis.DataProcessor.utils.seed.pp.process_relationships import process_rela, process_not_accept_values
 from PopSynthesis.DataProcessor.utils.seed.pp.process_main_others import process_main_other
 from PopSynthesis.DataProcessor.utils.seed.pp.convert_age import convert_pp_age_gr, get_main_max_age
 from PopSynthesis.DataProcessor.utils.seed.pp.convert_inc import add_converted_inc
@@ -61,7 +61,8 @@ class DataProcessorGeneric:
         pp_file = find_file(base_path=self.raw_data_path, filename=pp_seed_file)
         raw_hh_seed = pl.read_csv(pp_file)
         pp_df = raw_hh_seed[PP_ATTS]
-        pp_df = process_rela(pp_df)
+        pp_df = process_not_accept_values(pp_df)
+        # pp_df = process_rela(pp_df)
         # print(pp_df)
         # pp_df = get_main_max_age(pp_df)
         # pp_df = convert_pp_age_gr(pp_df)
