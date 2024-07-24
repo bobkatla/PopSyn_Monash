@@ -97,6 +97,12 @@ def process_info_each_house(r):
     return the_highest_income_rela, implausible_case
 
 
+def process_spouse_highest_inc(spouse_df):
+    # This case is simple, we just swap
+    assert list(spouse_df["highest_inc"].unique()) == ["Spouse"]
+    return None
+
+
 def process_rela(pp_df: pl.DataFrame):
     # To handle relationship, generally we based on income, age and gender
     # Due to complexity, I will keep pandas here for now
@@ -111,6 +117,15 @@ def process_rela(pp_df: pl.DataFrame):
     implausible_hh = pid_df[pid_df["implausible_case"]]
     print(f"Remove {len(implausible_hh)} households with implausible combinations")
     filtered_cases = pid_df[~pid_df["implausible_case"]]
-    print(filtered_cases)
-
+    # Next filter case of not Main for highest income
+    no_change_cases = filtered_cases[filtered_cases["highest_inc"]=="Main"]
+    # to_check_cases = filtered_cases[filtered_cases["highest_inc"]!="Main"]
+    # print(to_check_cases["highest_inc"].value_counts())
+    check_spouse_cases = filtered_cases[filtered_cases["highest_inc"]=="Spouse"]
+    check_child_cases = filtered_cases[filtered_cases["highest_inc"]=="Child"]
+    check_grandchild_cases = filtered_cases[filtered_cases["highest_inc"]=="Grandchild"]
+    # Still need to think about how to handle case of Other
+    processed_spouse = process_spouse_highest_inc(check_spouse_cases)
+    # Last step would be combined all of the df into 1
+    # And check for all of them the highest income is Main
     # return pp_df
