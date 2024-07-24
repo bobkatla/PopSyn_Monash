@@ -45,6 +45,7 @@ class DataProcessorGeneric:
     def process_all_seed(self):
         hh_df = self.process_households_seed()
         pp_df = self.process_persons_seed()
+        # Steps to make sure all persons belongs to households, and households size equal number of persons
 
     def process_households_seed(self):
         # Import the hh seed data
@@ -62,8 +63,7 @@ class DataProcessorGeneric:
         raw_hh_seed = pl.read_csv(pp_file)
         pp_df = raw_hh_seed[PP_ATTS]
         pp_df = process_not_accept_values(pp_df)
-        # pp_df = process_rela(pp_df)
-        # print(pp_df)
+        pp_df = process_rela(pp_df)
         # pp_df = get_main_max_age(pp_df)
         # pp_df = convert_pp_age_gr(pp_df)
         # pp_df = add_converted_inc(pp_df)
