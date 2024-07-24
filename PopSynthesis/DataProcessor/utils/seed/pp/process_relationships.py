@@ -97,9 +97,22 @@ def process_info_each_house(r):
     return the_highest_income_rela, implausible_case
 
 
-def process_spouse_highest_inc(spouse_df):
+def process_spouse_highest_inc(spouse_df) -> dict[str, str]:
+    """Return dict of """
     # This case is simple, we just swap
     assert list(spouse_df["highest_inc"].unique()) == ["Spouse"]
+    def process_swap_inc(id_combine):
+        ls_id, ls_age, ls_sex, ls_income, ls_rela = np.array(id_combine).T
+        ls_rela[0] = "Main" # replace all
+        main_id = find_idx_value(ls_rela, "Main")
+        highest_idx = idx_max_val_return(ls_income.astype(int))
+        highest_income_id = ls_id[highest_idx]
+        # confirm again, never bad to do this
+        assert ls_rela[highest_idx] == "Spouse"
+        # Swap
+        return {main_id: "Spouse", highest_income_id: "Main"}
+    result_mapping = spouse_df["id_combine"].apply(process_swap_inc)
+    print(result_mapping)
     return None
 
 
