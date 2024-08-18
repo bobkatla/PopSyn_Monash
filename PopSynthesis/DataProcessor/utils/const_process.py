@@ -43,7 +43,7 @@ LS_HH_INC = [
     "$8,000 or more ($416,000 or more)",
 ]
 
-HH_ATTS = ["hhid", "dwelltype", "owndwell", "hhinc", "totalvehs", "hhsize"]
+HH_ATTS = ["hhid", "dwelltype", "owndwell", "hhinc", "totalvehs", "hhsize", "wdhhwgt_sa3", "wehhwgt_sa3"]
 
 PP_ATTS = [
     "persid",
@@ -54,14 +54,7 @@ PP_ATTS = [
     "persinc",
     "nolicence",
     "anywork",
+    "wdperswgt_sa3",
+    "weperswgt_sa3"
 ]
-
-LS_GR_RELA = [
-    "Self",
-    "Spouse",
-    "Child",
-    "Grandchild",
-]  # For the rest we will make them Others
-HANDLE_THE_REST_RELA = "Others"
-ALL_RELA = LS_GR_RELA + [HANDLE_THE_REST_RELA]
 NOT_INCLUDED_IN_BN_LEARN = ["hhid", "persid", "relationship"]

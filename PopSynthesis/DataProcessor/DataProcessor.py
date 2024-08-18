@@ -74,14 +74,21 @@ class DataProcessorGeneric:
             check_match_hhsz, axis=1
         )
         assert check_combine["cross_check"].all()
-
-        # Next we add weights
+        print(filtered_hh)
+        print(pp_df)
 
     def process_households_seed(self) -> pd.DataFrame:
         # Import the hh seed data
         hh_file = find_file(base_path=self.raw_data_path, filename=hh_seed_file)
         raw_hh_seed = pl.read_csv(hh_file)
         hh_df = raw_hh_seed[HH_ATTS]
+        # Next we add weights, we combine weights of both wd and we
+        hh_df = hh_df.with_columns(pl.col("wdhhwgt_sa3").fill_null(strategy="zero"))
+        hh_df = hh_df.with_columns(pl.col("wehhwgt_sa3").fill_null(strategy="zero"))
+        hh_df = hh_df.with_columns(_weight = pl.col("wdhhwgt_sa3") + pl.col("wehhwgt_sa3"))
+        hh_df = hh_df.drop(["wdhhwgt_sa3", "wehhwgt_sa3"])
+
+        # other processing
         hh_df = convert_hh_totvehs(hh_df)
         hh_df = convert_hh_inc(hh_df, check_states=LS_HH_INC)
         hh_df = convert_hh_dwell(hh_df)
@@ -90,8 +97,14 @@ class DataProcessorGeneric:
 
     def process_persons_seed(self) -> pd.DataFrame:
         pp_file = find_file(base_path=self.raw_data_path, filename=pp_seed_file)
-        raw_hh_seed = pl.read_csv(pp_file)
-        pp_df = raw_hh_seed[PP_ATTS]
+        raw_pp_seed = pl.read_csv(pp_file)
+        pp_df = raw_pp_seed[PP_ATTS]
+        # Next we add weights, we combine weights of both wd and we
+        pp_df = pp_df.with_columns(pl.col("wdperswgt_sa3").fill_null(strategy="zero"))
+        pp_df = pp_df.with_columns(pl.col("weperswgt_sa3").fill_null(strategy="zero"))
+        pp_df = pp_df.with_columns(_weight = pl.col("wdperswgt_sa3") + pl.col("weperswgt_sa3"))
+        pp_df = pp_df.drop(["wdperswgt_sa3", "weperswgt_sa3"])
+
         pp_df = process_not_accept_values(pp_df)
         pp_df = process_rela(pp_df)
         pp_df = convert_pp_age_gr(pp_df)

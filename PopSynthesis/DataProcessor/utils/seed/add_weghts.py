@@ -1,21 +1,7 @@
-import polars as pl
+import pandas as pd
 
 
-def get_weights_dict(hh_df_w: pl.DataFrame, pp_df_w: pl.DataFrame):
-    re_dict = {}
-    # Process HH weights
-    hh_df_w["_weight"] = hh_df_w["wdhhwgt_sa3"].fillna(0) + hh_df_w[
-        "wehhwgt_sa3"
-    ].fillna(0)
-    pp_df_w["_weight"] = pp_df_w["wdperswgt_sa3"].fillna(0) + pp_df_w[
-        "weperswgt_sa3"
-    ].fillna(0)
-    re_dict["hh"] = dict(zip(hh_df_w["hhid"], hh_df_w["_weight"]))
-    re_dict["pp"] = dict(zip(pp_df_w["persid"], pp_df_w["_weight"]))
-    return re_dict
-
-
-def add_weights_in_df(df, weights_dict, type="hh"):
+def add_weights_in_df(df: pd.DataFrame, weights_dict, type="hh"):
     select_col = None
     dict_check = weights_dict[type]
     if type == "hh":
