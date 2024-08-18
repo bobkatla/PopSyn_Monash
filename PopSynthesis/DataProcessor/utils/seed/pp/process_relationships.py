@@ -3,10 +3,11 @@ from PopSynthesis.Methods.connect_HH_PP.scripts.const import LS_GR_RELA, HANDLE_
 import polars as pl
 import numpy as np
 import pandas as pd
-
+from typing import List
 
 MIN_PARENT_CHILD_GAP = 16
 MIN_GRANDPARENT_GRANDCHILD_GAP = 33
+MIN_COUPLE_GAP = 20 # This only apply when we do the conversion
 
 
 def check_rela_gb(gb_df):
@@ -97,29 +98,54 @@ def process_info_each_house(r):
     return the_highest_income_rela, implausible_case
 
 
-def process_spouse_highest_inc(spouse_df) -> dict[str, str]:
-    """Return dict of """
-    # This case is simple, we just swap
-    assert list(spouse_df["highest_inc"].unique()) == ["Spouse"]
-    def process_swap_inc(id_combine):
-        ls_id, ls_age, ls_sex, ls_income, ls_rela = np.array(id_combine).T
-        ls_rela[0] = "Main" # replace all
-        main_id = find_idx_value(ls_rela, "Main")
-        highest_idx = idx_max_val_return(ls_income.astype(int))
+def _extract_highest_n_main_idx(ordered_incomes, ordered_rela, check_rela):
+    assert list(ordered_rela).count("Self") == 0 or list(ordered_rela).count("Self") == 1
+    ordered_rela[0] = "Main" # replace all, this is maybe redundant
+    main_idx = find_idx_value(ordered_rela, "Main")
+    highest_idx = idx_max_val_return(ordered_incomes.astype(int))
+    # confirm again, never bad to do this
+    assert ordered_rela[highest_idx] == check_rela
+    return main_idx, highest_idx
+
+
+def process_func_diff_rela(id_combine, check_rela: str) -> dict[str, str]:
+    ls_id, ls_age, ls_sex, ls_income, ls_rela = np.array(id_combine).T
+    main_idx, highest_idx = _extract_highest_n_main_idx(ls_income, ls_rela, check_rela)
+    if check_rela == "Spouse":
+        # Simple swap
+        main_id = ls_id[main_idx]
         highest_income_id = ls_id[highest_idx]
-        # confirm again, never bad to do this
-        assert ls_rela[highest_idx] == "Spouse"
-        # Swap
-        return {main_id: "Spouse", highest_income_id: "Main"}
-    result_mapping = spouse_df["id_combine"].apply(process_swap_inc)
-    print(result_mapping)
-    return None
+        return {main_id: check_rela, highest_income_id: "Main"}
+    elif check_rela == "Child":
+        # We all assume that they don't consider their in-law their Child
+        # If simple no other and no Grandchild we can simply swap, other Child will become Sibling
+        NotImplemented
+        # If Granchild but no Other, we check the gap, and if fit, it's the child, not then Others
+        # If Others, we check the age gap and sex, if fit then turn them to Spouse (assert that the Child is above 18)
+        # Check the Grandchild, if 
+    
+
+def process_highest_inc(rela_only_df: pd.DataFrame, check_rela: str) -> pd.Series:
+    """Return dict of new changes, we will basically map them"""
+    assert list(rela_only_df["highest_inc"].unique()) == [check_rela]        
+    result_mapping = rela_only_df["id_combine"].apply(lambda id_combine: process_func_diff_rela(id_combine, check_rela))
+    return result_mapping
+
+
+def process_chosen_to_others(pp_data: pd.DataFrame, to_others_rela: List[str] = ["Other relative", "Unrelated", "Other"], other_name:str = "Others") -> pd.DataFrame:
+    # Maybe let's keep sibling, as sibling defo cannot be spouse, and they maybe special
+    filter_data_to_process = pp_data[pp_data["relationship"].isin(to_others_rela)]
+    to_process_pp_data = pp_data.copy(deep=True) # ensure we don't modify the original data
+    to_process_pp_data.loc[filter_data_to_process.index, "relationship"] = other_name
+    return to_process_pp_data
 
 
 def process_rela(pp_df: pl.DataFrame):
     # To handle relationship, generally we based on income, age and gender
     # Due to complexity, I will keep pandas here for now
     pp_df: pd.DataFrame = pp_df.to_pandas()
+    pp_df = process_chosen_to_others(pp_df) # Note, it's Others not Other, minor to help tell diff
+
     pp_df["converted_income"] = pp_df["persinc"].apply(convert_simple_income)
     pp_df["id_combine"] = pp_df.apply(lambda r: [r["persid"], r["age"], r["sex"], r["converted_income"], r["relationship"]], axis=1)
     gb_pid = pp_df.groupby("hhid")["id_combine"].apply(lambda x: list(x))
@@ -130,6 +156,7 @@ def process_rela(pp_df: pl.DataFrame):
     implausible_hh = pid_df[pid_df["implausible_case"]]
     print(f"Remove {len(implausible_hh)} households with implausible combinations")
     filtered_cases = pid_df[~pid_df["implausible_case"]]
+
     # Next filter case of not Main for highest income
     no_change_cases = filtered_cases[filtered_cases["highest_inc"]=="Main"]
     # to_check_cases = filtered_cases[filtered_cases["highest_inc"]!="Main"]
@@ -138,7 +165,8 @@ def process_rela(pp_df: pl.DataFrame):
     check_child_cases = filtered_cases[filtered_cases["highest_inc"]=="Child"]
     check_grandchild_cases = filtered_cases[filtered_cases["highest_inc"]=="Grandchild"]
     # Still need to think about how to handle case of Other
-    processed_spouse = process_spouse_highest_inc(check_spouse_cases)
+    processed_spouse = process_highest_inc(check_spouse_cases, "Spouse")
+    processed_child = process_highest_inc(check_child_cases, "Child")
     # Last step would be combined all of the df into 1
-    # And check for all of them the highest income is Main
+    # And check for all of them the highest income is Main, again
     # return pp_df
