@@ -49,7 +49,7 @@ class DataProcessorGeneric:
         self.mid_process_path = Path(mid_processed_src)
         self.output_data_path = Path(output_data_src)
 
-    def process_all_seed(self):
+    def process_all_seed(self) -> None:
         hh_df = self.process_households_seed()
         pp_df = self.process_persons_seed()
         # Steps to make sure all persons belongs to households, if not remove
@@ -74,8 +74,9 @@ class DataProcessorGeneric:
             check_match_hhsz, axis=1
         )
         assert check_combine["cross_check"].all()
-        print(filtered_hh)
-        print(pp_df)
+
+        self.hh_seed_data = filtered_hh
+        self.pp_seed_data = pp_df
 
     def process_households_seed(self) -> pd.DataFrame:
         # Import the hh seed data
@@ -117,6 +118,9 @@ class DataProcessorGeneric:
         NotImplemented
 
     def process_persons_census(self):
+        NotImplemented
+    
+    def output_all_files(self):
         NotImplemented
 
 

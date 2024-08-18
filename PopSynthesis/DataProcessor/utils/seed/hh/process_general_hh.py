@@ -1,7 +1,7 @@
 import polars as pl
 
 
-def convert_hh_totvehs(hh_df: pl.DataFrame, veh_limit=4):
+def convert_hh_totvehs(hh_df: pl.DataFrame, veh_limit=4) -> pl.DataFrame:
     # Define the conditional operation
     def convert_veh(col, veh_limit):
         return (
@@ -16,7 +16,7 @@ def convert_hh_totvehs(hh_df: pl.DataFrame, veh_limit=4):
     return hh_df
 
 
-def convert_hh_inc(hh_df, check_states):
+def convert_hh_inc(hh_df: pl.DataFrame, check_states: str) -> pl.DataFrame:
     # Note there can be null
     hhinc_col = pl.col("hhinc")
 
@@ -47,7 +47,7 @@ def convert_hh_inc(hh_df, check_states):
     return hh_df
 
 
-def convert_hh_dwell(hh_df: pl.DataFrame):  # Removing the occupied rent free
+def convert_hh_dwell(hh_df: pl.DataFrame) -> pl.DataFrame:  # Removing the occupied rent free
     col_owndwell = pl.col("owndwell")
     expr = (
         pl.when(col_owndwell == "Occupied Rent-Free")

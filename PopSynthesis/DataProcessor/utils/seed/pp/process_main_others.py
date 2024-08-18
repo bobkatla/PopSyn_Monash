@@ -1,4 +1,10 @@
-def process_main_other(main_pp_df, sub_df, rela, to_csv=True, include_weights=True):
+"""This is specific to the SAA method"""
+
+
+import pandas as pd
+
+
+def process_main_other(main_pp_df, sub_df, rela, include_weights=True):
     assert len(main_pp_df["relationship"].unique()) == 1  # It is Main
     assert (
         len(sub_df["relationship"].unique()) == 1
@@ -18,10 +24,5 @@ def process_main_other(main_pp_df, sub_df, rela, to_csv=True, include_weights=Tr
 
     if not include_weights:
         combine_df = combine_df.drop(columns="_weight")
-
-    if to_csv:
-        combine_df.to_csv(
-            os.path.join(processed_data, f"connect_main_{rela}.csv"), index=False
-        )
 
     return combine_df
