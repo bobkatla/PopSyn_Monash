@@ -1,10 +1,5 @@
 from collections import defaultdict
-from PopSynthesis.Methods.connect_HH_PP.scripts.const import (
-    LS_GR_RELA,
-    HANDLE_THE_REST_RELA,
-)
 import polars as pl
-import numpy as np
 import pandas as pd
 from typing import List, Dict, Any, Literal
 

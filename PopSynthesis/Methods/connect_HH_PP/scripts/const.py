@@ -55,13 +55,4 @@ PP_ATTS = [
     "nolicence",
     "anywork",
 ]
-
-LS_GR_RELA = [
-    "Self",
-    "Spouse",
-    "Child",
-    "Grandchild",
-]  # For the rest we will make them Others
-HANDLE_THE_REST_RELA = "Others"
-ALL_RELA = LS_GR_RELA + [HANDLE_THE_REST_RELA]
 NOT_INCLUDED_IN_BN_LEARN = ["hhid", "persid", "relationship"]

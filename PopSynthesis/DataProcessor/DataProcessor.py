@@ -14,7 +14,6 @@ from PopSynthesis.DataProcessor.utils.const_files import (
 from PopSynthesis.DataProcessor.utils.const_process import (
     HH_ATTS,
     PP_ATTS,
-    LS_GR_RELA,
     LS_HH_INC,
 )
 from PopSynthesis.DataProcessor.utils.general_utils import find_file
