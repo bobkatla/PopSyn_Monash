@@ -161,8 +161,10 @@ def get_new_update_household(household: Household) -> Household:
         return household # No change needed
     
     elif highest_inc_rela == "Spouse":
-        # Simple swap, rest is the same
+        # Simple swap, sibling to Other, rest is the same
         household.update_relationship(main_id, "Spouse")
+        for sibling in household.segment_by_rela["Sibling"]:
+            household.update_relationship(sibling.id, "Others")
 
     elif highest_inc_rela == "Child":
         num_spouse = 0
