@@ -3,7 +3,7 @@ from PopSynthesis.Methods.connect_HH_PP.scripts.const import LS_GR_RELA, HANDLE_
 import polars as pl
 import numpy as np
 import pandas as pd
-from typing import List
+from typing import List, Dict, Tuple, Any, Union
 
 MIN_PARENT_CHILD_GAP = 16
 MIN_GRANDPARENT_GRANDCHILD_GAP = 33
@@ -32,7 +32,7 @@ def process_not_accept_values(pp_df):
     return pp_df
 
 
-def convert_simple_income(income_str):
+def convert_simple_income(income_str: str):
     if "Negative" in income_str:
         return -1
     elif "Missing" in income_str:
@@ -48,24 +48,26 @@ def convert_simple_income(income_str):
         raise ValueError("Weird")
     
 
-def idx_max_val_return(ls):
+def idx_max_val_return(values: List[Any]) -> int:
+    assert len(values) > 0
     max_idx = None
     max_val = None
-    for idx, val in enumerate(ls):
+    for idx, val in enumerate(values):
         if max_val is None or val > max_val:
             max_idx = idx
             max_val = val
     return max_idx
 
 
-def find_idx_value(ls, find_val):
-    for idx, val in enumerate(ls):
+def find_idx_value(values: List[Any], find_val: Any) -> Union[None, List[int]]:
+    results: List[Any] = []
+    for idx, val in enumerate(values):
         if val == find_val:
-            return idx
-    return None
+            results.append(idx)
+    return None if len(results) == 0 else results
 
 
-def process_info_each_house(r):
+def process_info_each_house(r: pd.Series) -> Tuple[str, bool]:
     val_combine = r["id_combine"]
     ls_id, ls_age, ls_sex, ls_income, ls_rela = np.array(val_combine).T
     ls_rela[0] = "Main" # replace all
@@ -98,17 +100,17 @@ def process_info_each_house(r):
     return the_highest_income_rela, implausible_case
 
 
-def _extract_highest_n_main_idx(ordered_incomes, ordered_rela, check_rela):
+def _extract_highest_n_main_idx(ordered_incomes: List[int], ordered_rela: List[str], check_rela:str) -> Tuple[int, int]:
     assert list(ordered_rela).count("Self") == 0 or list(ordered_rela).count("Self") == 1
     ordered_rela[0] = "Main" # replace all, this is maybe redundant
-    main_idx = find_idx_value(ordered_rela, "Main")
+    main_idx = find_idx_value(ordered_rela, "Main")[0] # defo only 1 Main
     highest_idx = idx_max_val_return(ordered_incomes.astype(int))
     # confirm again, never bad to do this
     assert ordered_rela[highest_idx] == check_rela
     return main_idx, highest_idx
 
 
-def process_func_diff_rela(id_combine, check_rela: str) -> dict[str, str]:
+def process_func_diff_rela(id_combine, check_rela: str) -> Dict[str, str]:
     ls_id, ls_age, ls_sex, ls_income, ls_rela = np.array(id_combine).T
     main_idx, highest_idx = _extract_highest_n_main_idx(ls_income, ls_rela, check_rela)
     if check_rela == "Spouse":
@@ -117,9 +119,10 @@ def process_func_diff_rela(id_combine, check_rela: str) -> dict[str, str]:
         highest_income_id = ls_id[highest_idx]
         return {main_id: check_rela, highest_income_id: "Main"}
     elif check_rela == "Child":
-        # We all assume that they don't consider their in-law their Child
+        # NOTE: Assume that NO ONE consider their in-law their Child
         # If simple no other and no Grandchild we can simply swap, other Child will become Sibling
-        NotImplemented
+        if "Others" not in ls_rela:
+            NotImplemented
         # If Granchild but no Other, we check the gap, and if fit, it's the child, not then Others
         # If Others, we check the age gap and sex, if fit then turn them to Spouse (assert that the Child is above 18)
         # Check the Grandchild, if 
