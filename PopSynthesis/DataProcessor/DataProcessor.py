@@ -64,6 +64,7 @@ class DataProcessorGeneric:
         pp_df = raw_hh_seed[PP_ATTS]
         pp_df = process_not_accept_values(pp_df)
         pp_df = process_rela(pp_df)
+        print(pp_df)
         # pp_df = get_main_max_age(pp_df)
         # pp_df = convert_pp_age_gr(pp_df)
         # pp_df = add_converted_inc(pp_df)
