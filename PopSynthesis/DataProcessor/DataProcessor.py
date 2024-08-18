@@ -24,14 +24,20 @@ from PopSynthesis.DataProcessor.utils.seed.hh.process_general_hh import (
     convert_hh_dwell,
     convert_hh_inc,
 )
-from PopSynthesis.DataProcessor.utils.seed.pp.process_relationships import process_rela, process_not_accept_values
-from PopSynthesis.DataProcessor.utils.seed.pp.process_main_others import process_main_other
+from PopSynthesis.DataProcessor.utils.seed.pp.process_relationships import (
+    process_rela,
+    process_not_accept_values,
+)
+from PopSynthesis.DataProcessor.utils.seed.pp.process_main_others import (
+    process_main_other,
+)
 from PopSynthesis.DataProcessor.utils.seed.pp.convert_age import convert_pp_age_gr
 import polars as pl
 import pandas as pd
 
 
 # Future will convert to polars, stick with pandas mainly for now
+
 
 class DataProcessorGeneric:
     def __init__(
@@ -51,11 +57,12 @@ class DataProcessorGeneric:
         hhid_in_pp = list(pp_df["hhid"].unique())
         filtered_hh = hh_df[hh_df["hhid"].isin(hhid_in_pp)]
         print(f"Removed {len(hh_df) - len(filtered_hh)} households total")
-        
+
         # households size equal number of persons
         sub_check_hhsz = filtered_hh[["hhid", "hhsize"]].set_index("hhid")
         sub_check_pp = pp_df.groupby("hhid")["persid"].apply(lambda x: list(x))
         check_combine = pd.concat([sub_check_hhsz, sub_check_pp], axis=1)
+
         def check_match_hhsz(r):
             hhsz_from_pp = len(r["persid"])
             hhsz_from_hh = r["hhsize"]
@@ -63,7 +70,10 @@ class DataProcessorGeneric:
                 return hhsz_from_pp >= 8
             else:
                 return hhsz_from_pp == int(hhsz_from_hh)
-        check_combine.loc[:, ["cross_check"]] = check_combine.apply(check_match_hhsz, axis=1)
+
+        check_combine.loc[:, ["cross_check"]] = check_combine.apply(
+            check_match_hhsz, axis=1
+        )
         assert check_combine["cross_check"].all()
 
         # Next we add weights

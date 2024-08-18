@@ -15,8 +15,9 @@ from PopSynthesis.Methods.connect_HH_PP.scripts.sample_hh_main import *
 from PopSynthesis.Methods.connect_HH_PP.scripts.sample_pp import *
 from PopSynthesis.Methods.connect_HH_PP.scripts.process_all_hh_pp import *
 import logging
+
 # create logger
-logger = logging.getLogger('connect_hh_pp')
+logger = logging.getLogger("connect_hh_pp")
 
 
 def get_combine_df(hh_df, pool_hh_main):
@@ -33,12 +34,14 @@ def get_combine_df(hh_df, pool_hh_main):
 
     if isinstance(hh_df["hhid"].iloc[0], list):
         print("we received the count_df not hh_df")
-        gb_df = hh_df # already given
+        gb_df = hh_df  # already given
         ori_hh_df = hh_df.explode("hhid")
     else:
         ori_hh_df = hh_df.astype(str)
-        gb_df = ori_hh_df.groupby(ls_match)["hhid"].apply(lambda x: list(x)).reset_index()
-    
+        gb_df = (
+            ori_hh_df.groupby(ls_match)["hhid"].apply(lambda x: list(x)).reset_index()
+        )
+
     ls_match.remove("POA")
 
     # Concat first then explode, it will save run time
@@ -53,13 +56,14 @@ def get_combine_df(hh_df, pool_hh_main):
     df_com["hhid"] = df_com["hhid"].apply(lambda x: eval(x))
 
     logger.info("Start select based on distribution in the pool")
+
     def ran_sam(r):
         ids_choose_from = r["id_pool"]
         if str(ids_choose_from[0]) == "nan":
             return None
         else:
             counts = np.nan_to_num(r["count"])
-            p = [x/ sum(counts) for x in counts]
+            p = [x / sum(counts) for x in counts]
             sz = len(r["hhid"])
             return np.random.choice(ids_choose_from, size=sz, p=p)
 
@@ -86,8 +90,8 @@ def get_combine_df(hh_df, pool_hh_main):
     com_df_del = del_df.merge(ori_hh_df, on="hhid")
     com_df_del = com_df_del.drop(columns=["id_pool", "count", "selection"])
 
-    com_df_del = com_df_del.drop_duplicates(subset=['hhid'])
-    com_df_hh_main = com_df_hh_main.drop_duplicates(subset=['hhid'])
+    com_df_del = com_df_del.drop_duplicates(subset=["hhid"])
+    com_df_hh_main = com_df_hh_main.drop_duplicates(subset=["hhid"])
 
     if len(com_df_del) + len(com_df_hh_main) != len(ori_hh_df):
         hhid_created = set(com_df_del["hhid"]) & set(com_df_hh_main["hhid"])
@@ -96,27 +100,32 @@ def get_combine_df(hh_df, pool_hh_main):
         print("hhid not in ori, which is weird: ", len(hhid_in_created_only))
         hhid_in_ori_only = hhid_ori - hhid_created
         print("hhid in ori only: ", len(hhid_in_ori_only))
-    
+
     return com_df_hh_main, com_df_del
 
 
 def main():
-    with open(os.path.join(processed_data, 'dict_hh_states.pickle'), 'rb') as handle:
+    with open(os.path.join(processed_data, "dict_hh_states.pickle"), "rb") as handle:
         hh_state_names = pickle.load(handle)
-    with open(os.path.join(processed_data, 'dict_pp_states.pickle'), 'rb') as handle:
+    with open(os.path.join(processed_data, "dict_pp_states.pickle"), "rb") as handle:
         pp_state_names = pickle.load(handle)
     state_names = hh_state_names | pp_state_names
 
-    #learning to get the HH only with main person
+    # learning to get the HH only with main person
     df_seed_hh_main = pd.read_csv(os.path.join(processed_data, "connect_hh_main.csv"))
     # drop all the ids as they are not needed for in BN learning
-    id_cols_hh_main = [x for x in df_seed_hh_main.columns if "hhid" in x or "persid" in x]
+    id_cols_hh_main = [
+        x for x in df_seed_hh_main.columns if "hhid" in x or "persid" in x
+    ]
     df_seed_hh_main = df_seed_hh_main.drop(columns=id_cols_hh_main)
     logger.info("GETTING the pool HH and Main")
     pool_hh_main = get_pool(df_seed_hh_main, state_names, int(1e5))
     pool_hh_main = pool_hh_main.value_counts().reset_index()
 
-    hh_df = pd.read_csv(os.path.join(output_dir, "adjust", "final", "saving_hh_dwelltype.csv"), low_memory=False)
+    hh_df = pd.read_csv(
+        os.path.join(output_dir, "adjust", "final", "saving_hh_dwelltype.csv"),
+        low_memory=False,
+    )
     hh_df["hhid"] = hh_df.index
 
     combine_df, del_df = get_combine_df(hh_df, pool_hh_main)

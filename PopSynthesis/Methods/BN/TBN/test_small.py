@@ -9,18 +9,14 @@ import matplotlib.pyplot as plt
 
 location_of_processed_data = "../../data/data_processed"
 
+
 def input():
     df_h_ori = pd.read_csv(location_of_processed_data + "/h_test_seed.csv")
-    ATTRIBUTES = [ 
-    "HHSIZE", 
-    "CARS", 
-    "TOTALVEHS",
-    "CW_ADHHWGT_SA3",
-    "SA3"
-    ]
+    ATTRIBUTES = ["HHSIZE", "CARS", "TOTALVEHS", "CW_ADHHWGT_SA3", "SA3"]
     df = df_h_ori[ATTRIBUTES].dropna()
-    df = df.rename(columns={'CW_ADHHWGT_SA3': '_weight'})
+    df = df.rename(columns={"CW_ADHHWGT_SA3": "_weight"})
     return df
+
 
 def input_SA3_20904():
     df = input()
@@ -35,21 +31,74 @@ def tot_SA3_20904():
     return df
 
 
-pri_counts = {'HHSIZE': [[501.7725737,3410.708717,4819.874374,1590.543415,291.03364,291.03364,291.03364,],
-        [876.5782217,5958.382619,8420.143166,2778.620815,508.4250594,508.4250594,508.4250594], 
-       [607.0480092,4126.299533,5831.118113,1924.250674,352.0945564,352.0945564,352.0945564], 
-       [662.1282605,4500.697623,6360.202215,2098.846767,384.0417111,384.0417111,384.0417111], 
-       [284.5887677,1934.440903,2733.672944,902.1034908,165.0646315,165.0646315,165.0646315], 
-       [74.08271386,503.5639076,711.6159647,234.8310347,42.96879304,42.96879304,42.96879304], 
-       [74.08271386,503.5639076,711.6159647,234.8310347,42.96879304,42.96879304,42.96879304]], 
-       'TOTALVEHS': [[2985],
-       [20290],
-       [28673],
-       [9462],
-       [1731.333],
-       [1731.333],
-       [1731.333]]
-       }
+pri_counts = {
+    "HHSIZE": [
+        [
+            501.7725737,
+            3410.708717,
+            4819.874374,
+            1590.543415,
+            291.03364,
+            291.03364,
+            291.03364,
+        ],
+        [
+            876.5782217,
+            5958.382619,
+            8420.143166,
+            2778.620815,
+            508.4250594,
+            508.4250594,
+            508.4250594,
+        ],
+        [
+            607.0480092,
+            4126.299533,
+            5831.118113,
+            1924.250674,
+            352.0945564,
+            352.0945564,
+            352.0945564,
+        ],
+        [
+            662.1282605,
+            4500.697623,
+            6360.202215,
+            2098.846767,
+            384.0417111,
+            384.0417111,
+            384.0417111,
+        ],
+        [
+            284.5887677,
+            1934.440903,
+            2733.672944,
+            902.1034908,
+            165.0646315,
+            165.0646315,
+            165.0646315,
+        ],
+        [
+            74.08271386,
+            503.5639076,
+            711.6159647,
+            234.8310347,
+            42.96879304,
+            42.96879304,
+            42.96879304,
+        ],
+        [
+            74.08271386,
+            503.5639076,
+            711.6159647,
+            234.8310347,
+            42.96879304,
+            42.96879304,
+            42.96879304,
+        ],
+    ],
+    "TOTALVEHS": [[2985], [20290], [28673], [9462], [1731.333], [1731.333], [1731.333]],
+}
 
 
 def compare_dist(model, data):
@@ -65,13 +114,9 @@ def compare_dist(model, data):
         state_names.update(model.get_cpds(var).state_names)
 
     _est = BayesianEstimator(model, data, state_names=state_names)
-    cpds = _est.get_parameters(
-            prior_type="dirichlet", pseudo_counts=pseudo_counts
-        )
+    cpds = _est.get_parameters(prior_type="dirichlet", pseudo_counts=pseudo_counts)
     return cpds
-        
-        
-        
+
 
 if __name__ == "__main__":
     # Prep
@@ -83,7 +128,7 @@ if __name__ == "__main__":
     tot_df_SA3_20904 = tot_SA3_20904()
     df_h_SA3_20904 = input_SA3_20904()
 
-    con_df = pd.read_csv('controls_files/hh_controls.csv')
+    con_df = pd.read_csv("controls_files/hh_controls.csv")
 
     # struct learning
     # Do I need to set up the states?
@@ -94,21 +139,15 @@ if __name__ == "__main__":
     # model.fit()
     # Para learning
     # Auto got weights
-    state_names = {
-        'HHSIZE': [1, 2, 3, 4, 5, 6, 7], 
-        'TOTALVEHS': [0, 1, 2, 3, 4, 5, 6]
-    }
+    state_names = {"HHSIZE": [1, 2, 3, 4, 5, 6, 7], "TOTALVEHS": [0, 1, 2, 3, 4, 5, 6]}
 
     Y = []
     # first run
     para_learn = BayesianEstimator(
-        model=model,
-        data=df_h_SA3_20904,
-        state_names=state_names
+        model=model, data=df_h_SA3_20904, state_names=state_names
     )
     ls_CPDs = para_learn.get_parameters(
-        prior_type='dirichlet',
-        pseudo_counts = pri_counts
+        prior_type="dirichlet", pseudo_counts=pri_counts
     )
     model.add_cpds(*ls_CPDs)
     inference = BayesianModelSampling(model)
@@ -124,10 +163,10 @@ if __name__ == "__main__":
         inference = BayesianModelSampling(model)
         syn_data = inference.forward_sample(size=68732)
         Y.append(SRMSE(syn_data, tot_df_SA3_20904, con_df))
-    X = list(range(1, len(Y)+1))
+    X = list(range(1, len(Y) + 1))
     plt.plot(X, Y)
-    plt.xlabel('Iteration')
-    plt.ylabel('SRMSE')
+    plt.xlabel("Iteration")
+    plt.ylabel("SRMSE")
     plt.show()
     # nx.draw_circular(model ,with_labels=True)
     # plt.show()

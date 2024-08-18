@@ -1,5 +1,3 @@
-
-
 def main():
     NotImplemented
     # Getting the raw data for everything

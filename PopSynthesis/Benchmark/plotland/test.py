@@ -16,7 +16,7 @@ def main():
     for name in ls_census_name:
         if name not in ls_syn_pop_name:
             ls_not_exist.append(name)
-    
+
     df = census[census["SA1"].isin(ls_not_exist)]
     df = df[["SA1", "Total_dwelings"]]
     print(df["Total_dwelings"].sum())
@@ -31,7 +31,7 @@ def main():
         extra_df = inference.forward_sample(size=tot_hh)
         extra_df["SA1"] = sa1
         to_impute_df.append(extra_df)
-    
+
     final_to_impute = pd.concat(to_impute_df)
     final_df = pd.concat([final_to_impute, syn_pop])
 

@@ -15,7 +15,7 @@ def get_sample_counts(df, ls_to_rm=None, ls_to_have=None):
             "SA2",
             "SA3",
             "SA4",
-            "wdhhwgt_sa3"
+            "wdhhwgt_sa3",
         ]
     for to_rm in ls_to_rm:
         if to_rm in df.columns:
@@ -47,7 +47,6 @@ def get_marg_from_constraints(constraints):
     return marginals
 
 
-
 def process_data(seed, census, zone_lev, control, hh=True):
     # We are approaching this zone by zone
     seed_type = "households" if hh else "persons"
@@ -57,19 +56,29 @@ def process_data(seed, census, zone_lev, control, hh=True):
     for index, row in census.iterrows():
         # zone by zone
         zone = row[zone_lev]
-        households, persons, inside = seed[seed[zone_lev]==zone], seed[seed[zone_lev]==zone], seed[seed[zone_lev]==zone]
+        households, persons, inside = (
+            seed[seed[zone_lev] == zone],
+            seed[seed[zone_lev] == zone],
+            seed[seed[zone_lev] == zone],
+        )
 
         ls_tups = []
         margi_val = []
-        ls_to_have=[]
+        ls_to_have = []
 
-        for census_att, exp, att, state in zip(control["control_field"], control["expression"], control["att"], control["state"]):
+        for census_att, exp, att, state in zip(
+            control["control_field"],
+            control["expression"],
+            control["att"],
+            control["state"],
+        ):
             # Get the census val for that zone
             margi_val.append(row[census_att])
 
             ls_tups.append((att, state,))
 
-            if att not in ls_to_have: ls_to_have.append(att)
+            if att not in ls_to_have:
+                ls_to_have.append(att)
 
             filter_on_exp = eval(exp)
             inside.loc[filter_on_exp, att] = state
@@ -84,10 +93,7 @@ def process_data(seed, census, zone_lev, control, hh=True):
         midx = pd.MultiIndex.from_tuples(ls_tups)
         marginals = pd.Series(margi_val, index=midx)
 
-        final_results[zone] = {
-            "seed": j_cou,
-            "census": marginals
-        }
+        final_results[zone] = {"seed": j_cou, "census": marginals}
     return final_results
 
 
@@ -95,7 +101,7 @@ def get_marg_val_from_full(df):
     atts = df.columns
     ls_tups = []
     margi_val = []
-    
+
     for att in atts:
         counts = df[att].value_counts()
         indexs = list(counts.index)
@@ -115,7 +121,7 @@ def get_joint_dist_from_sample(seed_df, full_pop):
     # joint dist for IPF but only the bone
     j_idx = list(j_cou.index)
     # To solve zero cell by making a extremely small number
-    j_vals = [1e-25]*len(j_idx)
+    j_vals = [1e-25] * len(j_idx)
 
     seed_cou = seed_df.value_counts()
     seed_idx = list(seed_cou.index)
@@ -146,11 +152,11 @@ def simple_load_data(marginal_file, sample_file):
     sample = pd.read_csv(sample_file)
 
     marg = pd.read_csv(marginal_file, header=[0, 1], index_col=0)
-    marg.columns.levels[0].set_names('cat_name', inplace=True)
-    marg.columns.levels[1].set_names('cat_values', inplace=True)
+    marg.columns.levels[0].set_names("cat_name", inplace=True)
+    marg.columns.levels[1].set_names("cat_values", inplace=True)
 
     xwalk = list(zip(marg.index, marg.sample_geog.unstack().values))
-    marg = marg.drop('sample_geog', axis=1, level=0)
+    marg = marg.drop("sample_geog", axis=1, level=0)
 
     return marg, sample, xwalk
 

@@ -6,29 +6,26 @@ import os
 
 
 def test_run(hh_marg, p_marg, hh_sample, p_sample):
-    hh_marg, p_marg, hh_sample, p_sample, xwalk = zs.load_data(hh_marg,
-                                                               p_marg,
-                                                               hh_sample,
-                                                               p_sample)
+    hh_marg, p_marg, hh_sample, p_sample, xwalk = zs.load_data(
+        hh_marg, p_marg, hh_sample, p_sample
+    )
     # a = zs.synch_hhids(hh_marg, p_marg, xwalk)
     # sample_df = hh_sample[hh_sample.sample_geog == xwalk[0][1]]
     # category_df = cat.category_combinations(hh_marg.columns)
     # hhs, hh_jd = cat.joint_distribution(
     #         hh_sample[hh_sample.sample_geog == xwalk[0][1]],
     #         cat.category_combinations(hh_marg.columns))
-    
+
     # category_names = list(category_df.index.names)
     # print(sample_df.groupby(category_names).size())
     # category_df["frequency"] = sample_df.groupby(category_names).size()
     # print(hhs)
     # print(hh_jd)
 
-    all_households, all_persons, all_stats = zs.synthesize_all_zones(hh_marg,
-                                                                     p_marg,
-                                                                     hh_sample,
-                                                                     p_sample,
-                                                                     xwalk)
-    
+    all_households, all_persons, all_stats = zs.synthesize_all_zones(
+        hh_marg, p_marg, hh_sample, p_sample, xwalk
+    )
+
     print(all_households)
     print(all_persons)
     print(all_stats)
@@ -39,7 +36,12 @@ def test_run(hh_marg, p_marg, hh_sample, p_sample):
 
 def main():
     print()
-    name_f = lambda x: os.path.join(pathlib.Path(__file__).parent.parent.resolve(), 'data', 'testing_new', f'{x}.csv')
+    name_f = lambda x: os.path.join(
+        pathlib.Path(__file__).parent.parent.resolve(),
+        "data",
+        "testing_new",
+        f"{x}.csv",
+    )
     hh_marg = name_f("hh_marginals_ipu")
     p_marg = name_f("person_marginals_ipu")
     hh_sample = name_f("hh_sample_ipu")

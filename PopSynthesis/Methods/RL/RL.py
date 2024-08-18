@@ -7,29 +7,29 @@ from checker import SRMSE
 
 # thinking of creating an env object so it better to control, creating new env will be like initialize again
 
+
 class Env:
     def __init__(self, df, order):
         # parameters of RL
         self.alpha = 0.1
         self.gamma = 0.6
-        self.epsilon = 0.8 #exploration heavy
+        self.epsilon = 0.8  # exploration heavy
 
-        # init 
+        # init
         self.df = df
         self.order = order
-        self.order.insert(0, 'start')
+        self.order.insert(0, "start")
         self.states = df.columns
         self.policy = {}
         self.seq = {}
         for i, state in enumerate(self.order):
             self.policy[state] = {}
             if i == (len(self.order) - 1):
-                self.policy[state]['finish'] = 0
+                self.policy[state]["finish"] = 0
                 break
-            possible_actions = pd.unique(df[self.order[i+1]])
+            possible_actions = pd.unique(df[self.order[i + 1]])
             for action in possible_actions:
                 self.policy[state][action] = 0
-        
 
     def choose_action(self, current_state_i):
         current_state = self.order[current_state_i]
@@ -42,19 +42,17 @@ class Env:
             action = max(actions_space, key=actions_space.get)
         return action
 
-
     def reward(self):
         check = None
         for att in self.seq:
             val = self.seq[att]
             if check is None:
-                check = (self.df[att] == val)
+                check = self.df[att] == val
             else:
-                check &= (self.df[att] == val)
+                check &= self.df[att] == val
         # This assumes that there will always be False result
         matching_num = len(check) - check.value_counts()[False]
         return len(self.seq) * matching_num
-
 
     def step(self, current_state_i, action):
         # return the next state, reward, done (and maybe any extra)
@@ -63,7 +61,6 @@ class Env:
         re = self.reward()
         done = current_state_i == (len(self.order) - 2)
         return re, done
-        
 
     def update_Qtable(self, current_state_i, action, reward):
         current_state = self.order[current_state_i]
@@ -72,7 +69,6 @@ class Env:
         predict = self.policy[current_state][action]
         target = reward + self.gamma * max(self.policy[next_state].values())
         self.policy[current_state][action] += self.alpha * (target - predict)
-
 
     def RL_trainning(self, eps, max_train):
         for j in range(eps):
@@ -90,22 +86,22 @@ class Env:
                     # print(cur_val, action, reward)
                     self.update_Qtable(cur_i, action, reward)
                     cur_i += 1
-                    if cur_i == (len(self.order)-1):
+                    if cur_i == (len(self.order) - 1):
                         # print(f"Got seq {self.seq}")
                         final = reward != 0
-                        if final: print(f"I REACH THE GOAL at step {l}")
-                if l >= max_train: 
-                    print ("FINISH EARLY")
+                        if final:
+                            print(f"I REACH THE GOAL at step {l}")
+                if l >= max_train:
+                    print("FINISH EARLY")
                     break
             # print(f"FINISH TRAINING EP {j}")
-
 
     def sampling(self, n):
         hold = {}
         for i, state in enumerate(self.order):
             if i == (len(self.order) - 1):
                 break
-            next_state = self.order[i+1]
+            next_state = self.order[i + 1]
             hold[next_state] = ([], [])
             for action in self.policy[state]:
                 hold[next_state][0].append(action)
@@ -131,16 +127,16 @@ def calculate_SRMSE_given_rate(sample_rate, df, order):
     num_train = 5000
     max_step = 1000
     N = df.shape[0]
-    seed_df = df.sample(n = (int(N/100)*sample_rate)).copy()
+    seed_df = df.sample(n=(int(N / 100) * sample_rate)).copy()
     e = Env(seed_df, order.copy())
     e.RL_trainning(num_train, max_step)
-    predict_df = e.sampling(N*2)
+    predict_df = e.sampling(N * 2)
     return SRMSE(df, predict_df)
 
 
 def multithreading_func(l, i, df, order, results_arr):
     print(f"START {i}")
-    err_cal = calculate_SRMSE_given_rate(i+1, df, order)
+    err_cal = calculate_SRMSE_given_rate(i + 1, df, order)
     l.acquire()
     try:
         results_arr[i] = err_cal
@@ -150,34 +146,40 @@ def multithreading_func(l, i, df, order, results_arr):
 
 
 if __name__ == "__main__":
-    ATTRIBUTES = ['AGEGROUP', 'CARLICENCE', 'SEX', 'PERSINC', 'DWELLTYPE', 'TOTALVEHS']
-    
-    # import data
-    p_original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv")
-    # Only have record of the main person (the person that did the survey)
-    p_self_df = p_original_df[p_original_df['RELATIONSHIP']=='Self']
-    h_original_df = pd.read_csv("./data/VISTA_2012_16_v1_SA1_CSV/H_VISTA12_16_SA1_V1.csv")
+    ATTRIBUTES = ["AGEGROUP", "CARLICENCE", "SEX", "PERSINC", "DWELLTYPE", "TOTALVEHS"]
 
-    orignal_df = pd.merge(p_self_df, h_original_df, on=['HHID'])
+    # import data
+    p_original_df = pd.read_csv(
+        "./data/VISTA_2012_16_v1_SA1_CSV/P_VISTA12_16_SA1_V1.csv"
+    )
+    # Only have record of the main person (the person that did the survey)
+    p_self_df = p_original_df[p_original_df["RELATIONSHIP"] == "Self"]
+    h_original_df = pd.read_csv(
+        "./data/VISTA_2012_16_v1_SA1_CSV/H_VISTA12_16_SA1_V1.csv"
+    )
+
+    orignal_df = pd.merge(p_self_df, h_original_df, on=["HHID"])
     df = orignal_df[ATTRIBUTES].dropna()
 
     make_like_paper = False
     if make_like_paper:
-        df.loc[df['TOTALVEHS'] == 0, 'TOTALVEHS'] = 'NO'
-        df.loc[df['TOTALVEHS'] != 'NO', 'TOTALVEHS'] = 'YES'
+        df.loc[df["TOTALVEHS"] == 0, "TOTALVEHS"] = "NO"
+        df.loc[df["TOTALVEHS"] != "NO", "TOTALVEHS"] = "YES"
 
-        df.loc[df['CARLICENCE'] == 'No Car Licence', 'CARLICENCE'] = 'NO'
-        df.loc[df['CARLICENCE'] != 'NO', 'CARLICENCE'] = 'YES'
+        df.loc[df["CARLICENCE"] == "No Car Licence", "CARLICENCE"] = "NO"
+        df.loc[df["CARLICENCE"] != "NO", "CARLICENCE"] = "YES"
 
     # try to do multi threading now
     min_num_percen = 1
     max_num_percen = 5
-    results = Array('d', range(max_num_percen))
+    results = Array("d", range(max_num_percen))
     lock = Lock()
     hold_p = []
 
-    for num in range(min_num_percen-1, max_num_percen):
-        p = Process(target=multithreading_func, args=(lock, num, df, ATTRIBUTES, results))
+    for num in range(min_num_percen - 1, max_num_percen):
+        p = Process(
+            target=multithreading_func, args=(lock, num, df, ATTRIBUTES, results)
+        )
         p.start()
         hold_p.append(p)
 
@@ -194,10 +196,8 @@ if __name__ == "__main__":
 
     print("DONEEEE")
 
-    
 
-
-'''
+"""
 
 Random thought put here:
 
@@ -209,4 +209,4 @@ Multi-dimensional actions
 Hierarchical reinforcement learning (HRL) can decompose a task into several sub-tasks and solve each job with a sub-model which will be more potent than solving the entire task with one model
 https://www.mdpi.com/2073-8994/13/8/1335/htm
 https://ieeexplore.ieee.org/document/5967381
-'''
+"""

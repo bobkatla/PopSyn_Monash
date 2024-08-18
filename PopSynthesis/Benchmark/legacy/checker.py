@@ -6,12 +6,12 @@ import math
 
 
 def SRMSE(actual, pred):
-    '''
+    """
     This calculate the SRMSE for 2 pandas.dataframe based on the list of their attributes
     The actual has to have the same or more columns than pred
     This will compare only the one that is in pred's colls
     BUT now I make it return -1 if they are not match (at least in length)
-    '''
+    """
     if len(actual.columns) != len(pred.columns):
         return None
     start_time = time.time()
@@ -29,8 +29,8 @@ def SRMSE(actual, pred):
     # Generate all the possible combinations
     keys, values = zip(*full_list.items())
     combinations = [dict(zip(keys, v)) for v in itertools.product(*values)]
-    
-    #calculate
+
+    # calculate
     hold = 0
 
     for instance in combinations:
@@ -40,15 +40,15 @@ def SRMSE(actual, pred):
         for att in attributes:
             to_ttext.append(instance[att])
             if check_actual is not None:
-                check_actual &= (actual[att] == instance[att])
-                check_pred &= (pred[att] == instance[att])
+                check_actual &= actual[att] == instance[att]
+                check_pred &= pred[att] == instance[att]
             else:
-                check_actual = (actual[att] == instance[att])
-                check_pred = (pred[att] == instance[att])
+                check_actual = actual[att] == instance[att]
+                check_pred = pred[att] == instance[att]
         # This assumes that there will always be False result
         freq_actual = 1 - ((check_actual.value_counts()[False]) / len(check_actual))
         freq_pred = 1 - ((check_pred.value_counts()[False]) / len(check_pred))
-        hold += (freq_actual - freq_pred)**2
+        hold += (freq_actual - freq_pred) ** 2
 
     result = sqrt(hold * total_att)
 
@@ -61,7 +61,7 @@ def SRMSE(actual, pred):
 def update_SRMSE(actual, pred):
     if len(actual.columns) != len(pred.columns):
         return None
-    
+
     start_time = time.time()
     attributes = pred.columns
     # key step: we need to organize the cols for 2 df to match so the val count later is correct
@@ -74,14 +74,14 @@ def update_SRMSE(actual, pred):
     for att in attributes:
         possible_values = actual[att].unique()
         ls_pos_vals.append(set(possible_values))
-    
+
     hold = 0
     all_com = pd.MultiIndex.from_product(ls_pos_vals, names=attributes)
     for com in all_com:
         actual_freq = actual_vals[com] if com in actual_vals else 0
         pred_freq = pred_vals[com] if com in pred_vals else 0
-        hold += (actual_freq - pred_freq)**2
-            
+        hold += (actual_freq - pred_freq) ** 2
+
     result = sqrt(hold * len(all_com))
     duration = time.time() - start_time
     print(f"Calculated the SRMSE for {len(attributes)} atts in {duration} seconds")
@@ -93,8 +93,9 @@ def total_RMSE_flat(synthetic_df, tot_df, df_controls, skip_ls=[]):
 
     hold = 0
     ite = 0
-    for tot_name, exp in zip(df_controls['tot_name'],  df_controls['expression']):
-        if tot_name in skip_ls: continue
+    for tot_name, exp in zip(df_controls["tot_name"], df_controls["expression"]):
+        if tot_name in skip_ls:
+            continue
         filtered_df = flat_table[eval(exp)]
         syn_num = len(filtered_df)
         expected_num = int(tot_df[tot_name].iloc[0])

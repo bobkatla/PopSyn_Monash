@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 def main():
     file_loc = "../data/output/"
-    all_files = glob.glob(os.path.join(file_loc , "*_0.0001_0.0005.npy*"))
+    all_files = glob.glob(os.path.join(file_loc, "*_0.0001_0.0005.npy*"))
     results = {}
     for f in all_files:
         name = f.split("_")[1]

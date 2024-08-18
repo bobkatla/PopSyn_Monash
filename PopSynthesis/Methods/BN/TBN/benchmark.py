@@ -8,8 +8,14 @@ def SRMSE(synthetic_df, tot_df, df_controls, skip_ls=[]):
 
     hold = 0
     ite = 0
-    for name, df, att, exp in zip(df_controls['target'], df_controls['seed_table'], df_controls['control_field'],  df_controls['expression']):
-        if att in skip_ls: continue
+    for name, df, att, exp in zip(
+        df_controls["target"],
+        df_controls["seed_table"],
+        df_controls["control_field"],
+        df_controls["expression"],
+    ):
+        if att in skip_ls:
+            continue
         df = eval(df)
         filtered_df = df[eval(exp)]
         syn_num = len(filtered_df)

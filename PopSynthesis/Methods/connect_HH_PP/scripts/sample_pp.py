@@ -14,7 +14,7 @@ from PopSynthesis.Methods.connect_HH_PP.paras_dir import processed_data, geo_lev
 from PopSynthesis.Methods.connect_HH_PP.scripts.const import *
 
 
-init_n_pool = int(1e7) # 10 Mils
+init_n_pool = int(1e7)  # 10 Mils
 
 
 def process_combine_df(combine_df):
@@ -29,21 +29,15 @@ def process_combine_df(combine_df):
 
 
 def extra_pp_df(pp_df):
-    to_drop_cols = [x  for x in pp_df.columns if x in ALL_RELA]
+    to_drop_cols = [x for x in pp_df.columns if x in ALL_RELA]
     pp_df = pp_df.drop(columns=to_drop_cols)
     pp_df["relationship"] = "Main"
     return pp_df
 
 
 def learn_para_BN_diric(model, data_df, state_names):
-    para_learn = BayesianEstimator(
-            model=model,
-            data=data_df,
-            state_names=state_names
-        )
-    ls_CPDs = para_learn.get_parameters(
-        prior_type='K2'
-    )
+    para_learn = BayesianEstimator(model=model, data=data_df, state_names=state_names)
+    ls_CPDs = para_learn.get_parameters(prior_type="K2")
     model.add_cpds(*ls_CPDs)
     return model
 
@@ -64,7 +58,9 @@ def inference_model_get(ls_rela, state_names_base):
         df = df.drop(columns=id_cols)
         print(f"Learn BN {rela}")
         rela_state_names = get_2_pp_connect_state_names(state_names_base, rela)
-        model = learn_struct_BN_score(df, show_struct=False, state_names=rela_state_names)
+        model = learn_struct_BN_score(
+            df, show_struct=False, state_names=rela_state_names
+        )
         model = learn_para_BN_diric(model, df, state_names=rela_state_names)
         re_dict[rela] = BayesianModelSampling(model)
     return re_dict
@@ -78,6 +74,7 @@ def pools_get(ls_rela, dict_model_inference, pool_size):
         re_dict[rela] = pool
     return re_dict
 
+
 def process_rela_using_count(main_pp_df, rela, pool_count, geo_lev):
     dict_hhid_geo = dict(zip(main_pp_df["hhid"], main_pp_df[geo_lev]))
 
@@ -89,9 +86,15 @@ def process_rela_using_count(main_pp_df, rela, pool_count, geo_lev):
     pp_cols = [x for x in sub_pp_df.columns if x not in ALL_RELA]
     sub_pp_df = sub_pp_df[pp_cols + [rela]]
     sub_pp_df = sub_pp_df.rename(columns=rename_to_main)
-    
-    pool_count["comb_rela"] = pool_count.apply(lambda r: ([r[c] for c in cols_rela], r["count"]), axis=1)
-    gb_pool = pool_count.groupby(cols_main)["comb_rela"].apply(lambda x: list(x)).reset_index()
+
+    pool_count["comb_rela"] = pool_count.apply(
+        lambda r: ([r[c] for c in cols_rela], r["count"]), axis=1
+    )
+    gb_pool = (
+        pool_count.groupby(cols_main)["comb_rela"]
+        .apply(lambda x: list(x))
+        .reset_index()
+    )
     gb_main_id = sub_pp_df.groupby(cols_main)["hhid"].apply(lambda x: list(x))
     gb_main_re = sub_pp_df.groupby(cols_main)[rela].apply(lambda x: list(x))
     gb_main = pd.concat([gb_main_id, gb_main_re], axis=1).reset_index()
@@ -99,8 +102,9 @@ def process_rela_using_count(main_pp_df, rela, pool_count, geo_lev):
 
     # Process keep df, this is the rela
     keep_df = merge_df[~merge_df["comb_rela"].isna()]
+
     def select_ran_sam(r):
-        ls_num = r[rela] # this match with ls hhid
+        ls_num = r[rela]  # this match with ls hhid
         ls_pos_choose = r["comb_rela"]
         temp_df = pd.DataFrame(ls_pos_choose, columns=["comb", "weight"])
         temp_df["weight"] = temp_df["weight"] / temp_df["weight"].sum()
@@ -110,6 +114,7 @@ def process_rela_using_count(main_pp_df, rela, pool_count, geo_lev):
             selected_combs = list(selected_df["comb"])
             final_list.append(selected_combs)
         return final_list
+
     keep_df["selected"] = keep_df.apply(select_ran_sam, axis=1)
     rela_df = keep_df[["hhid", "selected"]].explode(["hhid", "selected"])
     rela_df = rela_df.explode(["selected"])
@@ -129,7 +134,9 @@ def process_rela_using_count(main_pp_df, rela, pool_count, geo_lev):
     del_df_main = del_df_main.explode(["hhid"])
     del_df_main["relationship"] = "Self"
     if len(del_df_main) != 0:
-        del_df_main[geo_lev] = del_df_main.apply(lambda r: dict_hhid_geo[r["hhid"]], axis=1)
+        del_df_main[geo_lev] = del_df_main.apply(
+            lambda r: dict_hhid_geo[r["hhid"]], axis=1
+        )
     else:
         del_df_main[geo_lev] = None
 
@@ -188,11 +195,13 @@ def process_rela_fast(main_pp_df, rela, pool):
     comb_df = pd.merge(gb_df_hhid, gb_df_num_rela, left_index=True, right_index=True)
     ls_to_com_df = []
     hold_ids = []
-    for check_val, ls_hhid, ls_rela in zip(comb_df.index, comb_df["hhid"], comb_df[rela]):
+    for check_val, ls_hhid, ls_rela in zip(
+        comb_df.index, comb_df["hhid"], comb_df[rela]
+    ):
         to_sample_df = dict_to_sample[check_val]
         tot = 0
-        for hhid, n in zip (ls_hhid, ls_rela):
-            hold_id = [hhid]*n
+        for hhid, n in zip(ls_hhid, ls_rela):
+            hold_id = [hhid] * n
             hold_ids += hold_id
             tot += n
         re_df = to_sample_df.sample(n=tot, replace=True)
@@ -204,7 +213,7 @@ def process_rela_fast(main_pp_df, rela, pool):
         final_rela_df = pd.concat(ls_to_com_df)
         final_rela_df["hhid"] = hold_ids
         final_rela_df["relationship"] = rela
-    
+
     return to_del_df, final_rela_df
 
 
@@ -220,7 +229,7 @@ def main():
     ls_df_pp = [store_pp_df]
 
     state_names_pp = None
-    with open(os.path.join(processed_data, 'dict_pp_states.pickle'), 'rb') as handle:
+    with open(os.path.join(processed_data, "dict_pp_states.pickle"), "rb") as handle:
         state_names_pp = pickle.load(handle)
 
     all_rela_exist = ALL_RELA.copy()
@@ -230,13 +239,19 @@ def main():
     dict_pool_sample = pools_get(all_rela_exist, dict_model_inference, 1e6)
 
     for rela in all_rela_exist:
-        to_del_df, pop_rela = process_rela_fast(main_pp_df_all, rela, dict_pool_sample[rela])
-        pop_rela.to_csv(os.path.join(processed_data, f"1e5_test_pp_{rela}.csv"), index=False)
-        to_del_df.to_csv(os.path.join(processed_data, f"1e5_test_del_main_pp_{rela}.csv"), index=False)
+        to_del_df, pop_rela = process_rela_fast(
+            main_pp_df_all, rela, dict_pool_sample[rela]
+        )
+        pop_rela.to_csv(
+            os.path.join(processed_data, f"1e5_test_pp_{rela}.csv"), index=False
+        )
+        to_del_df.to_csv(
+            os.path.join(processed_data, f"1e5_test_del_main_pp_{rela}.csv"),
+            index=False,
+        )
         # ls_df_pp.append(pop_rela)
     # sample to have the pool
     # Group the available HH into diffrent group and get total number number
-
 
 
 if __name__ == "__main__":

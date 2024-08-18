@@ -17,18 +17,20 @@ POOL_SZ = int(1e7)
 
 
 def main():
-    census_data = pd.read_csv(os.path.join(data_dir, "hh_marginals_ipu.csv"), header=[0,1])
+    census_data = pd.read_csv(
+        os.path.join(data_dir, "hh_marginals_ipu.csv"), header=[0, 1]
+    )
     df_seed = pd.read_csv(os.path.join(processed_data, "ori_sample_hh.csv"))
     # drop all the ids as they are not needed for in BN learning
     id_cols = [x for x in df_seed.columns if "hhid" in x or "persid" in x]
     df_seed = df_seed.drop(columns=id_cols)
 
-    with open(os.path.join(processed_data, 'dict_hh_states.pickle'), 'rb') as handle:
+    with open(os.path.join(processed_data, "dict_hh_states.pickle"), "rb") as handle:
         hh_state_names = pickle.load(handle)
-    with open(os.path.join(processed_data, 'dict_pp_states.pickle'), 'rb') as handle:
+    with open(os.path.join(processed_data, "dict_pp_states.pickle"), "rb") as handle:
         pp_state_names = pickle.load(handle)
     state_names = hh_state_names | pp_state_names
-    
+
     pool = get_pool(df_seed, hh_state_names, POOL_SZ)
     geo_lev = "POA"
     adjust_atts_order = ["hhsize", "totalvehs", "hhinc", "dwelltype", "owndwell"]
@@ -45,7 +47,7 @@ def main():
     i = 0
     marg_hh = census_data
     re_check_to_show = []
-    
+
     while check > 10:
         print(f"DOING ITE {i} with err == {check}")
         # Simple create a new func here and get the new marg already
@@ -60,9 +62,19 @@ def main():
 
         del_df = []
         for rela in all_rela_exist:
-            to_del_df, pop_rela = process_rela_fast(main_pp_df_all, rela, dict_pool_sample[rela])
-            cols_main = [f"{x}_main" for x in PP_ATTS if x not in["relationship", "persid", "hhid", geo_lev]]
-            rename_cols = {f"{name}_{rela}": name for name in PP_ATTS if name not in["relationship", "persid", "hhid", geo_lev]}
+            to_del_df, pop_rela = process_rela_fast(
+                main_pp_df_all, rela, dict_pool_sample[rela]
+            )
+            cols_main = [
+                f"{x}_main"
+                for x in PP_ATTS
+                if x not in ["relationship", "persid", "hhid", geo_lev]
+            ]
+            rename_cols = {
+                f"{name}_{rela}": name
+                for name in PP_ATTS
+                if name not in ["relationship", "persid", "hhid", geo_lev]
+            }
             pop_rela = pop_rela.drop(columns=cols_main)
             pop_rela = pop_rela.rename(columns=rename_cols)
             if pop_rela is not None:
@@ -71,7 +83,7 @@ def main():
                 del_df.append(to_del_df)
 
         all_df_pp = pd.concat(ls_df_pp)
-        
+
         if len(del_df) == 0:
             ls_final_hh.append(hh_df)
             ls_final_pp.append(all_df_pp)
@@ -79,9 +91,11 @@ def main():
             break
 
         del_df_final = pd.concat(del_df)
-        all_df_pp_rm = all_df_pp[~all_df_pp["hhid"].isin(del_df_final["hhid"])] # remove those del
+        all_df_pp_rm = all_df_pp[
+            ~all_df_pp["hhid"].isin(del_df_final["hhid"])
+        ]  # remove those del
         hh_df_rm = hh_df[~hh_df["hhid"].isin(del_df_final["hhid"])]
-        
+
         ls_final_hh.append(hh_df_rm)
         ls_final_pp.append(all_df_pp_rm)
 
@@ -100,17 +114,22 @@ def main():
         pool_hh_main = pool_hh_main.loc[~pool_hh_main.index.isin(pool_del_index)]
         # Get the new marg to handle the new df
         del_hh = hh_df[hh_df["hhid"].isin(del_df_final["hhid"])]
-        
+
         # NOTE: need to rethink the adjust att here, key point is to maintain the marg of given
         ls_temp_hold = []
         for adjust_att in adjust_atts_order:
-            temp_hold = del_hh.groupby('POA')[adjust_att].value_counts().unstack().fillna(0)
+            temp_hold = (
+                del_hh.groupby("POA")[adjust_att].value_counts().unstack().fillna(0)
+            )
             ls_temp_hold.append(temp_hold)
         marg_new_raw = pd.concat(ls_temp_hold, axis=1)
-        convert_marg_dict = {(marg_new_raw.columns.name, state): marg_new_raw[state] for state in marg_new_raw.columns}
+        convert_marg_dict = {
+            (marg_new_raw.columns.name, state): marg_new_raw[state]
+            for state in marg_new_raw.columns
+        }
         convert_marg_dict[("zone_id", None)] = marg_new_raw.index
         marg_hh = pd.DataFrame(convert_marg_dict)
-    
+
         check = len(del_df_final)
         re_check_to_show.append(check)
         i += 1
@@ -128,14 +147,16 @@ def main():
         new_ls_hh.append(hh)
         new_ls_pp.append(pp)
 
-
-    
     final_hh = pd.concat(new_ls_hh)
     final_pp = pd.concat(new_ls_pp)
 
     # Outputing
-    final_pp.to_csv(os.path.join(output_dir, f"syn_pp_final_{geo_lev}.csv"), index=False)
-    final_hh.to_csv(os.path.join(output_dir, f"syn_hh_final_{geo_lev}.csv"), index=False)
+    final_pp.to_csv(
+        os.path.join(output_dir, f"syn_pp_final_{geo_lev}.csv"), index=False
+    )
+    final_hh.to_csv(
+        os.path.join(output_dir, f"syn_hh_final_{geo_lev}.csv"), index=False
+    )
 
     print(re_check_to_show)
 

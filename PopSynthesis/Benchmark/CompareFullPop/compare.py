@@ -8,6 +8,7 @@ import pandas as pd
 import time
 import math
 
+
 def full_pop_SRMSE(actual: pd.DataFrame, pred: pd.DataFrame) -> float:
     return update_SRMSE(actual=actual, pred=pred)
 
@@ -24,13 +25,12 @@ def SRMSE_based_on_counts(actual_cou: pd.Series, pred_cou: pd.Series) -> float:
         actual_freq = actual_cou[com] / actual_sum
         pred_val = pred_cou[com] if com in pred_cou else 0
         pred_freq = pred_val / pred_sum
-        hold += (actual_freq - pred_freq)**2
+        hold += (actual_freq - pred_freq) ** 2
 
     for com in pred_cou.index:
         if com not in actual_cou.index:
-            hold += (pred_cou[com] / pred_sum)**2
-    
-            
+            hold += (pred_cou[com] / pred_sum) ** 2
+
     result = math.sqrt(hold * (len(actual_cou)))
     duration = time.time() - start_time
     print(f"Calculated the SRMSE in {duration} seconds")
