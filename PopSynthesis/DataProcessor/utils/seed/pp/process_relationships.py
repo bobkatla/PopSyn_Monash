@@ -49,7 +49,11 @@ class Household:
     def get_highest_income_person(self) -> Person:
         converted_incomes = [p.income for p in self.persons] # same order as given persons
         idx_highest = idx_max_val_return(converted_incomes)
-        return self.persons[idx_highest]
+        highest_inc_person = self.persons[idx_highest]
+        assert not self.main_person.income > highest_inc_person.income # if wrong, sth wrong with the func
+        if self.main_person.income == highest_inc_person.income:
+            highest_inc_person = self.main_person # This is to ensure we prefer Main for highest income
+        return highest_inc_person
     
     def check_implausible(self) -> bool:
         # Check Child and GrandChild
