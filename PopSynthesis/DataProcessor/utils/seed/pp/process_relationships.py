@@ -6,7 +6,7 @@ from PopSynthesis.Methods.connect_HH_PP.scripts.const import (
 import polars as pl
 import numpy as np
 import pandas as pd
-from typing import List, Dict, Tuple, Any, Union, Literal
+from typing import List, Dict, Any, Literal
 
 MIN_PARENT_CHILD_GAP = 15
 MIN_GRANDPARENT_GRANDCHILD_GAP = 33
