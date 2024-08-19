@@ -181,7 +181,7 @@ def wrapper_adjust_state(syn_pop, dict_diff, processed_atts, main_att, pool, geo
     return syn_pop
 
 
-def process_data_general(census_data, pool, geo_lev, adjust_atts_order):
+def process_data_general(census_data: pd.DataFrame, pool: pd.DataFrame, geo_lev: str, adjust_atts_order: List[str]) -> None:
     # Census data will be in format of count with zone_id, and columns in 2 levels
     # Loop through each att
     census_data = census_data.set_index(
@@ -216,7 +216,7 @@ def process_data_general(census_data, pool, geo_lev, adjust_atts_order):
     return syn_pop
 
 
-def main():
+def main() -> None:
     census_data = pd.read_csv(
         os.path.join(data_dir, "hh_marginals_ipu.csv"), header=[0, 1]
     )
