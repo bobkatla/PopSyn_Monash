@@ -123,7 +123,7 @@ def update_syn_pop(
     return new_syn_pop
 
 
-def wrapper_adjust_state(syn_pop: pd.DataFrame, dict_diff: Dict[str, Dict[str, int]], processed_atts: List[str], main_att:str, pool: pd.DataFrame, geo_lev:str):
+def wrapper_adjust_state(syn_pop: pd.DataFrame, dict_diff: Dict[str, Dict[str, int]], processed_atts: List[str], main_att:str, pool: pd.DataFrame, geo_lev:str) -> pd.DataFrame:
     """ A wrapper """
     # Doing zone by zone
     for zone in dict_diff:
