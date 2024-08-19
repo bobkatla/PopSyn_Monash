@@ -131,7 +131,7 @@ def wrapper_adjust_state(syn_pop: pd.DataFrame, dict_diff: Dict[str, Dict[str, i
         sub_syn_pop = syn_pop[syn_pop[geo_lev] == zone]
         # Process the pos_states counts from the pool
         ls_neg_states, ls_pos_states = get_neg_pos_ls(count_vals)
-        dict_pos_comb_counts = process_pos_states_counts(
+        dict_pos_comb_counts: Dict[str, pd.Series] = process_pos_states_counts(
             main_att, ls_pos_states, processed_atts, pool
         )
 
