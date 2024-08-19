@@ -1,14 +1,22 @@
 """
+SAA method, eventually we may want to have a log to record and maybe turn each method into a class
+
 This scripts will loop use the pools from BNs and update each atts to match with census
+NOTE: we may consider removing the geo_lev var and put a general name for it such as "geog", the geo_lev applied at data processing only
 """
+
 import pandas as pd
 import numpy as np
 
+from typing import Dict, List, Tuple, Any, Union
+
+# Very bad, should list out the imports you want
 from PopSynthesis.Methods.connect_HH_PP.scripts.sample_hh_main import *
 from PopSynthesis.Methods.connect_HH_PP.scripts.process_all_hh_pp import *
 
 
-def cal_states_diff(att, pop_df, census_data, geo_lev):
+def cal_states_diff(att: str, pop_df: pd.DataFrame, census_data: pd.DataFrame, geo_lev: str) -> Dict[str, Dict[str, int]]:
+    """ This calculate the differences between current syn_pop and the census at a specific geo_lev """
     pop_counts = pop_df[[geo_lev, att]].value_counts()
 
     sub_census_data = census_data[
@@ -30,7 +38,8 @@ def cal_states_diff(att, pop_df, census_data, geo_lev):
     return re_dict
 
 
-def get_neg_pos_ls(count_vals):
+def get_neg_pos_ls(count_vals: Dict[str, int]) -> Tuple[List[str], List[str]]:
+    """ Get list of negative or positive states (aka, to del and to add) """
     ls_neg_states = []
     ls_pos_states = []
     for state in count_vals:
@@ -47,27 +56,30 @@ def get_neg_pos_ls(count_vals):
     return ls_neg_states, ls_pos_states
 
 
-def get_comb_count(main_att, to_change_state, to_maintain_atts, pool, normalize=True):
+def get_comb_count(main_att: str, to_change_state: str, to_maintain_atts: List[str], pool: pd.DataFrame, normalize: bool =True) -> pd.Series:
+    """ Get the count for different combination """
     sub_pool = pool[pool[main_att] == to_change_state]
-    sub_pool = sub_pool[to_maintain_atts]
+    sub_pool = sub_pool[to_maintain_atts] # These are the atts got adjusted already, we used them to find matching combinations
     comb_counts = sub_pool.value_counts(
         normalize=normalize, ascending=True
     )  # if it is from the syn_pop that this is already perfected
     return comb_counts
 
 
-def process_pos_states_counts(main_att, ls_pos_states, to_maintain_atts, pool):
+def process_pos_states_counts(main_att: str, ls_pos_states: List[str], to_maintain_atts: List[str], pool: pd.DataFrame) -> Dict[str, pd.Series]:
+    """ Get combinations from pos states list """
     re_dict = {}
     for state in ls_pos_states:
-        comb_counts = get_comb_count(main_att, state, to_maintain_atts, pool)
-        re_dict[state] = comb_counts
+        re_dict[state] = get_comb_count(main_att, state, to_maintain_atts, pool)
         # Will think maybe will create the sample dict here as well
     return re_dict
 
 
-def get_ls_ranked_comb(comb, dict_comb):
+def get_ls_ranked_comb(comb: Any, dict_comb: Dict[str, pd.Series]) -> List[str]:
+    """ Return a ordered from largest to smallest in counts states """
+    # At the moment, comb is a tuple of states for the maintain atts
     hold_dict = {}
-    re_ls = []
+    ordered_states_by_counts = []
     for state, counts in dict_comb.items():
         if comb in counts.index:
             hold_dict[state] = counts[comb]
@@ -76,17 +88,19 @@ def get_ls_ranked_comb(comb, dict_comb):
 
 
 def update_syn_pop(
-    syn_pop,
-    pool,
-    n_adjust,
-    prev_atts,
-    main_att,
-    comb,
-    del_state,
-    plus_state,
-    geo_lev,
-    zone,
-):
+    syn_pop: pd.DataFrame,
+    pool: pd.DataFrame,
+    n_adjust: int,
+    prev_atts: List[str],
+    main_att: str,
+    comb: Any,
+    del_state: str,
+    plus_state: str,
+    geo_lev: str,
+    zone: str,
+) -> pd.DataFrame:
+    """ We update the current syn pop with a specific state replacement at a specific zone """
+    # So the runtime we have is sum(tot_states for all atts) * num_zones
     syn_pop = syn_pop.reset_index(drop=True)
     # Filter to have sub_df of syn_pop about del
     q_based = ""
@@ -110,6 +124,7 @@ def update_syn_pop(
 
 
 def wrapper_adjust_state(syn_pop, dict_diff, processed_atts, main_att, pool, geo_lev):
+    """ A wrapper """
     # Doing zone by zone
     for zone in dict_diff:
         count_vals = dict_diff[zone]
