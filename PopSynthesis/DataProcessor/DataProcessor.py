@@ -48,6 +48,7 @@ class DataProcessorGeneric:
         self.raw_data_path = Path(raw_data_src)
         self.mid_process_path = Path(mid_processed_src)
         self.output_data_path = Path(output_data_src)
+        self.process_all_seed()
 
     def process_all_seed(self) -> None:
         hh_df = self.process_households_seed()
@@ -110,6 +111,12 @@ class DataProcessorGeneric:
         pp_df = process_rela(pp_df)
         pp_df = convert_pp_age_gr(pp_df)
         return pp_df.to_pandas()
+    
+    def output_seed(self, name_pp_seed:str = "pp_seed", name_hh_seed:str = "hh_seed") -> None:
+        pp_loc = self.output_data_path / f"{name_pp_seed}.csv"
+        hh_loc = self.output_data_path / f"{name_hh_seed}.csv"
+        self.pp_seed_data.to_csv(pp_loc, index=False)
+        self.hh_seed_data.to_csv(hh_loc, index=False)
 
     def process_all_census(self):
         NotImplemented
@@ -122,6 +129,10 @@ class DataProcessorGeneric:
     
     def output_all_files(self):
         NotImplemented
+
+
+def get_generic_generator(specific_output_dir) -> DataProcessorGeneric:
+    return DataProcessorGeneric(raw_data_dir, processed_data_dir, specific_output_dir)
 
 
 if __name__ == "__main__":
