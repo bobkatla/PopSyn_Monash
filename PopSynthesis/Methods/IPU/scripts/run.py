@@ -3,6 +3,7 @@ import synthpop.zone_synthesizer as zs
 import pathlib
 
 import os
+import time
 
 
 def test_run(hh_marg, p_marg, hh_sample, p_sample):
@@ -35,7 +36,6 @@ def test_run(hh_marg, p_marg, hh_sample, p_sample):
 
 
 def main():
-    print()
     name_f = lambda x: os.path.join(
         pathlib.Path(__file__).parent.parent.resolve(),
         "data",
@@ -52,7 +52,12 @@ def main():
     # p_marg = name_f("person_marginals")
     # hh_sample = name_f("household_sample")
     # p_sample = name_f("person_sample")
-    a = test_run(hh_marg, p_marg, hh_sample, p_sample)
+    start_time = time.time()
+    test_run(hh_marg, p_marg, hh_sample, p_sample)
+    elapsed_time = time.time() - start_time
+    print("--- %s seconds ---" % elapsed_time)
+    print("--- %s minutes ---" % (elapsed_time / 60))
+    print("--- %s hours ---" % (elapsed_time / 360))
 
 
 if __name__ == "__main__":
