@@ -22,8 +22,9 @@ class SAA:
         self.pool = None
         pass
 
-    def adjust_the_atts(self)
+    def adjust_the_atts(self):
+        NotImplemented
 
     def run(self) -> pl.DataFrame:
         # Output the synthetic population, the main point
-        
+        NotImplemented
