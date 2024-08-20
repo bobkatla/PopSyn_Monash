@@ -1,5 +1,5 @@
 """
-After we got the households, now we need 
+After we got the households, now we sample the people: CSP method
 """
 
 
