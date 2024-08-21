@@ -34,10 +34,12 @@ def init_syn_pop_saa(att:str, marginal_data: pl.DataFrame, pool: pl.DataFrame) -
         for zone in marginal_data[zone_field]:
             condition = marginal_data.filter(pl.col(zone_field) == zone)
             census_val = condition.select(state).to_numpy()[0,0]
-            # sub_syn_pop = pool.sample(n=census_val, weights=w_sample, =True)
+
             sub_syn_pop = sample_from_pl(sub_pool, census_val)
+
             sub_syn_pop = sub_syn_pop.with_columns([pl.lit(zone).alias(zone_field)])
             sub_syn_pop = sub_syn_pop.drop(count_field)
+            
             sub_pops.append(sub_syn_pop)
     return pl.concat(sub_pops)
 
