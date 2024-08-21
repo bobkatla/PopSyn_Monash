@@ -83,8 +83,8 @@ def get_ls_ranked_comb(comb: Any, dict_comb: Dict[str, pd.Series]) -> List[str]:
     for state, counts in dict_comb.items():
         if comb in counts.index:
             hold_dict[state] = counts[comb]
-            re_ls.append(state)
-    return sorted(re_ls, key=lambda x: hold_dict[x], reverse=True)
+            ordered_states_by_counts.append(state)
+    return sorted(ordered_states_by_counts, key=lambda x: hold_dict[x], reverse=True)
 
 
 def update_syn_pop(
