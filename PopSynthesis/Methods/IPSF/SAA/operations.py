@@ -39,11 +39,34 @@ def init_syn_pop_saa(att:str, marginal_data: pl.DataFrame, pool: pl.DataFrame) -
 
             sub_syn_pop = sub_syn_pop.with_columns([pl.lit(zone).alias(zone_field)])
             sub_syn_pop = sub_syn_pop.drop(count_field)
-            
+
             sub_pops.append(sub_syn_pop)
     return pl.concat(sub_pops)
 
 
-def adjust_atts_state_match_census(att: str, curr_syn_pop: Union[None, pl.DataFrame], census_data: pl.DataFrame, adjusted_atts: List[str], pool: pl.DataFrame) -> pl.DataFrame:
+def adjust_atts_state_match_census(att: str, curr_syn_pop: Union[None, pl.DataFrame], census_data_by_att: pl.DataFrame, adjusted_atts: List[str], pool: pl.DataFrame) -> pl.DataFrame:
     if curr_syn_pop is None:
-        curr_syn_pop = init_syn_pop_saa()
+        curr_syn_pop = init_syn_pop_saa(att, census_data_by_att, pool)
+    else:
+        # All the pool and synpop would be in the count format (with weights)
+        # This also help confirmed later if we want to use the vista directly
+        # now we need update popsyn with SAA, we can k
+        # Calulate the diff for each state comparing with census
+        # This can just be a value counts and minus
+        # Then adjust by add and del
+        # We need to search for combinations with each add and del
+        # This is to ensure the prev adjust atts are maintained
+        # We only can del what can be add and add what can be del
+        # Value counts for all states to get the filter
+        # Remember to check the weights, the weights for each combination would be the sum
+        # Maybe achieve this via a set intersection to filter feasible cases
+        # For add, we only care whether they exist or not
+        # For del, we only can del what we can del
+        # Maybe instead of pairing neg and pos (maybe that while it is slow)
+        # We draw the add from a pool, as long as we update the state diff
+        # But how to make sure we don't over sample (as we will sample with replacement)
+        # So we may need a dict to map to the existing
+        # We also need to care about the sampling
+
+        # Loop through the matching combination to add and del
+        NotImplemented
