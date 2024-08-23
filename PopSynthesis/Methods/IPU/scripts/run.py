@@ -7,6 +7,8 @@ from pathlib import Path
 ipu_dir_path = Path(__file__).parent.parent.resolve()
 data_path = Path(ipu_dir_path / "data")
 output_path = Path(ipu_dir_path / "output")
+assert data_path.exists()
+assert output_path.exists()
 
 
 def test_run(hh_marg, p_marg, hh_sample, p_sample):
