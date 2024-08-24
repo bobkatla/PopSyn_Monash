@@ -8,6 +8,16 @@ MIN_GRANDPARENT_GRANDCHILD_GAP = 33
 # This only apply when we do the conversion for Child and Grandchild
 MAX_COUPLE_GAP = 20  
 MIN_PERMITTED_AGE_MARRIED = 16
+AVAILABLE_RELATIONSHIPS = [
+        "Main",
+        "Spouse",
+        "Child",
+        "Grandchild",
+        "Sibling",
+        "Others",
+        "Parent",
+        "Grandparent",
+    ]
 
 
 class Person:
@@ -25,17 +35,6 @@ class Person:
 
 
 class Household:
-    AVAILABLE_RELATIONSHIPS = [
-        "Main",
-        "Spouse",
-        "Child",
-        "Grandchild",
-        "Sibling",
-        "Others",
-        "Parent",
-        "Grandparent",
-    ]
-
     def __init__(self, persons: List[Person]) -> None:
         self.persons = persons
         # replace for all
