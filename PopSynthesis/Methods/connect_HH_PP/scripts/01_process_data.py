@@ -9,7 +9,7 @@ from PopSynthesis.DataProcessor.DataProcessor import get_generic_generator
 from PopSynthesis.DataProcessor.utils.seed.pp.process_relationships import AVAILABLE_RELATIONSHIPS
 
 
-output_dir = Path(__file__).parent.resolve() / "output"
+output_dir = Path(__file__).parent.parent.resolve() / "output"
 assert output_dir.exists()
 
 

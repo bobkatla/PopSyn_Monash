@@ -46,7 +46,7 @@ class Household:
 
     def initialize(self) -> None:
         self.segment_by_rela = {
-            relationship: [] for relationship in self.AVAILABLE_RELATIONSHIPS
+            relationship: [] for relationship in AVAILABLE_RELATIONSHIPS
         }
         for person in self.persons:
             assert person.relationship != "Self"  # this should no longer exist
@@ -383,5 +383,8 @@ def process_rela(pp_df: pl.DataFrame) -> pl.DataFrame:
     for mapping in filtered_cases["new_mapping_from_id"].to_list():
         result_mapping.update(mapping)
     pp_df["relationship"] = pp_df["persid"].map(result_mapping)
+
+    # The households with implausible combinations will have None value for relationship
+    pp_df =pp_df[~pp_df["relationship"].isna()]
 
     return pl.from_pandas(pp_df)
