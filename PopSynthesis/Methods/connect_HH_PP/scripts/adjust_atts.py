@@ -7,12 +7,19 @@ NOTE: we may consider removing the geo_lev var and put a general name for it suc
 
 import pandas as pd
 import numpy as np
-
-from typing import Dict, List, Tuple, Any, Union
+import os
+from pathlib import Path
+import pickle
+from typing import Dict, List, Tuple, Any
 
 # Very bad, should list out the imports you want
-from PopSynthesis.Methods.connect_HH_PP.scripts.sample_hh_main import *
-from PopSynthesis.Methods.connect_HH_PP.scripts.process_all_hh_pp import *
+from PopSynthesis.Methods.connect_HH_PP.paras_dir import data_dir, processed_data, output_dir
+from PopSynthesis.Methods.connect_HH_PP.scripts.sample_hh_main import samp_from_pool_1layer
+from PopSynthesis.Methods.connect_HH_PP.scripts.process_all_hh_pp import get_pool, POOL_SZ
+
+assert Path(data_dir).exists()
+assert Path(processed_data).exists()
+assert Path(output_dir).exists()
 
 
 def cal_states_diff(att: str, pop_df: pd.DataFrame, census_data: pd.DataFrame, geo_lev: str) -> Dict[str, Dict[str, int]]:
@@ -277,5 +284,5 @@ def sample_without_adjustments():
 
 
 if __name__ == "__main__":
-    # main()
-    sample_without_adjustments()
+    main()
+    # sample_without_adjustments()

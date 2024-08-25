@@ -20,9 +20,11 @@ from PopSynthesis.Methods.connect_HH_PP.paras_dir import (
     geo_lev,
     output_dir,
 )
-from PopSynthesis.Methods.connect_HH_PP.scripts.const import *
-from PopSynthesis.Methods.connect_HH_PP.scripts.sample_hh_main import *
-from PopSynthesis.Methods.connect_HH_PP.scripts.sample_pp import *
+from PopSynthesis.DataProcessor.utils.seed.pp.process_relationships import AVAILABLE_RELATIONSHIPS
+from PopSynthesis.Methods.connect_HH_PP.scripts.const import PP_ATTS
+from PopSynthesis.Methods.connect_HH_PP.paras_dir import data_dir
+from PopSynthesis.Methods.connect_HH_PP.scripts.sample_hh_main import samp_from_pool_1layer, filter_pool, learn_para_BN
+from PopSynthesis.Methods.connect_HH_PP.scripts.sample_pp import learn_struct_BN_score, pools_get, inference_model_get, process_combine_df, process_rela_fast, extra_pp_df
 
 
 # Process to have HH and Main Persons from the HH-Main pool
@@ -79,8 +81,8 @@ def main():
     df_seed = df_seed.drop(columns=id_cols)
     pool_hh_main = get_pool(df_seed, state_names, pool_sz=POOL_SZ)
 
-    all_rela_exist = ALL_RELA.copy()
-    all_rela_exist.remove("Self")
+    all_rela_exist = AVAILABLE_RELATIONSHIPS.copy()
+    all_rela_exist.remove("Main")
     dict_model_inference = inference_model_get(all_rela_exist, pp_state_names)
     dict_pool_sample = pools_get(all_rela_exist, dict_model_inference, POOL_SZ)
 

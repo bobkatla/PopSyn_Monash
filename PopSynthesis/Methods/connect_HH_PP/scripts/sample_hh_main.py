@@ -10,7 +10,7 @@ from PopSynthesis.Methods.connect_HH_PP.paras_dir import (
     processed_data,
     geo_lev,
 )
-from PopSynthesis.Methods.connect_HH_PP.scripts.const import ALL_RELA
+from PopSynthesis.DataProcessor.utils.seed.pp.process_relationships import AVAILABLE_RELATIONSHIPS
 
 
 def reject_samp_veh(BN, df_marg, zone_lev):
@@ -101,12 +101,13 @@ def main():
 
 def filter_pool(pool):
     # Removing some known impossible combinations, we can even incorp domain knownledge here
-    check_relas = ALL_RELA.copy()
-    check_relas.remove("Self")
+    check_relas = AVAILABLE_RELATIONSHIPS.copy()
+    check_relas.remove("Main")
 
     # hhsize HAS to be equal the total of other rela (+1 because of main person)
     # we will have the max hhsize
     max_hhsize = 11
+    print(check_relas)
     pool["sum_by_rela"] = pool[check_relas].sum(axis=1) + 1
 
     def f(r):

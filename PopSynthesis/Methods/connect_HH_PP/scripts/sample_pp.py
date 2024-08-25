@@ -11,7 +11,8 @@ from pgmpy.sampling import BayesianModelSampling
 from pgmpy.estimators import BayesianEstimator
 
 from PopSynthesis.Methods.connect_HH_PP.paras_dir import processed_data, geo_lev
-from PopSynthesis.Methods.connect_HH_PP.scripts.const import *
+from PopSynthesis.DataProcessor.utils.seed.pp.process_relationships import AVAILABLE_RELATIONSHIPS
+from PopSynthesis.Methods.connect_HH_PP.scripts.const import PP_ATTS, HH_ATTS
 
 
 init_n_pool = int(1e7)  # 10 Mils
@@ -19,8 +20,8 @@ init_n_pool = int(1e7)  # 10 Mils
 
 def process_combine_df(combine_df):
     hh_df = combine_df[HH_ATTS + [geo_lev]]
-    all_rela_exist = ALL_RELA.copy()
-    all_rela_exist.remove("Self")
+    all_rela_exist = AVAILABLE_RELATIONSHIPS.copy()
+    all_rela_exist.remove("Main")
     pp_cols = PP_ATTS + all_rela_exist + [geo_lev]
     pp_cols.remove("relationship")
     pp_cols.remove("persid")
@@ -29,7 +30,7 @@ def process_combine_df(combine_df):
 
 
 def extra_pp_df(pp_df):
-    to_drop_cols = [x for x in pp_df.columns if x in ALL_RELA]
+    to_drop_cols = [x for x in pp_df.columns if x in AVAILABLE_RELATIONSHIPS]
     pp_df = pp_df.drop(columns=to_drop_cols)
     pp_df["relationship"] = "Main"
     return pp_df
@@ -83,7 +84,7 @@ def process_rela_using_count(main_pp_df, rela, pool_count, geo_lev):
     rename_to_main = {x.replace("_main", ""): x for x in cols_main}
 
     sub_pp_df = main_pp_df[main_pp_df[rela] > 0]
-    pp_cols = [x for x in sub_pp_df.columns if x not in ALL_RELA]
+    pp_cols = [x for x in sub_pp_df.columns if x not in AVAILABLE_RELATIONSHIPS]
     sub_pp_df = sub_pp_df[pp_cols + [rela]]
     sub_pp_df = sub_pp_df.rename(columns=rename_to_main)
 
@@ -144,7 +145,7 @@ def process_rela_using_count(main_pp_df, rela, pool_count, geo_lev):
 
 
 def process_rela_fast(main_pp_df, rela, pool):
-    all_cols = [x for x in main_pp_df.columns if x not in ALL_RELA and x != geo_lev]
+    all_cols = [x for x in main_pp_df.columns if x not in AVAILABLE_RELATIONSHIPS and x != geo_lev]
     all_cols.remove("hhid")
     all_cols_main = [f"{x}_main" for x in all_cols]
     all_cols_rela_rename = {f"{x}_{rela}": x for x in all_cols}
@@ -232,8 +233,8 @@ def main():
     with open(os.path.join(processed_data, "dict_pp_states.pickle"), "rb") as handle:
         state_names_pp = pickle.load(handle)
 
-    all_rela_exist = ALL_RELA.copy()
-    all_rela_exist.remove("Self")
+    all_rela_exist = AVAILABLE_RELATIONSHIPS.copy()
+    all_rela_exist.remove("Main")
 
     dict_model_inference = inference_model_get(all_rela_exist, state_names_pp)
     dict_pool_sample = pools_get(all_rela_exist, dict_model_inference, 1e6)
