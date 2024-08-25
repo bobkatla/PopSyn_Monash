@@ -18,8 +18,8 @@ def main():
     geo_lev = "POA"
     processed_already = ["hhsize", "totalvehs", "hhinc", "dwelltype", "owndwell"]
 
-    all_rela_exist = ALL_RELA.copy()
-    all_rela_exist.remove("Self")
+    all_rela_exist = AVAILABLE_RELATIONSHIPS.copy()
+    all_rela_exist.remove("Main")
 
     ls_final_hh = []
     ls_final_pp = []
@@ -184,14 +184,14 @@ def main():
         # We do not convert the deleted to new marg anymore
         # We created the new ones based on kept and update the kept
         marg_from_kept_hh = convert_full_to_marg_count(
-            hh_df_keep, geo_lev, ALL_RELA + ["POA", "hhid"]
+            hh_df_keep, geo_lev, AVAILABLE_RELATIONSHIPS + ["POA", "hhid"]
         )
         diff_marg = get_diff_marg(marg_hh, marg_from_kept_hh)
         new_kept_hh = adjust_kept_hh_match_census(hh_df_keep, diff_marg, geo_lev)
 
         # checking
         new_kept_marg = convert_full_to_marg_count(
-            new_kept_hh, geo_lev, ALL_RELA + ["POA", "hhid"]
+            new_kept_hh, geo_lev, AVAILABLE_RELATIONSHIPS + ["POA", "hhid"]
         )
         new_diff_marg = get_diff_marg(marg_hh, new_kept_marg)
         checking_not_neg = new_diff_marg < 0

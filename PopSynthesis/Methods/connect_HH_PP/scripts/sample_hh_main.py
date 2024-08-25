@@ -107,7 +107,6 @@ def filter_pool(pool):
     # hhsize HAS to be equal the total of other rela (+1 because of main person)
     # we will have the max hhsize
     max_hhsize = 11
-    print(check_relas)
     pool["sum_by_rela"] = pool[check_relas].sum(axis=1) + 1
 
     def f(r):
