@@ -56,11 +56,14 @@ class DataProcessorGeneric:
         # Steps to make sure all persons belongs to households, if not remove
         hhid_in_pp = list(pp_df["hhid"].unique())
         filtered_hh = hh_df[hh_df["hhid"].isin(hhid_in_pp)]
-        print(f"Removed {len(hh_df) - len(filtered_hh)} households total")
+        hhid_in_hh = list(filtered_hh["hhid"].unique())
+        filtered_pp = pp_df[pp_df["hhid"].isin(hhid_in_hh)]
+        print(f"Removed {len(hh_df) - len(filtered_hh)} households due to mismatch with pp")
+        print(f"Removed {len(pp_df) - len(filtered_pp)} people due to mismatch with hh")
 
         # households size equal number of persons
         sub_check_hhsz = filtered_hh[["hhid", "hhsize"]].set_index("hhid")
-        sub_check_pp = pp_df.groupby("hhid")["persid"].apply(lambda x: list(x))
+        sub_check_pp = filtered_pp.groupby("hhid")["persid"].apply(lambda x: list(x))
         check_combine = pd.concat([sub_check_hhsz, sub_check_pp], axis=1)
 
         def check_match_hhsz(r):
@@ -77,7 +80,8 @@ class DataProcessorGeneric:
         assert check_combine["cross_check"].all()
 
         self.hh_seed_data = filtered_hh
-        self.pp_seed_data = pp_df
+        self.pp_seed_data = filtered_pp
+        
 
     def process_households_seed(self) -> pd.DataFrame:
         # Import the hh seed data
@@ -89,6 +93,7 @@ class DataProcessorGeneric:
         hh_df = hh_df.with_columns(pl.col("wehhwgt_sa3").fill_null(strategy="zero"))
         hh_df = hh_df.with_columns(_weight = pl.col("wdhhwgt_sa3") + pl.col("wehhwgt_sa3"))
         hh_df = hh_df.drop(["wdhhwgt_sa3", "wehhwgt_sa3"])
+        hh_df = hh_df.drop_nulls()
 
         # other processing
         hh_df = convert_hh_totvehs(hh_df)
@@ -137,4 +142,4 @@ def get_generic_generator(specific_output_dir) -> DataProcessorGeneric:
 
 if __name__ == "__main__":
     a = DataProcessorGeneric(raw_data_dir, processed_data_dir, output_dir)
-    a.process_all_seed()
+    a.process_households_seed()
