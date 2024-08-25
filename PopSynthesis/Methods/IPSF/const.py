@@ -65,5 +65,5 @@ count_field = "saa_count"
 POOL_SIZE = 1e7
 
 data_dir = Path(__file__).parent.resolve() / "data" / "raw"
-processed_dir = Path(__file__).resolve() / "data" / "processed"
-output_dir = Path(__file__).resolve() / "output"
+processed_dir = Path(__file__).parent.resolve() / "data" / "processed"
+output_dir = Path(__file__).parent.resolve() / "output"
