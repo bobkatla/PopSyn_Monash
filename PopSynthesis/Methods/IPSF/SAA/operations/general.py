@@ -4,8 +4,26 @@ import polars as pl
 import pandas as pd
 import numpy as np
 
-from typing import List, Union
-from PopSynthesis.Methods.IPSF.const import count_field, zone_field
+from typing import List, Union, Tuple, Dict
+from PopSynthesis.Methods.IPSF.const import count_field, zone_field, data_dir
+
+
+def process_raw_ipu_init(marg: pd.DataFrame, seed: pd.DataFrame) -> Tuple[Dict[str, pd.DataFrame], pd.DataFrame]:
+    atts = [x for x in seed.columns if x not in ["serialno", "sample_geog"] ]
+    segmented_marg = {}
+    zones = marg[marg.columns[marg.columns.get_level_values(0)==zone_field]].values
+    zones = [z[0] for z in zones]
+    for att in atts:
+        sub_marg = marg[marg.columns[marg.columns.get_level_values(0)==att]]
+        if sub_marg.empty:
+            print(f"Don't have this att {att} in census")
+            continue
+        sub_marg.columns = sub_marg.columns.droplevel(0)
+        sub_marg.loc[:, [zone_field]] = zones
+        sub_marg = sub_marg.set_index(zone_field)
+        segmented_marg[att] = sub_marg
+    new_seed = seed.drop(columns=["sample_geog", "serialno"])
+    return segmented_marg, new_seed
 
 
 def sample_from_pl(df: pl.DataFrame, n: int, count_field:str = count_field, with_replacement=True) -> pl.DataFrame:

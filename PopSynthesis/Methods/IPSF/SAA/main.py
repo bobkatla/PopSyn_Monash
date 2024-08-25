@@ -8,21 +8,19 @@ Will thinking of doing in Polars
 import pandas as pd
 
 from PopSynthesis.Methods.IPSF.const import POOL_SIZE
-from typing import List, Dict, Union
+from PopSynthesis.Methods.IPSF.SAA.operations.general import process_raw_ipu_init
+from typing import List, Dict
 
 class SAA:
-    def __init__(self, seed: pd.DataFrame, marginal: pd.DataFrame, pool_sz: int = POOL_SIZE, ordered_to_adjust_atts=List[str]) -> None:
-        self.seed = seed
-        self.marginal = marginal
+    def __init__(self, marginal_raw: pd.DataFrame, seed_raw: pd.DataFrame, ordered_to_adjust_atts:List[str], att_states: Dict[str, List[str]], pool_sz: int = POOL_SIZE) -> None:
         self.ordered_atts = ordered_to_adjust_atts
+        self.known_att_states = att_states
+        self.init_required_inputs(marginal_raw, seed_raw)
 
-    def create_pool(self, known_atts_states: Union[None, Dict[str, List[str]]]) -> pd.DataFrame:
-        # this creates the pool based on the seed data and also the dict if given
-        self.pool = None
-        pass
-
-    def adjust_the_atts(self):
-        NotImplemented
+    def init_required_inputs(self, marginal_raw: pd.DataFrame, seed_raw: pd.DataFrame):
+        converted_segment_marg, converted_seed = process_raw_ipu_init(marginal_raw, seed_raw)
+        self.seed = converted_seed
+        self.segmented_marg = converted_segment_marg
 
     def run(self) -> pd.DataFrame:
         # Output the synthetic population, the main point
