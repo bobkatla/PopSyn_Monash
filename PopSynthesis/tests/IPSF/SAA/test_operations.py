@@ -1,4 +1,4 @@
-from PopSynthesis.Methods.IPSF.SAA.operations import init_syn_pop_saa
+from PopSynthesis.Methods.IPSF.SAA.operations.general import init_syn_pop_saa
 from PopSynthesis.Methods.IPSF.const import zone_field
 
 from pathlib import Path
