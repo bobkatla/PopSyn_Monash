@@ -42,7 +42,7 @@ def main():
 
     print("--- %s seconds ---" % elapsed_time)
     print("--- %s minutes ---" % (elapsed_time / 60))
-    print("--- %s hours ---" % (elapsed_time / 360))
+    print("--- %s hours ---" % (elapsed_time / 3600))
 
 
 if __name__ == "__main__":
