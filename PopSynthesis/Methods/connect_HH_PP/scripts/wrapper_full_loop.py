@@ -15,6 +15,8 @@ from PopSynthesis.Methods.connect_HH_PP.scripts.get_hh_main_combine import *
 
 POOL_SZ = int(1e7)
 
+## Temp fix the code to continue
+
 
 def main():
     census_data = pd.read_csv(
@@ -33,10 +35,12 @@ def main():
 
     pool = get_pool(df_seed, hh_state_names, POOL_SZ)
     geo_lev = "POA"
-    adjust_atts_order = ["hhsize", "totalvehs", "hhinc", "dwelltype", "owndwell"]
+    adjust_atts_order = ["dwelltype", "owndwell"]
+    adjusted_atts = ["hhsize", "totalvehs", "hhinc"] # None
+    adjusted_pop = pd.read_csv(os.path.join(output_dir, "testland", "saving_hh_test2_hhinc.csv")) # None
 
-    all_rela_exist = ALL_RELA.copy()
-    all_rela_exist.remove("Self")
+    all_rela_exist = AVAILABLE_RELATIONSHIPS.copy()
+    all_rela_exist.remove("Main")
     dict_model_inference = inference_model_get(all_rela_exist, pp_state_names)
     dict_pool_sample = pools_get(all_rela_exist, dict_model_inference, POOL_SZ)
 
@@ -51,7 +55,7 @@ def main():
     while check > 10:
         print(f"DOING ITE {i} with err == {check}")
         # Simple create a new func here and get the new marg already
-        hh_df = process_data_general(marg_hh, pool, geo_lev, adjust_atts_order)
+        hh_df = process_data_general(marg_hh, pool, geo_lev, adjust_atts_order, adjusted_atts, adjusted_pop)
         # Sample hh main
         combine_df_hh_main = get_combine_df(hh_df)
         # Process the HH and main to have the HH with IDs and People in HH

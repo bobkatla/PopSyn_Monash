@@ -10,7 +10,7 @@ import numpy as np
 import os
 from pathlib import Path
 import pickle
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Tuple, Any, Union
 
 # Very bad, should list out the imports you want
 from PopSynthesis.Methods.connect_HH_PP.paras_dir import data_dir, processed_data, output_dir
@@ -188,7 +188,7 @@ def wrapper_adjust_state(syn_pop: pd.DataFrame, dict_diff: Dict[str, Dict[str, i
     return syn_pop
 
 
-def process_data_general(census_data: pd.DataFrame, pool: pd.DataFrame, geo_lev: str, adjust_atts_order: List[str]) -> None:
+def process_data_general(census_data: pd.DataFrame, pool: pd.DataFrame, geo_lev: str, adjust_atts_order: List[str], adjusted_atts: Union[None, List[str]] = None, adjusted_pop: Union[None, pd.DataFrame] = None) -> None:
     # Census data will be in format of count with zone_id, and columns in 2 levels
     # Loop through each att
     census_data = census_data.set_index(
@@ -203,6 +203,11 @@ def process_data_general(census_data: pd.DataFrame, pool: pd.DataFrame, geo_lev:
 
     syn_pop = None
     processed_atts = []
+
+    if adjusted_pop is not None:
+        assert adjusted_atts is not None
+        syn_pop = adjusted_pop
+        processed_atts = adjusted_atts
     for att in adjust_atts_order:
         if syn_pop is None:  # first time run, this should be perfect
             syn_pop = samp_from_pool_1layer(pool, census_data, att, geo_lev)
