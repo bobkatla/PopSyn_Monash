@@ -8,7 +8,7 @@ Will thinking of doing in Polars
 import pandas as pd
 
 from PopSynthesis.Methods.IPSF.const import POOL_SIZE
-from PopSynthesis.Methods.IPSF.SAA.operations.general import process_raw_ipu_init
+from PopSynthesis.Methods.IPSF.SAA.operations.general import process_raw_ipu_init, adjust_atts_state_match_census
 from typing import List, Dict
 
 class SAA:
@@ -24,4 +24,11 @@ class SAA:
 
     def run(self) -> pd.DataFrame:
         # Output the synthetic population, the main point
-        NotImplemented
+        curr_syn_pop = None
+        adjusted_atts = []
+        pool = self.seed # change later
+        for att in self.ordered_atts:
+            sub_census = self.segmented_marg[att].reset_index()
+            curr_syn_pop = adjust_atts_state_match_census(att, curr_syn_pop, sub_census, adjusted_atts, pool)
+            adjusted_atts.append(att)
+        return curr_syn_pop

@@ -6,6 +6,7 @@ import numpy as np
 
 from typing import List, Union, Tuple, Dict
 from PopSynthesis.Methods.IPSF.const import count_field, zone_field, data_dir
+from PopSynthesis.Methods.IPSF.SAA.operations.compare_census import calculate_states_diff
 
 
 def process_raw_ipu_init(marg: pd.DataFrame, seed: pd.DataFrame) -> Tuple[Dict[str, pd.DataFrame], pd.DataFrame]:
@@ -34,7 +35,9 @@ def sample_from_pl(df: pl.DataFrame, n: int, count_field:str = count_field, with
     return df[sample_indices.tolist()]
 
 
-def init_syn_pop_saa(att:str, marginal_data: pl.DataFrame, pool: pl.DataFrame) -> pl.DataFrame:
+def init_syn_pop_saa(att:str, marginal_data: pd.DataFrame, pool: pd.DataFrame) -> pl.DataFrame:
+    pool = pl.from_pandas(pool)
+    marginal_data = pl.from_pandas(marginal_data)
     assert zone_field in marginal_data
     states = list(pool[att].unique())
     assert set(states + [zone_field]) == set(marginal_data.columns)
@@ -64,19 +67,22 @@ def init_syn_pop_saa(att:str, marginal_data: pl.DataFrame, pool: pl.DataFrame) -
 
 
 def adjust_atts_state_match_census(att: str, curr_syn_pop: Union[None, pd.DataFrame], census_data_by_att: pd.DataFrame, adjusted_atts: List[str], pool: pd.DataFrame) -> pd.DataFrame:
+    updated_syn_pop = None
     if curr_syn_pop is None:
-        curr_syn_pop = init_syn_pop_saa(att, census_data_by_att, pool).to_pandas()
+        updated_syn_pop = init_syn_pop_saa(att, census_data_by_att, pool).to_pandas()
     else:
+        states_diff_census = calculate_states_diff(att, curr_syn_pop, census_data_by_att)
+        print(states_diff_census)
         # Will slowly convert to polars later
         # All the pool and synpop would be in the count format (with weights)
         # This also help confirmed later if we want to use the vista directly
-        # now we need update popsyn with SAA, we can k
+        # now we need update popsyn with SAA
         # Calulate the diff for each state comparing with census
-        # This can just be a value counts and minus
+        # This can just be a value counts and with the sign (plus or minus)
         # Then adjust by add and del
         # We need to search for combinations with each add and del
         # This is to ensure the prev adjust atts are maintained
-        # We only can del what can be add and add what can be del
+        # We only can del what can be add and add what can be del (using set opt?)
         # Value counts for all states to get the filter
         # Remember to check the weights, the weights for each combination would be the sum
         # Maybe achieve this via a set intersection to filter feasible cases
@@ -89,4 +95,4 @@ def adjust_atts_state_match_census(att: str, curr_syn_pop: Union[None, pd.DataFr
         # We also need to care about the sampling
 
         # Loop through the matching combination to add and del
-        NotImplemented
+    return updated_syn_pop
