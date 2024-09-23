@@ -207,13 +207,19 @@ def process_data_general(census_data: pd.DataFrame, pool: pd.DataFrame, geo_lev:
     if adjusted_pop is not None:
         assert adjusted_atts is not None
         syn_pop = adjusted_pop
+        syn_pop = syn_pop.astype(str)
+        syn_pop.index = syn_pop.index.astype(str)
         processed_atts = adjusted_atts
     for att in adjust_atts_order:
+        print(att)
+        print(processed_atts)
+        
         if syn_pop is None:  # first time run, this should be perfect
             syn_pop = samp_from_pool_1layer(pool, census_data, att, geo_lev)
             syn_pop = syn_pop.astype(str)
             syn_pop.index = syn_pop.index.astype(str)
         else:
+            print(syn_pop)
             # Now we need to process from the syn pop
             dict_diff = cal_states_diff(att, syn_pop, census_data, geo_lev)
             syn_pop = wrapper_adjust_state(

@@ -34,6 +34,9 @@ def main():
     state_names = hh_state_names | pp_state_names
 
     pool = get_pool(df_seed, hh_state_names, POOL_SZ)
+    # pool = pool.value_counts()
+    # pool.to_csv("testpool.csv")
+    # return
     geo_lev = "POA"
     adjust_atts_order = ["dwelltype", "owndwell"]
     adjusted_atts = ["hhsize", "totalvehs", "hhinc"] # None

@@ -79,7 +79,9 @@ def main():
         pickle.dump(dict_pp_state_names, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     # This part is to create the just simple converted samples from hh and pp
-    data_processer.output_seed("ori_sample_pp", "ori_sample_hh")
+    # We need to add the count of each rela here or at DATA processor
+    # data_processer.output_seed("ori_sample_pp", "ori_sample_hh")
+    # hh_df = pd.read_csv(os.path.join(processed_data, "ori_sample_hh.csv"))
 
     # process hh_main
     main_pp_df = pp_df[pp_df["relationship"] == "Main"]

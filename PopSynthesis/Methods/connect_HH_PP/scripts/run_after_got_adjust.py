@@ -16,11 +16,11 @@ logger = logging.getLogger("connect_hh_pp")
 
 def main():
     geo_lev = "POA"
-    processed_already = ["hhsize", "totalvehs", "hhinc", "dwelltype"]
+    processed_already = ["hhsize", "totalvehs", "hhinc", "dwelltype"] # Maybe don't need to run for that
     # processed_already = ["hhsize", "totalvehs"]
 
-    all_rela_exist = ALL_RELA.copy()
-    all_rela_exist.remove("Self")
+    all_rela_exist = AVAILABLE_RELATIONSHIPS.copy()
+    all_rela_exist.remove("Main")
 
     ls_final_hh = []
     ls_final_pp = []
@@ -47,33 +47,35 @@ def main():
     new_ori_census.index = new_ori_census.index.astype(str)
     marg_hh = new_ori_census.drop(columns=ls_drop)
 
-    with open(os.path.join(processed_data, "dict_pool_sample.pickle"), "rb") as handle:
-        dict_pool_sample = pickle.load(handle)
+    # with open(os.path.join(processed_data, "dict_pool_sample.pickle"), "rb") as handle:
+    #     dict_pool_sample = pickle.load(handle)
 
     ############# TEST #################
-    # with open(os.path.join(processed_data, 'dict_hh_states.pickle'), 'rb') as handle:
-    #     hh_state_names = pickle.load(handle)
-    # with open(os.path.join(processed_data, 'dict_pp_states.pickle'), 'rb') as handle:
-    #     pp_state_names = pickle.load(handle)
-    # state_names = hh_state_names | pp_state_names
+    with open(os.path.join(processed_data, 'dict_hh_states.pickle'), 'rb') as handle:
+        hh_state_names = pickle.load(handle)
+    with open(os.path.join(processed_data, 'dict_pp_states.pickle'), 'rb') as handle:
+        pp_state_names = pickle.load(handle)
+    state_names = hh_state_names | pp_state_names
 
-    # #learning to get the HH only with main person
-    # df_seed_hh_main = pd.read_csv(os.path.join(processed_data, "connect_hh_main.csv"))
-    # # drop all the ids as they are not needed for in BN learning
-    # id_cols_hh_main = [x for x in df_seed_hh_main.columns if "hhid" in x or "persid" in x]
-    # df_seed_hh_main = df_seed_hh_main.drop(columns=id_cols_hh_main)
-    # logger.info("GETTING the pool HH and Main")
-    # pool_hh_main = get_pool(df_seed_hh_main, state_names, int(1e5), special=False)
-    # dict_model_inference = inference_model_get(all_rela_exist, pp_state_names)
-    # dict_pool_sample = pools_get(all_rela_exist, dict_model_inference, int(1e4))
-    # dict_pool_sample["Main"] = pool_hh_main
+    #learning to get the HH only with main person
+    df_seed_hh_main = pd.read_csv(os.path.join(processed_data, "connect_hh_main.csv"))
+    # drop all the ids as they are not needed for in BN learning
+    id_cols_hh_main = [x for x in df_seed_hh_main.columns if "hhid" in x or "persid" in x]
+    df_seed_hh_main = df_seed_hh_main.drop(columns=id_cols_hh_main)
+    logger.info("GETTING the pool HH and Main")
+    pool_hh_main = get_pool(df_seed_hh_main, state_names, int(1e5), special=False)
+    dict_model_inference = inference_model_get(all_rela_exist, pp_state_names)
+    dict_pool_sample = pools_get(all_rela_exist, dict_model_inference, int(1e4))
+    dict_pool_sample["Main"] = pool_hh_main
 
-    # chosen_poa = ["3000", "3002", "3003", "3006", "3004"]
+    # chosen_poa = ["3000", "3002"]
     # marg_hh = marg_hh.loc[chosen_poa]
     #############################################
 
+    # Create pool, pool here is the household count, will fix alot later
+
     pool = pd.read_csv(
-        os.path.join(processed_data, "save_pools", "final_pool_count.csv")
+        os.path.join(processed_data, "new_save_pools", "final_pool_count_new_rela.csv")
     )
     pool = pool.astype(str)
     pool["count"] = pool["count"].astype(int)
@@ -83,7 +85,7 @@ def main():
         logger.info(f"DOING ITE {i} with err == {check}")
         if i == 0:  # init begin by having the adjust hh_df
             hh_df = pd.read_csv(
-                os.path.join(output_dir, "adjust", "final", "saving_hh_dwelltype.csv"),
+                os.path.join(output_dir, "adjust", "saving_hh_test2_dwelltype.csv"),
                 low_memory=False,
             )
             # hh_df = hh_df.astype(str)
@@ -94,7 +96,7 @@ def main():
                 marg_hh, pool, geo_lev, processed_already, is_ipu_data=False
             )
             hh_df.to_csv(
-                os.path.join(processed_data, "keep_check", f"adjusted4_hh_new_{i}.csv"),
+                os.path.join(processed_data, "keep_check", f"new_rela_adjusted4_hh_new_{i}.csv"),
                 index=False,
             )
 
@@ -135,11 +137,11 @@ def main():
         )
 
         del_hh.to_csv(
-            os.path.join(processed_data, "keep_check", f"del4_first_{i}.csv"),
+            os.path.join(processed_data, "keep_check", f"new_rela_del4_first_{i}.csv"),
             index=False,
         )
         main_pp_df_all.to_csv(
-            os.path.join(processed_data, "keep_check", f"main4_pp_df_{i}.csv"),
+            os.path.join(processed_data, "keep_check", f"new_rela_main4_pp_df_{i}.csv"),
             index=False,
         )
 
@@ -213,14 +215,14 @@ def main():
         ]  # not used yet, will think should I make it aim for only the needed cols for faster converge
 
         marg_from_kept_hh = convert_full_to_marg_count(
-            hh_df_keep, geo_lev, ALL_RELA + ["POA", "hhid"]
+            hh_df_keep, geo_lev, AVAILABLE_RELATIONSHIPS + ["POA", "hhid"]
         )
         diff_marg = get_diff_marg(marg_hh, marg_from_kept_hh)
         new_kept_hh = adjust_kept_hh_match_census(hh_df_keep, diff_marg, geo_lev)
 
         # checking
         new_kept_marg = convert_full_to_marg_count(
-            new_kept_hh, geo_lev, ALL_RELA + ["POA", "hhid"]
+            new_kept_hh, geo_lev, AVAILABLE_RELATIONSHIPS + ["POA", "hhid"]
         )
         new_diff_marg = get_diff_marg(marg_hh, new_kept_marg)
         checking_not_neg = new_diff_marg < 0
@@ -236,26 +238,26 @@ def main():
         ls_final_pp.append(new_fin_pp)
 
         hh_df_got_rm.to_csv(
-            os.path.join(processed_data, "keep_check", f"del4_df_hh_{i}.csv"),
+            os.path.join(processed_data, "keep_check", f"new_rela_del4_df_hh_{i}.csv"),
             index=False,
         )
         new_kept_hh.to_csv(
-            os.path.join(processed_data, "keep_check", f"hh4_keep_df_{i}.csv"),
+            os.path.join(processed_data, "keep_check", f"new_rela_hh4_keep_df_{i}.csv"),
             index=False,
         )
         new_fin_pp.to_csv(
-            os.path.join(processed_data, "keep_check", f"pp4_df_{i}.csv"), index=False
+            os.path.join(processed_data, "keep_check", f"new_rela_pp4_df_{i}.csv"), index=False
         )
 
         check = len(hh_df) - len(new_kept_hh)
         re_check_to_show.append(check)
 
         pool.to_csv(
-            os.path.join(processed_data, "keep_check", f"updated4_pool_{i}.csv"),
+            os.path.join(processed_data, "keep_check", f"new_rela_updated4_pool_{i}.csv"),
             index=False,
         )
         marg_hh.to_csv(
-            os.path.join(processed_data, "keep_check", f"updated4_marg_{i}.csv"),
+            os.path.join(processed_data, "keep_check", f"new_rela_updated4_marg_{i}.csv"),
             index=False,
         )
 
@@ -282,10 +284,10 @@ def main():
     print(final_hh)
     print(final_pp)
     final_pp.to_csv(
-        os.path.join(output_dir, f"syn4_pp_final_{geo_lev}_ad4.csv"), index=False
+        os.path.join(output_dir, f"new_syn4_pp_final_{geo_lev}_ad4.csv"), index=False
     )
     final_hh.to_csv(
-        os.path.join(output_dir, f"syn4_hh_final_{geo_lev}_ad4.csv"), index=False
+        os.path.join(output_dir, f"new_syn4_hh_final_{geo_lev}_ad4.csv"), index=False
     )
 
     print(re_check_to_show)
