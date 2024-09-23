@@ -72,7 +72,10 @@ def adjust_atts_state_match_census(att: str, curr_syn_pop: Union[None, pd.DataFr
         updated_syn_pop = init_syn_pop_saa(att, census_data_by_att, pool).to_pandas()
     else:
         states_diff_census = calculate_states_diff(att, curr_syn_pop, census_data_by_att)
-        print(states_diff_census)
+        assert (states_diff_census.sum(axis=1) == 0).all()
+        # With state diff we can now do adjustment for each zone, can parallel it?
+        
+
         # Will slowly convert to polars later
         # All the pool and synpop would be in the count format (with weights)
         # This also help confirmed later if we want to use the vista directly
