@@ -60,7 +60,7 @@ NOT_INCLUDED_IN_BN_LEARN = ["serialno", "persid", "relationship", "sample_geog"]
 
 zone_field = "zone_id"
 hhid_field = "serialno"
-count_field = "saa_count"
+count_field = "count" # THIS IS THE DEFAULT FROM value_counts in pandas
 
 POOL_SIZE = 1e7
 

@@ -12,3 +12,13 @@ Outputs: New syn_pop for that zone
 
 We need to think about how to better this process, not with pairing and simple finding, maybe matrix opt
 """
+import pandas as pd
+import numpy as np
+from PopSynthesis.Methods.IPSF.const import zone_field
+from typing import List
+
+def zone_adjustment(curr_syn_count: pd.DataFrame, diff_census: pd.Series, pool: pd.DataFrame, adjusted_atts: List[str]) -> pd.DataFrame:
+    assert zone_field in curr_syn_count.columns
+    assert zone_field in pool.columns
+
+    print(diff_census)
