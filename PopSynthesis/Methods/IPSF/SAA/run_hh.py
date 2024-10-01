@@ -16,10 +16,13 @@ def run_main() -> None:
         "hhsize",
         "hhinc",
         "totalvehs",
-    ]  # , "totalvehs", "dwelltype", "owndwell"
+        "dwelltype",
+        "owndwell",
+    ]
     hh_marg = hh_marg.head(3)
     saa = SAA(hh_marg, hh_seed, order_adjustment, hh_att_state)
     final_syn_pop = saa.run()
+    print(final_syn_pop)
     # print(saa.segmented_marg)
 
 
