@@ -22,9 +22,8 @@ import random
 
 def find_combinations_with_prev_atts(filtered_targeted_samples: pd.DataFrame, prev_atts: List[str]) -> pd.DataFrame:
     sub_samples = filtered_targeted_samples[prev_atts + [count_field]]
-    gb_cols = sub_samples.columns.difference([count_field]).to_list()
     sub_samples = sub_samples.reset_index()
-    gb_df = pd.DataFrame(sub_samples.groupby(gb_cols)["index"].apply(lambda x: list(x)))
+    gb_df = pd.DataFrame(sub_samples.groupby(prev_atts)["index"].apply(lambda x: list(x)))
     gb_df[count_field] = gb_df["index"].apply(lambda x: len(x))
     # get the list of index
     return gb_df
@@ -46,8 +45,9 @@ def add_decided_sample_count(count_df: pd.DataFrame, n_adjust: int, use_pool_wei
 def zone_adjustment(att: str, curr_syn_count: pd.DataFrame, diff_census: pd.Series, pool: pd.DataFrame, adjusted_atts: List[str]) -> pd.DataFrame:
     assert count_field in curr_syn_count.columns
     assert count_field in pool.columns
+    assert "id"
     assert len(curr_syn_count[zone_field].unique()) == 1
-    curr_syn_count = curr_syn_count.drop(columns=[zone_field])
+    to_update_syn_count = curr_syn_count.drop(columns=[zone_field]).reset_index(drop=True)
 
     neg_states = diff_census[diff_census < 0].index.tolist()
     pos_states = diff_census[diff_census > 0].index.tolist()
@@ -56,7 +56,7 @@ def zone_adjustment(att: str, curr_syn_count: pd.DataFrame, diff_census: pd.Seri
     
     for neg_state, pos_state in pairs_adjust:
         # Check neg state
-        filtered_syn_pop = curr_syn_count[curr_syn_count[att] == neg_state]
+        filtered_syn_pop = to_update_syn_count[to_update_syn_count[att] == neg_state]
         count_neg_in_syn = find_combinations_with_prev_atts(filtered_syn_pop, adjusted_atts)
         neg_val = int(diff_census[neg_state])
         # check pos state
@@ -72,6 +72,8 @@ def zone_adjustment(att: str, curr_syn_count: pd.DataFrame, diff_census: pd.Seri
         filtered_count_neg = count_neg_in_syn.loc[list(possible_prev_comb)].add_prefix("syn_")
         filtered_count_pos = count_pos_in_pool.loc[list(possible_prev_comb)].add_prefix("pool_")
         combined_filter = pd.concat([filtered_count_neg, filtered_count_pos], axis=1)
+
+        ##### TILL HERE IS CORRECT, combined filter will have the count, we need the index from the current syn_count
         # Sampling from this, will based on the neg from syn
         combined_counts = add_decided_sample_count(combined_filter, n_adjust)
         combined_counts["syn_chosen_idx"] = combined_counts.apply(lambda r: np.random.choice(r["syn_index"], r["decided_sample_count"], replace=False), axis=1)
@@ -79,6 +81,11 @@ def zone_adjustment(att: str, curr_syn_count: pd.DataFrame, diff_census: pd.Seri
         syn_idx = [item for sublist in combined_counts["syn_chosen_idx"] for item in sublist]
         pool_idx = [item for sublist in combined_counts["pool_chosen_idx"] for item in sublist]
         pool_chosen_samples = filtered_pool.loc[pool_idx]
-        print(pool_chosen_samples)
-        # Now we need to remove the neg and add the pos, this requires sampling
+
+        updated_popsyn = pd.concat([to_update_syn_count.drop(index=syn_idx), pool_chosen_samples])
+        # We need to reset this to make sure the idx is correct for next round
+        assert len(to_update_syn_count) == len(updated_popsyn) # same population
+        to_update_syn_count = updated_popsyn.reset_index(drop=True)
         break
+
+    # NOTE: huge issue, the idx is not for the indi but for the count, now how to link

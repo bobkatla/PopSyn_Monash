@@ -8,6 +8,7 @@ from typing import List, Union, Tuple, Dict
 from PopSynthesis.Methods.IPSF.const import count_field, zone_field, data_dir
 from PopSynthesis.Methods.IPSF.SAA.operations.compare_census import calculate_states_diff
 from PopSynthesis.Methods.IPSF.SAA.operations.zone_adjustment import zone_adjustment
+from PopSynthesis.Methods.IPSF.utils.condensed_tools import CondensedDF, sample_from_condensed
 
 
 def process_raw_ipu_init(marg: pd.DataFrame, seed: pd.DataFrame) -> Tuple[Dict[str, pd.DataFrame], pd.DataFrame]:
@@ -76,12 +77,15 @@ def adjust_atts_state_match_census(att: str, curr_syn_pop: Union[None, pd.DataFr
         states_diff_census = calculate_states_diff(att, curr_syn_pop, census_data_by_att)
         assert (states_diff_census.sum(axis=1) == 0).all()
         # With state diff we can now do adjustment for each zone, can parallel it?
-        syn_pop_count = curr_syn_pop.value_counts().reset_index()
-        for zid, zone_states_diff in states_diff_census.iterrows():
-            print(f"Processing zone {zid}")
-            sub_syn_pop = syn_pop_count[syn_pop_count[zone_field]==zid]
-            updated_syn_pop = zone_adjustment(att, sub_syn_pop, zone_states_diff, pool, adjusted_atts)
-            break
+        a = CondensedDF(curr_syn_pop)
+        b = sample_from_condensed(a, 20)
+        print(b)
+
+        # for zid, zone_states_diff in states_diff_census.iterrows():
+        #     print(f"Processing zone {zid}")
+        #     sub_syn_pop = syn_pop_count[syn_pop_count[zone_field]==zid]
+        #     updated_syn_pop = zone_adjustment(att, sub_syn_pop, zone_states_diff, pool, adjusted_atts)
+        #     break
 
         # Will slowly convert to polars later
         # All the pool and synpop would be in the count format (with weights)
