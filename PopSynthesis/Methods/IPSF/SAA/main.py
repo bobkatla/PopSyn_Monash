@@ -22,10 +22,11 @@ class SAA:
         seed_raw: pd.DataFrame,
         ordered_to_adjust_atts: List[str],
         att_states: Dict[str, List[str]],
-        pool_sz: int = POOL_SIZE,
+        pool: pd.DataFrame
     ) -> None:
         self.ordered_atts = ordered_to_adjust_atts
         self.known_att_states = att_states
+        self.pool = pool
         self.init_required_inputs(marginal_raw, seed_raw)
 
     def init_required_inputs(self, marginal_raw: pd.DataFrame, seed_raw: pd.DataFrame):
@@ -39,11 +40,10 @@ class SAA:
         # Output the synthetic population, the main point
         curr_syn_pop = None
         adjusted_atts = []
-        pool = self.seed  # change later
         for att in self.ordered_atts:
             sub_census = self.segmented_marg[att].reset_index()
             curr_syn_pop = adjust_atts_state_match_census(
-                att, curr_syn_pop, sub_census, adjusted_atts, pool
+                att, curr_syn_pop, sub_census, adjusted_atts, self.pool
             )
             adjusted_atts.append(att)
         return curr_syn_pop
