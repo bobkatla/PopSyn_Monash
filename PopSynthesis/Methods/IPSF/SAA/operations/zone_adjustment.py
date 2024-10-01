@@ -15,8 +15,8 @@ We need to think about how to better this process, not with pairing and simple f
 import pandas as pd
 import numpy as np
 from PopSynthesis.Methods.IPSF.const import zone_field
-from PopSynthesis.Methods.IPSF.utils.condensed_tools import CondensedDF, sample_ids_use_ids_count, filter_by_SAA_adjusted
-from typing import List, Tuple, Union
+from PopSynthesis.Methods.IPSF.utils.condensed_tools import CondensedDF, filter_by_SAA_adjusted
+from typing import List, Tuple
 import itertools
 import random
 
@@ -55,18 +55,18 @@ def sample_syn_and_pool_adjust(condensed_syn: CondensedDF, condensed_pool: Conde
     return removed_ids_syn, add_ids_pool, total_cannot_sample
 
 
-def zone_adjustment(att: str, curr_syn_count: pd.DataFrame, diff_census: pd.Series, pool: pd.DataFrame, adjusted_atts: List[str]) -> Union[pd.DataFrame, None]:
+def zone_adjustment(att: str, curr_syn: pd.DataFrame, diff_census: pd.Series, pool: pd.DataFrame, adjusted_atts: List[str]) -> pd.DataFrame:
     assert "id"
-    assert len(curr_syn_count[zone_field].unique()) == 1
-    zone = curr_syn_count[zone_field].unique()[0]
-    curr_syn_count = curr_syn_count.drop(columns=[zone_field])
+    assert len(curr_syn[zone_field].unique()) == 1
+    zone = curr_syn[zone_field].unique()[0]
+    to_update_syn = curr_syn.drop(columns=[zone_field])
 
     neg_states = diff_census[diff_census < 0].index.tolist()
     pos_states = diff_census[diff_census > 0].index.tolist()
     pairs_adjust = list(itertools.product(neg_states, pos_states))
     random.shuffle(pairs_adjust)
+    ori_num_syn = len(curr_syn)
 
-    adjusted_records = []
     # check_got_adjusted = []
     
     for neg_state, pos_state in pairs_adjust:
@@ -77,7 +77,7 @@ def zone_adjustment(att: str, curr_syn_count: pd.DataFrame, diff_census: pd.Seri
             continue
 
         # Check neg state
-        filtered_syn_pop = curr_syn_count[curr_syn_count[att] == neg_state]
+        filtered_syn_pop = to_update_syn[to_update_syn[att] == neg_state]
         num_syn_pop = len(filtered_syn_pop) # must not change
         neg_comb_prev = filtered_syn_pop.set_index(adjusted_atts)
         condensed_pop_check = CondensedDF(filtered_syn_pop)
@@ -104,7 +104,10 @@ def zone_adjustment(att: str, curr_syn_count: pd.DataFrame, diff_census: pd.Seri
         # final update
         final_resulted_syn = pd.concat([updated_condensed_pop.get_full_records(), remaining_pop])
         assert len(final_resulted_syn) == num_syn_pop
-        adjusted_records.append(final_resulted_syn)
+
+        # update the syn pop
+        remaining_syn_pop = to_update_syn[to_update_syn[att] != neg_state]
+        to_update_syn = pd.concat([remaining_syn_pop, final_resulted_syn])
 
         actual_got_adjusted = n_adjust - n_not_adjusted
         diff_census[neg_state] += actual_got_adjusted
@@ -113,9 +116,6 @@ def zone_adjustment(att: str, curr_syn_count: pd.DataFrame, diff_census: pd.Seri
         # check_got_adjusted.append(actual_got_adjusted)
 
     # print(check_got_adjusted)
-    if len(adjusted_records) == 0:
-        # We could not adjust any
-        return None
-    fin_adjusted_results = pd.concat(adjusted_records)
-    fin_adjusted_results[zone_field] = zone
-    return fin_adjusted_results
+    to_update_syn[zone_field] = zone
+    assert len(to_update_syn) == ori_num_syn
+    return to_update_syn
