@@ -69,23 +69,18 @@ def init_syn_pop_saa(att:str, marginal_data: pd.DataFrame, pool: pd.DataFrame) -
 
 
 def adjust_atts_state_match_census(att: str, curr_syn_pop: Union[None, pd.DataFrame], census_data_by_att: pd.DataFrame, adjusted_atts: List[str], pool: pd.DataFrame) -> pd.DataFrame:
-    assert count_field in pool.columns
-    updated_syn_pop = None
     if curr_syn_pop is None:
         updated_syn_pop = init_syn_pop_saa(att, census_data_by_att, pool).to_pandas()
     else:
+        updated_syn_pop = curr_syn_pop
         states_diff_census = calculate_states_diff(att, curr_syn_pop, census_data_by_att)
         assert (states_diff_census.sum(axis=1) == 0).all()
         # With state diff we can now do adjustment for each zone, can parallel it?
-        a = CondensedDF(curr_syn_pop)
-        b = sample_from_condensed(a, 20)
-        print(b)
-
-        # for zid, zone_states_diff in states_diff_census.iterrows():
-        #     print(f"Processing zone {zid}")
-        #     sub_syn_pop = syn_pop_count[syn_pop_count[zone_field]==zid]
-        #     updated_syn_pop = zone_adjustment(att, sub_syn_pop, zone_states_diff, pool, adjusted_atts)
-        #     break
+        for zid, zone_states_diff in states_diff_census.iterrows():
+            print(f"Processing zone {zid}")
+            sub_syn_pop = updated_syn_pop[updated_syn_pop[zone_field]==zid]
+            zone_adjusted_syn_pop = zone_adjustment(att, sub_syn_pop, zone_states_diff, pool, adjusted_atts)
+            break
 
         # Will slowly convert to polars later
         # All the pool and synpop would be in the count format (with weights)

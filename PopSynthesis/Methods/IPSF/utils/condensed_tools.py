@@ -20,11 +20,11 @@ class CondensedDF:
     count_col = "count"
 
     def __init__(self, original_records: pd.DataFrame) -> None:
-        self.full_records = original_records
+        self.full_records = original_records.copy()
         self.all_cols = original_records.columns.tolist()
 
         assert self.id_col not in self.all_cols
-        self.full_records[self.id_col] = range(1, len(self.full_records) + 1) # give the id
+        self.full_records.loc[:, self.id_col] = range(1, len(self.full_records) + 1) # give the id
 
         self.condense()
 
@@ -41,6 +41,9 @@ class CondensedDF:
 
         self.condensed_records = condensed_records
 
+    def get_sub_records_by_ids(self, ids: List[int]):
+        return self.full_records[self.full_records[self.id_col].isin(ids)].drop(columns=[self.id_col])
+
     def remove_identified_ids(self, ids: List[int]):
         self.full_records = self.full_records[~self.full_records[self.id_col].isin(ids)]
         self.condense()
@@ -56,10 +59,10 @@ class CondensedDF:
         return str(self.condensed_records)
 
 
-def filter_and_update_by_SAA_adjusted(src: CondensedDF, list_to_filter: List[Any], adjusted_atts: List[str]) -> CondensedDF:
-    assert adjusted_atts in src.all_cols
+def filter_by_SAA_adjusted(src: CondensedDF, list_to_filter: List[Any], adjusted_atts: List[str]) -> CondensedDF:
+    assert set(adjusted_atts).issubset(set(src.all_cols))
     temp_ori = src.get_full_records().set_index(adjusted_atts)
-    assert set(list_to_filter) in set(temp_condensed.index)
+    assert set(list_to_filter).issubset(set(temp_ori.index))
     filtered_ori_records = temp_ori.loc[list_to_filter].reset_index()
     return CondensedDF(filtered_ori_records)
 
