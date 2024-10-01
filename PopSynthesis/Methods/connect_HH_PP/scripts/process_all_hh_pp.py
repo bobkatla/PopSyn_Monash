@@ -31,7 +31,6 @@ from PopSynthesis.Methods.connect_HH_PP.scripts.sample_hh_main import (
     learn_para_BN,
 )
 from PopSynthesis.Methods.connect_HH_PP.scripts.sample_pp import (
-    learn_struct_BN_score,
     pools_get,
     inference_model_get,
     process_combine_df,
