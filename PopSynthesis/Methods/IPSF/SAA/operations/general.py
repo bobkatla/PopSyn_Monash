@@ -73,35 +73,18 @@ def adjust_atts_state_match_census(att: str, curr_syn_pop: Union[None, pd.DataFr
         updated_syn_pop = init_syn_pop_saa(att, census_data_by_att, pool).to_pandas()
     else:
         updated_syn_pop = curr_syn_pop
+
         states_diff_census = calculate_states_diff(att, curr_syn_pop, census_data_by_att)
         assert (states_diff_census.sum(axis=1) == 0).all()
         # With state diff we can now do adjustment for each zone, can parallel it?
+        pop_syn_across_zones = []
         for zid, zone_states_diff in states_diff_census.iterrows():
             print(f"Processing zone {zid}")
             sub_syn_pop = updated_syn_pop[updated_syn_pop[zone_field]==zid]
             zone_adjusted_syn_pop = zone_adjustment(att, sub_syn_pop, zone_states_diff, pool, adjusted_atts)
-            break
+            if zone_adjusted_syn_pop is not None:
+                pop_syn_across_zones.append(zone_adjusted_syn_pop)
+        
+        updated_syn_pop = pd.concat(pop_syn_across_zones)
 
-        # Will slowly convert to polars later
-        # All the pool and synpop would be in the count format (with weights)
-        # This also help confirmed later if we want to use the vista directly
-        # now we need update popsyn with SAA
-        # Calulate the diff for each state comparing with census
-        # This can just be a value counts and with the sign (plus or minus)
-        # Then adjust by add and del
-        # We need to search for combinations with each add and del
-        # This is to ensure the prev adjust atts are maintained
-        # We only can del what can be add and add what can be del (using set opt?)
-        # Value counts for all states to get the filter
-        # Remember to check the weights, the weights for each combination would be the sum
-        # Maybe achieve this via a set intersection to filter feasible cases
-        # For add, we only care whether they exist or not
-        # For del, we only can del what we can del
-        # Maybe instead of pairing neg and pos (maybe that while it is slow)
-        # We draw the add from a pool, as long as we update the state diff
-        # But how to make sure we don't over sample (as we will sample with replacement)
-        # So we may need a dict to map to the existing
-        # We also need to care about the sampling
-
-        # Loop through the matching combination to add and del
     return updated_syn_pop

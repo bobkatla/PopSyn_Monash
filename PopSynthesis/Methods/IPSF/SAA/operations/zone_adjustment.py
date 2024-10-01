@@ -14,9 +14,9 @@ We need to think about how to better this process, not with pairing and simple f
 """
 import pandas as pd
 import numpy as np
-from PopSynthesis.Methods.IPSF.const import count_field, zone_field
+from PopSynthesis.Methods.IPSF.const import zone_field
 from PopSynthesis.Methods.IPSF.utils.condensed_tools import CondensedDF, sample_ids_use_ids_count, filter_by_SAA_adjusted
-from typing import List, Tuple
+from typing import List, Tuple, Union
 import itertools
 import random
 
@@ -55,7 +55,7 @@ def sample_syn_and_pool_adjust(condensed_syn: CondensedDF, condensed_pool: Conde
     return removed_ids_syn, add_ids_pool, total_cannot_sample
 
 
-def zone_adjustment(att: str, curr_syn_count: pd.DataFrame, diff_census: pd.Series, pool: pd.DataFrame, adjusted_atts: List[str]) -> pd.DataFrame:
+def zone_adjustment(att: str, curr_syn_count: pd.DataFrame, diff_census: pd.Series, pool: pd.DataFrame, adjusted_atts: List[str]) -> Union[pd.DataFrame, None]:
     assert "id"
     assert len(curr_syn_count[zone_field].unique()) == 1
     zone = curr_syn_count[zone_field].unique()[0]
@@ -110,6 +110,9 @@ def zone_adjustment(att: str, curr_syn_count: pd.DataFrame, diff_census: pd.Seri
         # check_got_adjusted.append(actual_got_adjusted)
 
     # print(check_got_adjusted)
+    if len(adjusted_records) == 0:
+        # We could not adjust any
+        return None
     fin_adjusted_results = pd.concat(adjusted_records)
     fin_adjusted_results[zone_field] = zone
     return fin_adjusted_results
