@@ -6,18 +6,18 @@ from typing import List, Dict, Any, Literal
 MIN_PARENT_CHILD_GAP = 15
 MIN_GRANDPARENT_GRANDCHILD_GAP = 33
 # This only apply when we do the conversion for Child and Grandchild
-MAX_COUPLE_GAP = 20  
+MAX_COUPLE_GAP = 20
 MIN_PERMITTED_AGE_MARRIED = 16
 AVAILABLE_RELATIONSHIPS = [
-        "Main",
-        "Spouse",
-        "Child",
-        "Grandchild",
-        "Sibling",
-        "Others",
-        "Parent",
-        "Grandparent",
-    ]
+    "Main",
+    "Spouse",
+    "Child",
+    "Grandchild",
+    "Sibling",
+    "Others",
+    "Parent",
+    "Grandparent",
+]
 
 
 class Person:
@@ -385,6 +385,6 @@ def process_rela(pp_df: pl.DataFrame) -> pl.DataFrame:
     pp_df["relationship"] = pp_df["persid"].map(result_mapping)
 
     # The households with implausible combinations will have None value for relationship
-    pp_df =pp_df[~pp_df["relationship"].isna()]
+    pp_df = pp_df[~pp_df["relationship"].isna()]
 
     return pl.from_pandas(pp_df)

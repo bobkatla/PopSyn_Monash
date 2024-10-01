@@ -4,6 +4,7 @@ import synthpop.zone_synthesizer as zs
 import time
 
 from pathlib import Path
+
 data_path = Path(__file__).parent.parent.resolve() / "test_data"
 expected_folder = None
 
@@ -14,7 +15,7 @@ def test_ipu():
     p_marg = name_f("person_marg_minor_test")
     hh_sample = name_f("hh_sample_minors")
     p_sample = name_f("pp_sample_minors")
-    
+
     start_time = time.time()
 
     hh_marg, p_marg, hh_sample, p_sample, xwalk = zs.load_data(
@@ -33,5 +34,6 @@ def test_ipu():
     print("--- %s seconds ---" % elapsed_time)
     print("--- %s minutes ---" % (elapsed_time / 60))
     print("--- %s hours ---" % (elapsed_time / 360))
+
 
 test_ipu()

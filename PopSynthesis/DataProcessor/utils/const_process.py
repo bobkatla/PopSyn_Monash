@@ -43,7 +43,16 @@ LS_HH_INC = [
     "$8,000 or more ($416,000 or more)",
 ]
 
-HH_ATTS = ["hhid", "dwelltype", "owndwell", "hhinc", "totalvehs", "hhsize", "wdhhwgt_sa3", "wehhwgt_sa3"]
+HH_ATTS = [
+    "hhid",
+    "dwelltype",
+    "owndwell",
+    "hhinc",
+    "totalvehs",
+    "hhsize",
+    "wdhhwgt_sa3",
+    "wehhwgt_sa3",
+]
 
 PP_ATTS = [
     "persid",
@@ -55,6 +64,6 @@ PP_ATTS = [
     "nolicence",
     "anywork",
     "wdperswgt_sa3",
-    "weperswgt_sa3"
+    "weperswgt_sa3",
 ]
 NOT_INCLUDED_IN_BN_LEARN = ["hhid", "persid", "relationship"]

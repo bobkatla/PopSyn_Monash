@@ -58,7 +58,9 @@ class DataProcessorGeneric:
         filtered_hh = hh_df[hh_df["hhid"].isin(hhid_in_pp)]
         hhid_in_hh = list(filtered_hh["hhid"].unique())
         filtered_pp = pp_df[pp_df["hhid"].isin(hhid_in_hh)]
-        print(f"Removed {len(hh_df) - len(filtered_hh)} households due to mismatch with pp")
+        print(
+            f"Removed {len(hh_df) - len(filtered_hh)} households due to mismatch with pp"
+        )
         print(f"Removed {len(pp_df) - len(filtered_pp)} people due to mismatch with hh")
 
         # households size equal number of persons
@@ -81,7 +83,6 @@ class DataProcessorGeneric:
 
         self.hh_seed_data = filtered_hh
         self.pp_seed_data = filtered_pp
-        
 
     def process_households_seed(self) -> pd.DataFrame:
         # Import the hh seed data
@@ -91,7 +92,9 @@ class DataProcessorGeneric:
         # Next we add weights, we combine weights of both wd and we
         hh_df = hh_df.with_columns(pl.col("wdhhwgt_sa3").fill_null(strategy="zero"))
         hh_df = hh_df.with_columns(pl.col("wehhwgt_sa3").fill_null(strategy="zero"))
-        hh_df = hh_df.with_columns(_weight = pl.col("wdhhwgt_sa3") + pl.col("wehhwgt_sa3"))
+        hh_df = hh_df.with_columns(
+            _weight=pl.col("wdhhwgt_sa3") + pl.col("wehhwgt_sa3")
+        )
         hh_df = hh_df.drop(["wdhhwgt_sa3", "wehhwgt_sa3"])
         hh_df = hh_df.drop_nulls()
 
@@ -109,15 +112,19 @@ class DataProcessorGeneric:
         # Next we add weights, we combine weights of both wd and we
         pp_df = pp_df.with_columns(pl.col("wdperswgt_sa3").fill_null(strategy="zero"))
         pp_df = pp_df.with_columns(pl.col("weperswgt_sa3").fill_null(strategy="zero"))
-        pp_df = pp_df.with_columns(_weight = pl.col("wdperswgt_sa3") + pl.col("weperswgt_sa3"))
+        pp_df = pp_df.with_columns(
+            _weight=pl.col("wdperswgt_sa3") + pl.col("weperswgt_sa3")
+        )
         pp_df = pp_df.drop(["wdperswgt_sa3", "weperswgt_sa3"])
 
         pp_df = process_not_accept_values(pp_df)
         pp_df = process_rela(pp_df)
         pp_df = convert_pp_age_gr(pp_df)
         return pp_df.to_pandas()
-    
-    def output_seed(self, name_pp_seed:str = "pp_seed", name_hh_seed:str = "hh_seed") -> None:
+
+    def output_seed(
+        self, name_pp_seed: str = "pp_seed", name_hh_seed: str = "hh_seed"
+    ) -> None:
         pp_loc = self.output_data_path / f"{name_pp_seed}.csv"
         hh_loc = self.output_data_path / f"{name_hh_seed}.csv"
         self.pp_seed_data.to_csv(pp_loc, index=False)
@@ -131,7 +138,7 @@ class DataProcessorGeneric:
 
     def process_persons_census(self):
         NotImplemented
-    
+
     def output_all_files(self):
         NotImplemented
 

@@ -16,7 +16,12 @@ logger = logging.getLogger("connect_hh_pp")
 
 def main():
     geo_lev = "POA"
-    processed_already = ["hhsize", "totalvehs", "hhinc", "dwelltype"] # Maybe don't need to run for that
+    processed_already = [
+        "hhsize",
+        "totalvehs",
+        "hhinc",
+        "dwelltype",
+    ]  # Maybe don't need to run for that
     # processed_already = ["hhsize", "totalvehs"]
 
     all_rela_exist = AVAILABLE_RELATIONSHIPS.copy()
@@ -51,16 +56,18 @@ def main():
     #     dict_pool_sample = pickle.load(handle)
 
     ############# TEST #################
-    with open(os.path.join(processed_data, 'dict_hh_states.pickle'), 'rb') as handle:
+    with open(os.path.join(processed_data, "dict_hh_states.pickle"), "rb") as handle:
         hh_state_names = pickle.load(handle)
-    with open(os.path.join(processed_data, 'dict_pp_states.pickle'), 'rb') as handle:
+    with open(os.path.join(processed_data, "dict_pp_states.pickle"), "rb") as handle:
         pp_state_names = pickle.load(handle)
     state_names = hh_state_names | pp_state_names
 
-    #learning to get the HH only with main person
+    # learning to get the HH only with main person
     df_seed_hh_main = pd.read_csv(os.path.join(processed_data, "connect_hh_main.csv"))
     # drop all the ids as they are not needed for in BN learning
-    id_cols_hh_main = [x for x in df_seed_hh_main.columns if "hhid" in x or "persid" in x]
+    id_cols_hh_main = [
+        x for x in df_seed_hh_main.columns if "hhid" in x or "persid" in x
+    ]
     df_seed_hh_main = df_seed_hh_main.drop(columns=id_cols_hh_main)
     logger.info("GETTING the pool HH and Main")
     pool_hh_main = get_pool(df_seed_hh_main, state_names, int(1e5), special=False)
@@ -96,7 +103,9 @@ def main():
                 marg_hh, pool, geo_lev, processed_already, is_ipu_data=False
             )
             hh_df.to_csv(
-                os.path.join(processed_data, "keep_check", f"new_rela_adjusted4_hh_new_{i}.csv"),
+                os.path.join(
+                    processed_data, "keep_check", f"new_rela_adjusted4_hh_new_{i}.csv"
+                ),
                 index=False,
             )
 
@@ -246,18 +255,23 @@ def main():
             index=False,
         )
         new_fin_pp.to_csv(
-            os.path.join(processed_data, "keep_check", f"new_rela_pp4_df_{i}.csv"), index=False
+            os.path.join(processed_data, "keep_check", f"new_rela_pp4_df_{i}.csv"),
+            index=False,
         )
 
         check = len(hh_df) - len(new_kept_hh)
         re_check_to_show.append(check)
 
         pool.to_csv(
-            os.path.join(processed_data, "keep_check", f"new_rela_updated4_pool_{i}.csv"),
+            os.path.join(
+                processed_data, "keep_check", f"new_rela_updated4_pool_{i}.csv"
+            ),
             index=False,
         )
         marg_hh.to_csv(
-            os.path.join(processed_data, "keep_check", f"new_rela_updated4_marg_{i}.csv"),
+            os.path.join(
+                processed_data, "keep_check", f"new_rela_updated4_marg_{i}.csv"
+            ),
             index=False,
         )
 

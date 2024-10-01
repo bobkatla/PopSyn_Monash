@@ -13,16 +13,27 @@ import pickle
 from typing import Dict, List, Tuple, Any, Union
 
 # Very bad, should list out the imports you want
-from PopSynthesis.Methods.connect_HH_PP.paras_dir import data_dir, processed_data, output_dir
-from PopSynthesis.Methods.connect_HH_PP.scripts.sample_hh_main import samp_from_pool_1layer
-from PopSynthesis.Methods.connect_HH_PP.scripts.process_all_hh_pp import get_pool, POOL_SZ
+from PopSynthesis.Methods.connect_HH_PP.paras_dir import (
+    data_dir,
+    processed_data,
+    output_dir,
+)
+from PopSynthesis.Methods.connect_HH_PP.scripts.sample_hh_main import (
+    samp_from_pool_1layer,
+)
+from PopSynthesis.Methods.connect_HH_PP.scripts.process_all_hh_pp import (
+    get_pool,
+    POOL_SZ,
+)
 
 assert Path(data_dir).exists()
 assert Path(processed_data).exists()
 assert Path(output_dir).exists()
 
 
-def cal_states_diff(att: str, pop_df: pd.DataFrame, census_data: pd.DataFrame, geo_lev: str) -> Dict[str, Dict[str, int]]:
+def cal_states_diff(
+    att: str, pop_df: pd.DataFrame, census_data: pd.DataFrame, geo_lev: str
+) -> Dict[str, Dict[str, int]]:
     """ This calculate the differences between current syn_pop and the census at a specific geo_lev """
     pop_counts = pop_df[[geo_lev, att]].value_counts()
 
@@ -63,17 +74,30 @@ def get_neg_pos_ls(count_vals: Dict[str, int]) -> Tuple[List[str], List[str]]:
     return ls_neg_states, ls_pos_states
 
 
-def get_comb_count(main_att: str, to_change_state: str, to_maintain_atts: List[str], pool: pd.DataFrame, normalize: bool =True) -> pd.Series:
+def get_comb_count(
+    main_att: str,
+    to_change_state: str,
+    to_maintain_atts: List[str],
+    pool: pd.DataFrame,
+    normalize: bool = True,
+) -> pd.Series:
     """ Get the count for different combination """
     sub_pool = pool[pool[main_att] == to_change_state]
-    sub_pool = sub_pool[to_maintain_atts] # These are the atts got adjusted already, we used them to find matching combinations
+    sub_pool = sub_pool[
+        to_maintain_atts
+    ]  # These are the atts got adjusted already, we used them to find matching combinations
     comb_counts = sub_pool.value_counts(
         normalize=normalize, ascending=True
     )  # if it is from the syn_pop that this is already perfected
     return comb_counts
 
 
-def process_pos_states_counts(main_att: str, ls_pos_states: List[str], to_maintain_atts: List[str], pool: pd.DataFrame) -> Dict[str, pd.Series]:
+def process_pos_states_counts(
+    main_att: str,
+    ls_pos_states: List[str],
+    to_maintain_atts: List[str],
+    pool: pd.DataFrame,
+) -> Dict[str, pd.Series]:
     """ Get combinations from pos states list """
     re_dict = {}
     for state in ls_pos_states:
@@ -130,7 +154,14 @@ def update_syn_pop(
     return new_syn_pop
 
 
-def wrapper_adjust_state(syn_pop: pd.DataFrame, dict_diff: Dict[str, Dict[str, int]], processed_atts: List[str], main_att:str, pool: pd.DataFrame, geo_lev:str) -> pd.DataFrame:
+def wrapper_adjust_state(
+    syn_pop: pd.DataFrame,
+    dict_diff: Dict[str, Dict[str, int]],
+    processed_atts: List[str],
+    main_att: str,
+    pool: pd.DataFrame,
+    geo_lev: str,
+) -> pd.DataFrame:
     """ A wrapper """
     # Doing zone by zone
     for zone in dict_diff:
@@ -188,7 +219,14 @@ def wrapper_adjust_state(syn_pop: pd.DataFrame, dict_diff: Dict[str, Dict[str, i
     return syn_pop
 
 
-def process_data_general(census_data: pd.DataFrame, pool: pd.DataFrame, geo_lev: str, adjust_atts_order: List[str], adjusted_atts: Union[None, List[str]] = None, adjusted_pop: Union[None, pd.DataFrame] = None) -> None:
+def process_data_general(
+    census_data: pd.DataFrame,
+    pool: pd.DataFrame,
+    geo_lev: str,
+    adjust_atts_order: List[str],
+    adjusted_atts: Union[None, List[str]] = None,
+    adjusted_pop: Union[None, pd.DataFrame] = None,
+) -> None:
     # Census data will be in format of count with zone_id, and columns in 2 levels
     # Loop through each att
     census_data = census_data.set_index(
@@ -213,7 +251,7 @@ def process_data_general(census_data: pd.DataFrame, pool: pd.DataFrame, geo_lev:
     for att in adjust_atts_order:
         print(att)
         print(processed_atts)
-        
+
         if syn_pop is None:  # first time run, this should be perfect
             syn_pop = samp_from_pool_1layer(pool, census_data, att, geo_lev)
             syn_pop = syn_pop.astype(str)

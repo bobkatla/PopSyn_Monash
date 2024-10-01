@@ -11,7 +11,9 @@ from pgmpy.sampling import BayesianModelSampling
 from pgmpy.estimators import BayesianEstimator
 
 from PopSynthesis.Methods.connect_HH_PP.paras_dir import processed_data, geo_lev
-from PopSynthesis.DataProcessor.utils.seed.pp.process_relationships import AVAILABLE_RELATIONSHIPS
+from PopSynthesis.DataProcessor.utils.seed.pp.process_relationships import (
+    AVAILABLE_RELATIONSHIPS,
+)
 from PopSynthesis.Methods.connect_HH_PP.scripts.const import PP_ATTS, HH_ATTS
 
 
@@ -145,7 +147,11 @@ def process_rela_using_count(main_pp_df, rela, pool_count, geo_lev):
 
 
 def process_rela_fast(main_pp_df, rela, pool):
-    all_cols = [x for x in main_pp_df.columns if x not in AVAILABLE_RELATIONSHIPS and x != geo_lev]
+    all_cols = [
+        x
+        for x in main_pp_df.columns
+        if x not in AVAILABLE_RELATIONSHIPS and x != geo_lev
+    ]
     all_cols.remove("hhid")
     all_cols_main = [f"{x}_main" for x in all_cols]
     all_cols_rela_rename = {f"{x}_{rela}": x for x in all_cols}

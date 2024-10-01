@@ -10,7 +10,9 @@ from PopSynthesis.Methods.connect_HH_PP.paras_dir import (
     processed_data,
     geo_lev,
 )
-from PopSynthesis.DataProcessor.utils.seed.pp.process_relationships import AVAILABLE_RELATIONSHIPS
+from PopSynthesis.DataProcessor.utils.seed.pp.process_relationships import (
+    AVAILABLE_RELATIONSHIPS,
+)
 
 
 def reject_samp_veh(BN, df_marg, zone_lev):

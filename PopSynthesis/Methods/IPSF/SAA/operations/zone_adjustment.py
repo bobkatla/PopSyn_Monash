@@ -15,47 +15,103 @@ We need to think about how to better this process, not with pairing and simple f
 import pandas as pd
 import numpy as np
 from PopSynthesis.Methods.IPSF.const import zone_field
-from PopSynthesis.Methods.IPSF.utils.condensed_tools import CondensedDF, filter_by_SAA_adjusted
+from PopSynthesis.Methods.IPSF.utils.condensed_tools import (
+    CondensedDF,
+    filter_by_SAA_adjusted,
+)
 from typing import List, Tuple
 import itertools
 import random
 
 
-def convert_condensed_by_adjusted_atts(condensed: CondensedDF, adjusted_atts: List[str]) -> pd.DataFrame:
+def convert_condensed_by_adjusted_atts(
+    condensed: CondensedDF, adjusted_atts: List[str]
+) -> pd.DataFrame:
     condensed_records = condensed.get_condensed()
-    gb_ids = condensed_records.groupby(adjusted_atts)[condensed.id_col].apply(lambda x: list(x))
+    gb_ids = condensed_records.groupby(adjusted_atts)[condensed.id_col].apply(
+        lambda x: list(x)
+    )
     gb_counts = condensed_records.groupby(adjusted_atts)[condensed.count_col].sum()
     merged_new_condensed = pd.concat([gb_ids, gb_counts], axis=1)
-    merged_new_condensed[condensed.id_col] = merged_new_condensed[condensed.id_col].apply(lambda x: sum(x, []))
+    merged_new_condensed[condensed.id_col] = merged_new_condensed[
+        condensed.id_col
+    ].apply(lambda x: sum(x, []))
     return merged_new_condensed
 
 
-def sample_syn_and_pool_adjust(condensed_syn: CondensedDF, condensed_pool: CondensedDF, adjusted_atts: List[str], n_adjust: int) -> Tuple[List[int], List[int], int]:
-    converted_syn = convert_condensed_by_adjusted_atts(condensed_syn, adjusted_atts).add_prefix("syn_")
-    converted_pool = convert_condensed_by_adjusted_atts(condensed_pool, adjusted_atts).add_prefix("pool_")
-    combined_syn_pool = pd.merge(converted_syn, converted_pool, left_index=True, right_index=True)
+def sample_syn_and_pool_adjust(
+    condensed_syn: CondensedDF,
+    condensed_pool: CondensedDF,
+    adjusted_atts: List[str],
+    n_adjust: int,
+) -> Tuple[List[int], List[int], int]:
+    converted_syn = convert_condensed_by_adjusted_atts(
+        condensed_syn, adjusted_atts
+    ).add_prefix("syn_")
+    converted_pool = convert_condensed_by_adjusted_atts(
+        condensed_pool, adjusted_atts
+    ).add_prefix("pool_")
+    combined_syn_pool = pd.merge(
+        converted_syn, converted_pool, left_index=True, right_index=True
+    )
     # sample using the syn
     chosen_col_to_sample = f"syn_{condensed_syn.count_col}"
     sub_to_sample = combined_syn_pool[chosen_col_to_sample].reset_index()
     # sample for the comb of prev
-    sample_results = sub_to_sample.sample(n=n_adjust, weights=chosen_col_to_sample, replace=True)
+    sample_results = sub_to_sample.sample(
+        n=n_adjust, weights=chosen_col_to_sample, replace=True
+    )
     check_sample_value = sample_results.groupby(adjusted_atts).count()
-    check_sample_value = check_sample_value.rename(columns={chosen_col_to_sample: "sample_count"})
-    updated_combined_syn_pool = pd.concat([combined_syn_pool, check_sample_value], axis=1).fillna(0)
+    check_sample_value = check_sample_value.rename(
+        columns={chosen_col_to_sample: "sample_count"}
+    )
+    updated_combined_syn_pool = pd.concat(
+        [combined_syn_pool, check_sample_value], axis=1
+    ).fillna(0)
     # Process to sample for each case of prev comb
-    updated_combined_syn_pool["decided_sample"] = updated_combined_syn_pool.apply(lambda r: min(r[f"syn_{condensed_syn.count_col}"], r[f"pool_{condensed_pool.count_col}"], r["sample_count"]), axis=1)
-    updated_combined_syn_pool["Remaining_cannot_sample"] = updated_combined_syn_pool["sample_count"] - updated_combined_syn_pool["decided_sample"]
-    updated_combined_syn_pool["decided_syn"] = updated_combined_syn_pool.apply(lambda r: list(np.random.choice(r["syn_ids"], size=int(r["decided_sample"]), replace=False)), axis=1)
-    updated_combined_syn_pool["decided_pool"] = updated_combined_syn_pool.apply(lambda r: list(np.random.choice(r["pool_ids"], size=int(r["decided_sample"]), replace=False)), axis=1)
+    updated_combined_syn_pool["decided_sample"] = updated_combined_syn_pool.apply(
+        lambda r: min(
+            r[f"syn_{condensed_syn.count_col}"],
+            r[f"pool_{condensed_pool.count_col}"],
+            r["sample_count"],
+        ),
+        axis=1,
+    )
+    updated_combined_syn_pool["Remaining_cannot_sample"] = (
+        updated_combined_syn_pool["sample_count"]
+        - updated_combined_syn_pool["decided_sample"]
+    )
+    updated_combined_syn_pool["decided_syn"] = updated_combined_syn_pool.apply(
+        lambda r: list(
+            np.random.choice(r["syn_ids"], size=int(r["decided_sample"]), replace=False)
+        ),
+        axis=1,
+    )
+    updated_combined_syn_pool["decided_pool"] = updated_combined_syn_pool.apply(
+        lambda r: list(
+            np.random.choice(
+                r["pool_ids"], size=int(r["decided_sample"]), replace=False
+            )
+        ),
+        axis=1,
+    )
     # get results
     removed_ids_syn = sum(updated_combined_syn_pool["decided_syn"].to_list(), [])
     add_ids_pool = sum(updated_combined_syn_pool["decided_pool"].to_list(), [])
-    total_cannot_sample = int(updated_combined_syn_pool["Remaining_cannot_sample"].sum())
+    total_cannot_sample = int(
+        updated_combined_syn_pool["Remaining_cannot_sample"].sum()
+    )
 
     return removed_ids_syn, add_ids_pool, total_cannot_sample
 
 
-def zone_adjustment(att: str, curr_syn: pd.DataFrame, diff_census: pd.Series, pool: pd.DataFrame, adjusted_atts: List[str]) -> pd.DataFrame:
+def zone_adjustment(
+    att: str,
+    curr_syn: pd.DataFrame,
+    diff_census: pd.Series,
+    pool: pd.DataFrame,
+    adjusted_atts: List[str],
+) -> pd.DataFrame:
     assert "id"
     assert len(curr_syn[zone_field].unique()) == 1
     zone = curr_syn[zone_field].unique()[0]
@@ -68,7 +124,7 @@ def zone_adjustment(att: str, curr_syn: pd.DataFrame, diff_census: pd.Series, po
     ori_num_syn = len(curr_syn)
 
     # check_got_adjusted = []
-    
+
     for neg_state, pos_state in pairs_adjust:
         neg_val = int(diff_census[neg_state])
         pos_val = int(diff_census[pos_state])
@@ -78,7 +134,7 @@ def zone_adjustment(att: str, curr_syn: pd.DataFrame, diff_census: pd.Series, po
 
         # Check neg state
         filtered_syn_pop = to_update_syn[to_update_syn[att] == neg_state]
-        num_syn_pop = len(filtered_syn_pop) # must not change
+        num_syn_pop = len(filtered_syn_pop)  # must not change
         neg_comb_prev = filtered_syn_pop.set_index(adjusted_atts)
         condensed_pop_check = CondensedDF(filtered_syn_pop)
         # check pos state
@@ -86,23 +142,33 @@ def zone_adjustment(att: str, curr_syn: pd.DataFrame, diff_census: pd.Series, po
         pos_comb_prev = filtered_pool.set_index(adjusted_atts)
         condensed_pool_check = CondensedDF(filtered_pool)
 
-        n_adjust = min(abs(neg_val), pos_val) # the possible to adjust
+        n_adjust = min(abs(neg_val), pos_val)  # the possible to adjust
         possible_prev_comb = set(neg_comb_prev.index) & set(pos_comb_prev.index)
         if len(possible_prev_comb) == 0:
-            # No overlapping 
+            # No overlapping
             continue
 
-        updated_condensed_pop, remaining_pop = filter_by_SAA_adjusted(condensed_pop_check, list(possible_prev_comb), adjusted_atts)
-        updated_condensed_pool, _ = filter_by_SAA_adjusted(condensed_pool_check, list(possible_prev_comb), adjusted_atts)
+        updated_condensed_pop, remaining_pop = filter_by_SAA_adjusted(
+            condensed_pop_check, list(possible_prev_comb), adjusted_atts
+        )
+        updated_condensed_pool, _ = filter_by_SAA_adjusted(
+            condensed_pool_check, list(possible_prev_comb), adjusted_atts
+        )
 
-        to_remove_pop_ids, to_add_pool_ids, n_not_adjusted = sample_syn_and_pool_adjust(updated_condensed_pop, updated_condensed_pool, adjusted_atts, n_adjust)
+        to_remove_pop_ids, to_add_pool_ids, n_not_adjusted = sample_syn_and_pool_adjust(
+            updated_condensed_pop, updated_condensed_pool, adjusted_atts, n_adjust
+        )
 
-        chosen_records_from_pool = updated_condensed_pool.get_sub_records_by_ids(to_add_pool_ids)
+        chosen_records_from_pool = updated_condensed_pool.get_sub_records_by_ids(
+            to_add_pool_ids
+        )
         # update the condensed pop
         updated_condensed_pop.remove_identified_ids(to_remove_pop_ids)
         updated_condensed_pop.add_new_records(chosen_records_from_pool)
         # final update
-        final_resulted_syn = pd.concat([updated_condensed_pop.get_full_records(), remaining_pop])
+        final_resulted_syn = pd.concat(
+            [updated_condensed_pop.get_full_records(), remaining_pop]
+        )
         assert len(final_resulted_syn) == num_syn_pop
 
         # update the syn pop

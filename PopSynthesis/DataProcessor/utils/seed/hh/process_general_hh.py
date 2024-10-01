@@ -47,7 +47,9 @@ def convert_hh_inc(hh_df: pl.DataFrame, check_states: str) -> pl.DataFrame:
     return hh_df
 
 
-def convert_hh_dwell(hh_df: pl.DataFrame) -> pl.DataFrame:  # Removing the occupied rent free
+def convert_hh_dwell(
+    hh_df: pl.DataFrame,
+) -> pl.DataFrame:  # Removing the occupied rent free
     col_owndwell = pl.col("owndwell")
     expr = (
         pl.when(col_owndwell == "Occupied Rent-Free")

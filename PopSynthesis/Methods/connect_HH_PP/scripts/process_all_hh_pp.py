@@ -20,11 +20,24 @@ from PopSynthesis.Methods.connect_HH_PP.paras_dir import (
     geo_lev,
     output_dir,
 )
-from PopSynthesis.DataProcessor.utils.seed.pp.process_relationships import AVAILABLE_RELATIONSHIPS
+from PopSynthesis.DataProcessor.utils.seed.pp.process_relationships import (
+    AVAILABLE_RELATIONSHIPS,
+)
 from PopSynthesis.Methods.connect_HH_PP.scripts.const import PP_ATTS
 from PopSynthesis.Methods.connect_HH_PP.paras_dir import data_dir
-from PopSynthesis.Methods.connect_HH_PP.scripts.sample_hh_main import samp_from_pool_1layer, filter_pool, learn_para_BN
-from PopSynthesis.Methods.connect_HH_PP.scripts.sample_pp import learn_struct_BN_score, pools_get, inference_model_get, process_combine_df, process_rela_fast, extra_pp_df
+from PopSynthesis.Methods.connect_HH_PP.scripts.sample_hh_main import (
+    samp_from_pool_1layer,
+    filter_pool,
+    learn_para_BN,
+)
+from PopSynthesis.Methods.connect_HH_PP.scripts.sample_pp import (
+    learn_struct_BN_score,
+    pools_get,
+    inference_model_get,
+    process_combine_df,
+    process_rela_fast,
+    extra_pp_df,
+)
 
 
 # Process to have HH and Main Persons from the HH-Main pool

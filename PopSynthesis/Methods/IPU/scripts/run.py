@@ -4,6 +4,7 @@ import synthpop.zone_synthesizer as zs
 import time
 
 from pathlib import Path
+
 ipu_dir_path = Path(__file__).parent.parent.resolve()
 data_path = Path(ipu_dir_path / "data")
 output_path = Path(ipu_dir_path / "output")
@@ -23,7 +24,7 @@ def test_run(hh_marg, p_marg, hh_sample, p_sample):
     print(all_households)
     print(all_persons)
     print(all_stats)
-    
+
     all_households.to_csv(output_path / "syn_hh_ipu.csv", index=False)
     all_persons.to_csv(output_path / "syn_pp_ipu.csv", index=False)
     all_stats.to_csv(output_path / "stats_ipu.csv", index=False)
@@ -35,7 +36,7 @@ def main():
     p_marg = name_f("person_marginals_ipu")
     hh_sample = name_f("hh_sample_ipu")
     p_sample = name_f("pp_sample_ipu")
-    
+
     start_time = time.time()
     test_run(hh_marg, p_marg, hh_sample, p_sample)
     elapsed_time = time.time() - start_time

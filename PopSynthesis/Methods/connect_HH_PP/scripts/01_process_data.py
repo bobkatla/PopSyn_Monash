@@ -6,7 +6,9 @@ import os
 from PopSynthesis.Methods.connect_HH_PP.paras_dir import processed_data
 from PopSynthesis.Methods.connect_HH_PP.scripts.const import NOT_INCLUDED_IN_BN_LEARN
 from PopSynthesis.DataProcessor.DataProcessor import get_generic_generator
-from PopSynthesis.DataProcessor.utils.seed.pp.process_relationships import AVAILABLE_RELATIONSHIPS
+from PopSynthesis.DataProcessor.utils.seed.pp.process_relationships import (
+    AVAILABLE_RELATIONSHIPS,
+)
 
 
 output_dir = Path(__file__).parent.parent.resolve() / "output"
@@ -14,7 +16,7 @@ assert output_dir.exists()
 
 
 def process_hh_main_person(
-    hh_df: pd.DataFrame, main_pp_df: pd.DataFrame, include_weights:bool=True
+    hh_df: pd.DataFrame, main_pp_df: pd.DataFrame, include_weights: bool = True
 ):
     # they need to perfect match
     assert len(hh_df) == len(main_pp_df)
@@ -30,7 +32,12 @@ def process_hh_main_person(
     return combine_df
 
 
-def process_main_other(main_pp_df:pd.DataFrame, sub_df:pd.DataFrame, rela:str, include_weights:bool=True):
+def process_main_other(
+    main_pp_df: pd.DataFrame,
+    sub_df: pd.DataFrame,
+    rela: str,
+    include_weights: bool = True,
+):
     assert len(main_pp_df["relationship"].unique()) == 1  # It is Main
     assert (
         len(sub_df["relationship"].unique()) == 1
@@ -64,7 +71,8 @@ def main():
     dict_hh_state_names = {
         hh_cols: list(hh_df[hh_cols].unique())
         for hh_cols in hh_df.columns
-        if hh_cols not in AVAILABLE_RELATIONSHIPS and hh_cols not in NOT_INCLUDED_IN_BN_LEARN
+        if hh_cols not in AVAILABLE_RELATIONSHIPS
+        and hh_cols not in NOT_INCLUDED_IN_BN_LEARN
     }
     with open(os.path.join(processed_data, "dict_hh_states.pickle"), "wb") as handle:
         pickle.dump(dict_hh_state_names, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -85,9 +93,7 @@ def main():
 
     # process hh_main
     main_pp_df = pp_df[pp_df["relationship"] == "Main"]
-    df_hh_main = process_hh_main_person(
-        hh_df, main_pp_df, include_weights=False
-    )
+    df_hh_main = process_hh_main_person(hh_df, main_pp_df, include_weights=False)
     df_hh_main.to_csv(os.path.join(processed_data, "connect_hh_main.csv"), index=False)
 
     for rela in AVAILABLE_RELATIONSHIPS:
@@ -97,7 +103,9 @@ def main():
             df_main_other = process_main_other(
                 main_pp_df, sub_df, rela=rela, include_weights=False
             )
-            df_main_other.to_csv(os.path.join(processed_data, f"connect_main_{rela}.csv"), index=False)
+            df_main_other.to_csv(
+                os.path.join(processed_data, f"connect_main_{rela}.csv"), index=False
+            )
 
 
 if __name__ == "__main__":
