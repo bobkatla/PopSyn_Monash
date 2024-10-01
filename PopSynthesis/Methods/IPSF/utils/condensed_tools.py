@@ -11,8 +11,7 @@ We need the tools to convert it to condensed form for faster processing
 # Can just be an outside func, quite easy
 
 import pandas as pd
-import numpy as np
-from typing import List, Any
+from typing import List, Any, Tuple
 
 
 class CondensedDF:
@@ -50,7 +49,7 @@ class CondensedDF:
 
     def add_new_records(self, new_records: pd.DataFrame):
         assert set(new_records.columns) == set(self.all_cols)
-        max_id = self.full_records[self.id_col].max()
+        max_id = self.full_records[self.id_col].max() if not self.full_records.empty else 1
         new_records[self.id_col] = range(max_id, len(new_records) + max_id)
         self.full_records = pd.concat([self.full_records, new_records])
         self.condense()
@@ -59,12 +58,15 @@ class CondensedDF:
         return str(self.condensed_records)
 
 
-def filter_by_SAA_adjusted(src: CondensedDF, list_to_filter: List[Any], adjusted_atts: List[str]) -> CondensedDF:
+def filter_by_SAA_adjusted(src: CondensedDF, list_to_filter: List[Any], adjusted_atts: List[str]) -> Tuple[CondensedDF, pd.DataFrame]:
     assert set(adjusted_atts).issubset(set(src.all_cols))
     temp_ori = src.get_full_records().set_index(adjusted_atts)
     assert set(list_to_filter).issubset(set(temp_ori.index))
+    remaining_list_comb = list(set(temp_ori.index) - set(list_to_filter))
     filtered_ori_records = temp_ori.loc[list_to_filter].reset_index()
-    return CondensedDF(filtered_ori_records)
+    # Also return the remaining records that are not filtered
+    unfiltered_df = temp_ori.loc[remaining_list_comb].reset_index()
+    return CondensedDF(filtered_ori_records), unfiltered_df
 
 
 def sample_from_condensed(src: CondensedDF, n:int) -> CondensedDF:

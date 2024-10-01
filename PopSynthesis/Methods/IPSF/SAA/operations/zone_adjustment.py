@@ -78,6 +78,7 @@ def zone_adjustment(att: str, curr_syn_count: pd.DataFrame, diff_census: pd.Seri
 
         # Check neg state
         filtered_syn_pop = curr_syn_count[curr_syn_count[att] == neg_state]
+        num_syn_pop = len(filtered_syn_pop) # must not change
         neg_comb_prev = filtered_syn_pop.set_index(adjusted_atts)
         condensed_pop_check = CondensedDF(filtered_syn_pop)
         # check pos state
@@ -91,17 +92,19 @@ def zone_adjustment(att: str, curr_syn_count: pd.DataFrame, diff_census: pd.Seri
             # No overlapping 
             continue
 
-        updated_condensed_pop = filter_by_SAA_adjusted(condensed_pop_check, list(possible_prev_comb), adjusted_atts)
-        updated_condensed_pool = filter_by_SAA_adjusted(condensed_pool_check, list(possible_prev_comb), adjusted_atts)
+        updated_condensed_pop, remaining_pop = filter_by_SAA_adjusted(condensed_pop_check, list(possible_prev_comb), adjusted_atts)
+        updated_condensed_pool, _ = filter_by_SAA_adjusted(condensed_pool_check, list(possible_prev_comb), adjusted_atts)
 
         to_remove_pop_ids, to_add_pool_ids, n_not_adjusted = sample_syn_and_pool_adjust(updated_condensed_pop, updated_condensed_pool, adjusted_atts, n_adjust)
 
         chosen_records_from_pool = updated_condensed_pool.get_sub_records_by_ids(to_add_pool_ids)
         # update the condensed pop
         updated_condensed_pop.remove_identified_ids(to_remove_pop_ids)
-        updated_condensed_pool.add_new_records(chosen_records_from_pool)
+        updated_condensed_pop.add_new_records(chosen_records_from_pool)
         # final update
-        adjusted_records.append(updated_condensed_pool.get_full_records())
+        final_resulted_syn = pd.concat([updated_condensed_pop.get_full_records(), remaining_pop])
+        assert len(final_resulted_syn) == num_syn_pop
+        adjusted_records.append(final_resulted_syn)
 
         actual_got_adjusted = n_adjust - n_not_adjusted
         diff_census[neg_state] += actual_got_adjusted
