@@ -105,6 +105,10 @@ def sample_syn_and_pool_adjust(
     return removed_ids_syn, add_ids_pool, total_cannot_sample
 
 
+def process_neg_pos_states_adjustment():
+    NotImplemented
+
+
 def zone_adjustment(
     att: str,
     curr_syn: pd.DataFrame,
@@ -115,15 +119,29 @@ def zone_adjustment(
     assert "id"
     assert len(curr_syn[zone_field].unique()) == 1
     zone = curr_syn[zone_field].unique()[0]
-    to_update_syn = curr_syn.drop(columns=[zone_field])
+    
+    check_syn = curr_syn.drop(columns=[zone_field])
 
     neg_states = diff_census[diff_census < 0].index.tolist()
     pos_states = diff_census[diff_census > 0].index.tolist()
     pairs_adjust = list(itertools.product(neg_states, pos_states))
     random.shuffle(pairs_adjust)
-    ori_num_syn = len(curr_syn)
 
     # check_got_adjusted = []
+    # PARALLELLLLLLL
+    # Dict of lock based on the pandas series idx
+    # Segment the curr_syn (to be adjusted), by neg and pos state
+    # pos state part will stay the same (store for later concat)
+    # neg will also create a dict of df (as we only care about it)
+    # each neg df can only be access by 1 process and it will be updated (thread safe required)
+    # same for the 
+    # should convert all into multiprocessing.Manager().dict()
+    # concat all again
+
+    segmented_curr_syn_neg = {neg_state: check_syn[check_syn[att]==neg_state] for neg_state in neg_states}
+    # This can help reduce overhead as we don't want multiple copies of the large pool
+    segmented_pool_pos_state = {pos_state: pool[pool[att]==pos_state] for pos_state in pos_states}
+    added_records = []
 
     for neg_state, pos_state in pairs_adjust:
         neg_val = int(diff_census[neg_state])
@@ -133,12 +151,12 @@ def zone_adjustment(
             continue
 
         # Check neg state
-        filtered_syn_pop = to_update_syn[to_update_syn[att] == neg_state]
+        filtered_syn_pop = segmented_curr_syn_neg[neg_state]
         num_syn_pop = len(filtered_syn_pop)  # must not change
         neg_comb_prev = filtered_syn_pop.set_index(adjusted_atts)
         condensed_pop_check = CondensedDF(filtered_syn_pop)
         # check pos state
-        filtered_pool = pool[pool[att] == pos_state]
+        filtered_pool = segmented_pool_pos_state[pos_state]
         pos_comb_prev = filtered_pool.set_index(adjusted_atts)
         condensed_pool_check = CondensedDF(filtered_pool)
 
@@ -164,16 +182,17 @@ def zone_adjustment(
         )
         # update the condensed pop
         condensed_pop_check.remove_identified_ids(to_remove_pop_ids)
-        condensed_pop_check.add_new_records(chosen_records_from_pool)
+        added_records.append(chosen_records_from_pool) # these will be added later
+        # condensed_pop_check.add_new_records(chosen_records_from_pool)
+
         # final update
-        final_resulted_syn = pd.concat(
+        final_neg_syn = pd.concat(
             [condensed_pop_check.get_full_records(), remaining_pop]
         )
-        assert len(final_resulted_syn) == num_syn_pop
+        assert num_syn_pop == len(final_neg_syn) + len(chosen_records_from_pool)
 
-        # update the syn pop
-        remaining_syn_pop = to_update_syn[to_update_syn[att] != neg_state]
-        to_update_syn = pd.concat([remaining_syn_pop, final_resulted_syn])
+        # update the syn pop segmented
+        segmented_curr_syn_neg[neg_state] = final_neg_syn
 
         actual_got_adjusted = n_adjust - n_not_adjusted
         diff_census[neg_state] += actual_got_adjusted
@@ -182,6 +201,11 @@ def zone_adjustment(
         # check_got_adjusted.append(actual_got_adjusted)
 
     # print(check_got_adjusted)
-    to_update_syn[zone_field] = zone
-    assert len(to_update_syn) == ori_num_syn
-    return to_update_syn
+    ori_num_syn = len(check_syn)
+    curr_syn_pos_state = check_syn[check_syn[att].isin(pos_states)]
+
+    neg_syn_updated = [df for df in segmented_curr_syn_neg.values()]
+    final_resulted_syn = pd.concat([curr_syn_pos_state] + neg_syn_updated + added_records)
+    final_resulted_syn[zone_field] = zone
+    assert len(final_resulted_syn) == ori_num_syn
+    return final_resulted_syn
