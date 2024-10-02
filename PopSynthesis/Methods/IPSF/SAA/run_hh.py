@@ -20,7 +20,8 @@ def run_main() -> None:
         "dwelltype",
         "owndwell",
     ]
-    pool = create_pool(seed=hh_seed, state_names=hh_att_state, pool_sz=int(POOL_SIZE))
+    hh_seed = hh_seed[order_adjustment]
+    pool = create_pool(seed=hh_seed, state_names=hh_att_state, pool_sz=1000000)
     hh_marg = hh_marg.head(5)
     saa = SAA(hh_marg, hh_seed, order_adjustment, hh_att_state, pool)
     final_syn_pop = saa.run()

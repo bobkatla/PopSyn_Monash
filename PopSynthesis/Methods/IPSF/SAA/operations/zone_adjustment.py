@@ -148,26 +148,26 @@ def zone_adjustment(
             # No overlapping
             continue
 
-        updated_condensed_pop, remaining_pop = filter_by_SAA_adjusted(
+        condensed_pop_check, remaining_pop = filter_by_SAA_adjusted(
             condensed_pop_check, list(possible_prev_comb), adjusted_atts
         )
-        updated_condensed_pool, _ = filter_by_SAA_adjusted(
+        condensed_pool_check, _ = filter_by_SAA_adjusted(
             condensed_pool_check, list(possible_prev_comb), adjusted_atts
         )
 
         to_remove_pop_ids, to_add_pool_ids, n_not_adjusted = sample_syn_and_pool_adjust(
-            updated_condensed_pop, updated_condensed_pool, adjusted_atts, n_adjust
+            condensed_pop_check, condensed_pool_check, adjusted_atts, n_adjust
         )
 
-        chosen_records_from_pool = updated_condensed_pool.get_sub_records_by_ids(
+        chosen_records_from_pool = condensed_pool_check.get_sub_records_by_ids(
             to_add_pool_ids
         )
         # update the condensed pop
-        updated_condensed_pop.remove_identified_ids(to_remove_pop_ids)
-        updated_condensed_pop.add_new_records(chosen_records_from_pool)
+        condensed_pop_check.remove_identified_ids(to_remove_pop_ids)
+        condensed_pop_check.add_new_records(chosen_records_from_pool)
         # final update
         final_resulted_syn = pd.concat(
-            [updated_condensed_pop.get_full_records(), remaining_pop]
+            [condensed_pop_check.get_full_records(), remaining_pop]
         )
         assert len(final_resulted_syn) == num_syn_pop
 

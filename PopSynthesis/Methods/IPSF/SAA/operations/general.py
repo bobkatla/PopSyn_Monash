@@ -5,15 +5,11 @@ import pandas as pd
 import numpy as np
 
 from typing import List, Union, Tuple, Dict
-from PopSynthesis.Methods.IPSF.const import count_field, zone_field, data_dir
+from PopSynthesis.Methods.IPSF.const import count_field, zone_field
 from PopSynthesis.Methods.IPSF.SAA.operations.compare_census import (
     calculate_states_diff,
 )
 from PopSynthesis.Methods.IPSF.SAA.operations.zone_adjustment import zone_adjustment
-from PopSynthesis.Methods.IPSF.utils.condensed_tools import (
-    CondensedDF,
-    sample_from_condensed,
-)
 
 
 def process_raw_ipu_init(
@@ -32,7 +28,7 @@ def process_raw_ipu_init(
         sub_marg.loc[:, [zone_field]] = zones
         sub_marg = sub_marg.set_index(zone_field)
         segmented_marg[att] = sub_marg
-    new_seed = seed.drop(columns=["sample_geog", "serialno"])
+    new_seed = seed.drop(columns=["sample_geog", "serialno"], errors="ignore")
     return segmented_marg, new_seed
 
 
@@ -99,6 +95,7 @@ def adjust_atts_state_match_census(
         # With state diff we can now do adjustment for each zone, can parallel it?
         pop_syn_across_zones = []
         for zid, zone_states_diff in states_diff_census.iterrows():
+            print(f"DOING {zid}")
             sub_syn_pop = updated_syn_pop[updated_syn_pop[zone_field] == zid]
             zone_adjusted_syn_pop = zone_adjustment(
                 att, sub_syn_pop, zone_states_diff, pool, adjusted_atts

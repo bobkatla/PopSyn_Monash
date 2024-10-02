@@ -8,10 +8,10 @@ import pandas as pd
 from PopSynthesis.Methods.BN.utils.learn_BN import learn_struct_BN_score, learn_para_BN
 from pgmpy.sampling import BayesianModelSampling
 
-from typing import Dict, List
+from typing import Dict, List, Union
 
 
-def create_pool(seed: pd.DataFrame, state_names: Dict[str, List[str]], pool_sz: int, special:bool=True):
+def create_pool(seed: pd.DataFrame, state_names: Union[None, Dict[str, List[str]]], pool_sz: int, special:bool=True):
     print("Learn BN")
     model = learn_struct_BN_score(seed, show_struct=False, state_names=state_names)
     model = learn_para_BN(model, seed, state_names=state_names)
