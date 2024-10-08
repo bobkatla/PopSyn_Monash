@@ -62,7 +62,7 @@ zone_field = "zone_id"
 hhid_field = "serialno"
 count_field = "count"  # THIS IS THE DEFAULT FROM value_counts in pandas
 
-POOL_SIZE = 1e7
+POOL_SIZE = int(1e7)
 
 data_dir = Path(__file__).parent.resolve() / "data" / "raw"
 processed_dir = Path(__file__).parent.resolve() / "data" / "processed"
