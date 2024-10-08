@@ -21,7 +21,6 @@ def run_main() -> None:
         "dwelltype",
         "owndwell",
     ]
-    hh_marg = hh_marg.head(3)
     hh_seed = hh_seed[order_adjustment]
     pool = create_pool(seed=hh_seed, state_names=hh_att_state, pool_sz=POOL_SIZE)
     saa = SAA(hh_marg, hh_seed, order_adjustment, hh_att_state, pool)
