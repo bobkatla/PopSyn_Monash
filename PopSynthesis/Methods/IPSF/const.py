@@ -1,8 +1,9 @@
 from pathlib import Path
 import logging
 import os
-from PopSynthesis.Methods.connect_HH_PP.paras_dir import log_dir
 import datetime
+
+log_dir = Path(__file__).parent.resolve() / "log"
 
 # ct stores current time
 ct = datetime.datetime.now()

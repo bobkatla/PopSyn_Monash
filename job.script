@@ -1,12 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=gpu_test
+#SBATCH --job-name=run_hh
 #SBATCH --gres=gpu:A40:1
 #SBATCH --partition=gpu
 #SBATCH --nodes=1
 #SBATCH --ntasks=3
-#SBATCH --time=00:30:00
-#SBATCH --output=gpu_test.out
+#SBATCH --output=run_hh.out
 
 source .venv/bin/activate
 
-python gpu_test.py
+python PopSynthesis/Methods/IPSF/SAA/run_hh.py
