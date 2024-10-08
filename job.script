@@ -1,7 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=run_hh
+#SBATCH --partition=comp
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=90
+#SBATCH --cpus-per-task=80
 #SBATCH --ntasks=1
 #SBATCH --time=99:00:00
 #SBATCH --output=run_hh.out
