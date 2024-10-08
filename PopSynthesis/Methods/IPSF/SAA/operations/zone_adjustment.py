@@ -119,7 +119,7 @@ def zone_adjustment(
     assert "id"
     assert len(curr_syn[zone_field].unique()) == 1
     zone = curr_syn[zone_field].unique()[0]
-    
+
     check_syn = curr_syn.drop(columns=[zone_field])
 
     neg_states = diff_census[diff_census < 0].index.tolist()
@@ -134,13 +134,17 @@ def zone_adjustment(
     # pos state part will stay the same (store for later concat)
     # neg will also create a dict of df (as we only care about it)
     # each neg df can only be access by 1 process and it will be updated (thread safe required)
-    # same for the 
+    # same for the
     # should convert all into multiprocessing.Manager().dict()
     # concat all again
 
-    segmented_curr_syn_neg = {neg_state: check_syn[check_syn[att]==neg_state] for neg_state in neg_states}
+    segmented_curr_syn_neg = {
+        neg_state: check_syn[check_syn[att] == neg_state] for neg_state in neg_states
+    }
     # This can help reduce overhead as we don't want multiple copies of the large pool
-    segmented_pool_pos_state = {pos_state: pool[pool[att]==pos_state] for pos_state in pos_states}
+    segmented_pool_pos_state = {
+        pos_state: pool[pool[att] == pos_state] for pos_state in pos_states
+    }
     added_records = []
 
     for neg_state, pos_state in pairs_adjust:
@@ -182,7 +186,7 @@ def zone_adjustment(
         )
         # update the condensed pop
         condensed_pop_check.remove_identified_ids(to_remove_pop_ids)
-        added_records.append(chosen_records_from_pool) # these will be added later
+        added_records.append(chosen_records_from_pool)  # these will be added later
         # condensed_pop_check.add_new_records(chosen_records_from_pool)
 
         # final update
@@ -205,7 +209,9 @@ def zone_adjustment(
     curr_syn_pos_state = check_syn[check_syn[att].isin(pos_states)]
 
     neg_syn_updated = [df for df in segmented_curr_syn_neg.values()]
-    final_resulted_syn = pd.concat([curr_syn_pos_state] + neg_syn_updated + added_records)
+    final_resulted_syn = pd.concat(
+        [curr_syn_pos_state] + neg_syn_updated + added_records
+    )
     final_resulted_syn[zone_field] = zone
     assert len(final_resulted_syn) == ori_num_syn
     return final_resulted_syn

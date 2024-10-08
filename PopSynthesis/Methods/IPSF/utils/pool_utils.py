@@ -11,7 +11,12 @@ from pgmpy.sampling import BayesianModelSampling
 from typing import Dict, List, Union
 
 
-def create_pool(seed: pd.DataFrame, state_names: Union[None, Dict[str, List[str]]], pool_sz: int, special:bool=True):
+def create_pool(
+    seed: pd.DataFrame,
+    state_names: Union[None, Dict[str, List[str]]],
+    pool_sz: int,
+    special: bool = True,
+):
     print("Learn BN")
     model = learn_struct_BN_score(seed, show_struct=False, state_names=state_names)
     model = learn_para_BN(model, seed, state_names=state_names)
@@ -26,4 +31,3 @@ def create_pool(seed: pd.DataFrame, state_names: Union[None, Dict[str, List[str]
             print("Not yet have it, gotta sample negative inc again")
             pool = inference.forward_sample(size=pool_sz, show_progress=True)
     return pool
-

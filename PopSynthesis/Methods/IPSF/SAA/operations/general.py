@@ -79,7 +79,9 @@ def init_syn_pop_saa(
 def wrapper_multiprocessing_zones(args):
     att, sub_syn_pop, zone_states_diff, pool, adjusted_atts = args
     # Process row with parameters
-    result_zone_syn = zone_adjustment(att, sub_syn_pop, zone_states_diff, pool, adjusted_atts)
+    result_zone_syn = zone_adjustment(
+        att, sub_syn_pop, zone_states_diff, pool, adjusted_atts
+    )
     return result_zone_syn
 
 
@@ -101,8 +103,17 @@ def adjust_atts_state_match_census(
         )
         assert (states_diff_census.sum(axis=1) == 0).all()
         # Prepare arguments for each row
-        args = [(att, updated_syn_pop[updated_syn_pop[zone_field] == zid], zone_states_diff.copy(deep=True), pool, adjusted_atts) for zid, zone_states_diff in states_diff_census.iterrows()]
-        
+        args = [
+            (
+                att,
+                updated_syn_pop[updated_syn_pop[zone_field] == zid],
+                zone_states_diff.copy(deep=True),
+                pool,
+                adjusted_atts,
+            )
+            for zid, zone_states_diff in states_diff_census.iterrows()
+        ]
+
         # Use multiprocessing Pool
         with mp.Pool(mp.cpu_count()) as pool:
             pop_syn_across_zones = pool.map(wrapper_multiprocessing_zones, args)

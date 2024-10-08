@@ -3,7 +3,12 @@
 
 import pandas as pd
 import pickle
-from PopSynthesis.Methods.IPSF.const import data_dir, processed_dir, output_dir, POOL_SIZE
+from PopSynthesis.Methods.IPSF.const import (
+    data_dir,
+    processed_dir,
+    output_dir,
+    POOL_SIZE,
+)
 from PopSynthesis.Methods.IPSF.utils.pool_utils import create_pool
 from PopSynthesis.Methods.IPSF.SAA.main import SAA
 import time
@@ -32,9 +37,9 @@ def run_main() -> None:
     end_time = time.time()
     elapsed_time = end_time - start_time
     hours, rem = divmod(elapsed_time, 3600)  # 3600 seconds in an hour
-    minutes, seconds = divmod(rem, 60)       # 60 seconds in a minute
+    minutes, seconds = divmod(rem, 60)  # 60 seconds in a minute
     print(f"Processing took {int(hours)}h-{int(minutes)}m-{seconds:.2f}s")
-    
+
     print(final_syn_pop)
     final_syn_pop.to_csv(output_dir / "SAA_output_HH.csv")
 

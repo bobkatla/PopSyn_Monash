@@ -22,7 +22,7 @@ class SAA:
         seed_raw: pd.DataFrame,
         ordered_to_adjust_atts: List[str],
         att_states: Dict[str, List[str]],
-        pool: pd.DataFrame
+        pool: pd.DataFrame,
     ) -> None:
         self.ordered_atts = ordered_to_adjust_atts
         self.known_att_states = att_states
