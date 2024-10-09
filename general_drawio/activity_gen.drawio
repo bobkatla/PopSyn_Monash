@@ -1,11 +1,11 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36" version="24.7.16">
   <diagram name="Page-1" id="2Gl4b44V5FFW3uYvH6PN">
-    <mxGraphModel dx="1434" dy="746" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+    <mxGraphModel dx="1323" dy="643" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="zJSgsKGGuxwdJfE0XvD6-1" value="" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=none;" vertex="1" parent="1">
-          <mxGeometry x="160" y="140" width="740" height="740" as="geometry" />
+          <mxGeometry x="160" y="120" width="760" height="760" as="geometry" />
         </mxCell>
         <mxCell id="zJSgsKGGuxwdJfE0XvD6-2" value="&lt;b&gt;&lt;i style=&quot;&quot;&gt;&lt;font style=&quot;font-size: 25px;&quot;&gt;h1&lt;/font&gt;&lt;/i&gt;&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="380" y="150" width="40" height="40" as="geometry" />
@@ -27,6 +27,13 @@
             <Array as="points">
               <mxPoint x="880" y="180" />
               <mxPoint x="880" y="255" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zJSgsKGGuxwdJfE0XvD6-61" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="zJSgsKGGuxwdJfE0XvD6-7" target="zJSgsKGGuxwdJfE0XvD6-22">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="600" y="420" />
             </Array>
           </mxGeometry>
         </mxCell>
@@ -56,7 +63,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="zJSgsKGGuxwdJfE0XvD6-11" value="Contraints" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="1">
+        <mxCell id="zJSgsKGGuxwdJfE0XvD6-11" value="Activity contraints" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="200" y="240" width="660" height="30" as="geometry" />
         </mxCell>
         <mxCell id="zJSgsKGGuxwdJfE0XvD6-60" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="zJSgsKGGuxwdJfE0XvD6-15" target="zJSgsKGGuxwdJfE0XvD6-16">
@@ -145,6 +152,15 @@
         </mxCell>
         <mxCell id="zJSgsKGGuxwdJfE0XvD6-58" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="zJSgsKGGuxwdJfE0XvD6-33" target="zJSgsKGGuxwdJfE0XvD6-34">
           <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zJSgsKGGuxwdJfE0XvD6-63" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="zJSgsKGGuxwdJfE0XvD6-33" target="zJSgsKGGuxwdJfE0XvD6-31">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="640" y="590" />
+              <mxPoint x="640" y="790" />
+              <mxPoint x="765" y="790" />
+            </Array>
+          </mxGeometry>
         </mxCell>
         <mxCell id="zJSgsKGGuxwdJfE0XvD6-33" value="act1" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;" vertex="1" parent="1">
           <mxGeometry x="730" y="550" width="70" height="40" as="geometry" />
