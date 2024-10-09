@@ -124,6 +124,7 @@ def zone_adjustment(
 
     neg_states = diff_census[diff_census < 0].index.tolist()
     pos_states = diff_census[diff_census > 0].index.tolist()
+    zeros_states = diff_census[diff_census == 0].index.tolist() # Only for later processing
     pairs_adjust = list(itertools.product(neg_states, pos_states))
     random.shuffle(pairs_adjust)
 
@@ -206,12 +207,14 @@ def zone_adjustment(
 
     # print(check_got_adjusted)
     ori_num_syn = len(check_syn)
-    curr_syn_pos_state = check_syn[check_syn[att].isin(pos_states)]
+    curr_syn_pos_state = check_syn[check_syn[att].isin(pos_states + zeros_states)]
 
     neg_syn_updated = [df for df in segmented_curr_syn_neg.values()]
     final_resulted_syn = pd.concat(
         [curr_syn_pos_state] + neg_syn_updated + added_records
     )
     final_resulted_syn[zone_field] = zone
-    assert len(final_resulted_syn) == ori_num_syn
+    if len(final_resulted_syn) != ori_num_syn:
+        raise ValueError(f"Error processing at zone {zone}: expected {ori_num_syn} records, got {len(final_resulted_syn)}")
+    print(f"Finished zone {zone}")
     return final_resulted_syn
