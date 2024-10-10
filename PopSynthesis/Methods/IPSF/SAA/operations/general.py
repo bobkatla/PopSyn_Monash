@@ -102,32 +102,32 @@ def adjust_atts_state_match_census(
             att, curr_syn_pop, census_data_by_att
         )
         assert (states_diff_census.sum(axis=1) == 0).all()
-        # Prepare arguments for each row
-        args = [
-            (
-                att,
-                updated_syn_pop[updated_syn_pop[zone_field] == zid],
-                zone_states_diff.copy(deep=True),
-                pool,
-                adjusted_atts,
-            )
-            for zid, zone_states_diff in states_diff_census.iterrows()
-        ]
+        # # Prepare arguments for each row
+        # args = [
+        #     (
+        #         att,
+        #         updated_syn_pop[updated_syn_pop[zone_field] == zid],
+        #         zone_states_diff.copy(deep=True),
+        #         pool,
+        #         adjusted_atts,
+        #     )
+        #     for zid, zone_states_diff in states_diff_census.iterrows()
+        # ]
 
-        # Use multiprocessing Pool
-        with mp.Pool(mp.cpu_count()) as pool:
-            pop_syn_across_zones = pool.map(wrapper_multiprocessing_zones, args)
+        # # Use multiprocessing Pool
+        # with mp.Pool(mp.cpu_count()) as pool:
+        #     pop_syn_across_zones = pool.map(wrapper_multiprocessing_zones, args)
 
         # With state diff we can now do adjustment for each zone, can parallel it?
-        # pop_syn_across_zones = []
-        # for zid, zone_states_diff in states_diff_census.iterrows():
-        #     print(f"DOING {zid}")
-        #     sub_syn_pop = updated_syn_pop[updated_syn_pop[zone_field] == zid]
-        #     zone_adjusted_syn_pop = zone_adjustment(
-        #         att, sub_syn_pop, zone_states_diff, pool, adjusted_atts
-        #     )
-        #     if zone_adjusted_syn_pop is not None:
-        #         pop_syn_across_zones.append(zone_adjusted_syn_pop)
+        pop_syn_across_zones = []
+        for zid, zone_states_diff in states_diff_census.iterrows():
+            print(f"DOING {zid}")
+            sub_syn_pop = updated_syn_pop[updated_syn_pop[zone_field] == zid]
+            zone_adjusted_syn_pop = zone_adjustment(
+                att, sub_syn_pop, zone_states_diff, pool, adjusted_atts
+            )
+            if zone_adjusted_syn_pop is not None:
+                pop_syn_across_zones.append(zone_adjusted_syn_pop)
 
         updated_syn_pop = pd.concat(pop_syn_across_zones)
 
