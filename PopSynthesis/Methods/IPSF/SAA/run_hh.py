@@ -41,7 +41,7 @@ def run_main() -> None:
     print(f"Processing took {int(hours)}h-{int(minutes)}m-{seconds:.2f}s")
 
     print(final_syn_pop)
-    final_syn_pop.to_csv(output_dir / "SAA_output_HH_again.csv")
+    # final_syn_pop.to_csv(output_dir / "SAA_output_HH_again.csv")
 
 
 if __name__ == "__main__":

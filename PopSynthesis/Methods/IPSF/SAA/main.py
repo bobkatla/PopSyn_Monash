@@ -7,7 +7,7 @@ Will thinking of doing in Polars
 
 import pandas as pd
 
-from PopSynthesis.Methods.IPSF.const import POOL_SIZE
+from PopSynthesis.Methods.IPSF.const import POOL_SIZE, output_dir
 from PopSynthesis.Methods.IPSF.SAA.operations.general import (
     process_raw_ipu_init,
     adjust_atts_state_match_census,
@@ -36,7 +36,7 @@ class SAA:
         self.seed = converted_seed
         self.segmented_marg = converted_segment_marg
 
-    def run(self) -> pd.DataFrame:
+    def run(self, output_each_step:bool =True) -> pd.DataFrame:
         # Output the synthetic population, the main point
         curr_syn_pop = None
         adjusted_atts = []
@@ -46,4 +46,6 @@ class SAA:
                 att, curr_syn_pop, sub_census, adjusted_atts, self.pool
             )
             adjusted_atts.append(att)
+            if output_each_step:
+                curr_syn_pop.to_csv(output_dir / f"syn_pop_adjusted_{att}.csv")
         return curr_syn_pop

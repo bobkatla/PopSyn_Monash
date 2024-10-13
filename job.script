@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=run_hh_sequential
+#SBATCH --job-name=run_hh_seq2
 #SBATCH --partition=comp
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=2
 #SBATCH --ntasks=1
-#SBATCH --time=200:00:00
-#SBATCH --output=run_hh_sequential.out
+#SBATCH --time=180:00:00
+#SBATCH --output=run_hh_seq2.out
 
 source .venv/bin/activate
 
