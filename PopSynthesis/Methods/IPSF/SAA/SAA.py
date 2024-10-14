@@ -34,7 +34,7 @@ class SAA:
         converted_segment_marg = process_raw_ipu_marg(marginal_raw, atts=self.considered_atts)
         self.segmented_marg = converted_segment_marg
 
-    def run(self, output_each_step:bool =True) -> pd.DataFrame:
+    def run(self, output_each_step:bool =True, extra_name:str="") -> pd.DataFrame:
         # Output the synthetic population, the main point
         curr_syn_pop = None
         adjusted_atts = []
@@ -45,5 +45,5 @@ class SAA:
             )
             adjusted_atts.append(att)
             if output_each_step:
-                curr_syn_pop.to_csv(output_dir / f"syn_pop_adjusted_{att}_2.csv")
+                curr_syn_pop.to_csv(output_dir / f"syn_pop_adjusted_{att}{extra_name}.csv")
         return curr_syn_pop
