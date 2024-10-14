@@ -35,9 +35,10 @@ def convert_count_to_full(count_df: pd.DataFrame, count_col: str = count_field) 
 
 
 def convert_full_to_marg_count(
-    full_pop: pd.DataFrame, filter_ls: list[str]
+    full_pop: pd.DataFrame, filter_ls: list[str]=[]
 ) -> pd.DataFrame:
-    cols = [x for x in full_pop.columns if x not in filter_ls]
+    assert zone_field in full_pop.columns
+    cols = [x for x in full_pop.columns if x not in filter_ls+[zone_field]]
     ls_temp_hold = []
     for att in cols:
         full_pop[att] = full_pop[att].astype(str)
@@ -105,17 +106,16 @@ def convert_to_dict_ls(tup: Tuple[Tuple[str, str]]) -> Dict[str, str]:
 
 def adjust_kept_rec_match_census(syn_records: pd.DataFrame, diff_census: pd.DataFrame) -> pd.DataFrame:
     # The point is to remove the chosen in
+    syn_records = syn_records.astype(str)
     count_kept = syn_records.value_counts()
     # diff_census = diff_census.head(10) # sample to check smaller
     # diff_census = diff_census.set_index(diff_census.columns[diff_census.columns.get_level_values(0)==zone_field])
     for zone, r in diff_census.iterrows():
         print(f"DOING deleting to match cencus diff for {zone}")
-        before_sum = count_kept.loc[
-            count_kept.index.get_level_values(zone_field) == zone
-        ].sum()
         sub_count_kept = count_kept.loc[
             count_kept.index.get_level_values(zone_field) == zone
         ]
+        before_sum = sub_count_kept.sum()
         prev_indexs = sub_count_kept.index
         neg_cols = r[r < 0]
         # re check with neg val
