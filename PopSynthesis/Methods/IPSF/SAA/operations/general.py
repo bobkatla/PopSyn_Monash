@@ -10,13 +10,8 @@ from PopSynthesis.Methods.IPSF.SAA.operations.compare_census import (
     calculate_states_diff,
 )
 from PopSynthesis.Methods.IPSF.SAA.operations.zone_adjustment import zone_adjustment
-import multiprocessing as mp
 
-
-def process_raw_ipu_init(
-    marg: pd.DataFrame, seed: pd.DataFrame
-) -> Tuple[Dict[str, pd.DataFrame], pd.DataFrame]:
-    atts = [x for x in seed.columns if x not in ["serialno", "sample_geog"]]
+def process_raw_ipu_marg(marg: pd.DataFrame, atts: List[str]) -> pd.DataFrame:
     segmented_marg = {}
     zones = marg[marg.columns[marg.columns.get_level_values(0) == zone_field]].values
     zones = [z[0] for z in zones]
@@ -29,6 +24,14 @@ def process_raw_ipu_init(
         sub_marg.loc[:, [zone_field]] = zones
         sub_marg = sub_marg.set_index(zone_field)
         segmented_marg[att] = sub_marg
+    return segmented_marg
+
+
+def process_raw_ipu_init(
+    marg: pd.DataFrame, seed: pd.DataFrame
+) -> Tuple[Dict[str, pd.DataFrame], pd.DataFrame]:
+    atts = [x for x in seed.columns if x not in ["serialno", "sample_geog"]]
+    segmented_marg = process_raw_ipu_marg(marg, atts)
     new_seed = seed.drop(columns=["sample_geog", "serialno"], errors="ignore")
     return segmented_marg, new_seed
 

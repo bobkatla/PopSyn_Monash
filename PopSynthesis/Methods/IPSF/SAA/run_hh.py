@@ -6,6 +6,7 @@ import pickle
 from PopSynthesis.Methods.IPSF.const import (
     data_dir,
     processed_dir,
+    output_dir,
     POOL_SIZE,
 )
 from PopSynthesis.Methods.IPSF.utils.pool_utils import create_pool
@@ -27,6 +28,8 @@ def run_main() -> None:
     ]
     hh_seed = hh_seed[order_adjustment]
     pool = create_pool(seed=hh_seed, state_names=hh_att_state, pool_sz=POOL_SIZE)
+
+    
     saa = SAA(hh_marg, hh_seed, order_adjustment, hh_att_state, pool)
 
     start_time = time.time()
