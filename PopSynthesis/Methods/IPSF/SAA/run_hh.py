@@ -10,7 +10,7 @@ from PopSynthesis.Methods.IPSF.const import (
     POOL_SIZE,
 )
 from PopSynthesis.Methods.IPSF.utils.pool_utils import create_pool
-from PopSynthesis.Methods.IPSF.SAA.main import SAA
+from PopSynthesis.Methods.IPSF.SAA.SAA import SAA
 import time
 
 
@@ -29,8 +29,8 @@ def run_main() -> None:
     hh_seed = hh_seed[order_adjustment]
     pool = create_pool(seed=hh_seed, state_names=hh_att_state, pool_sz=POOL_SIZE)
 
-    
-    saa = SAA(hh_marg, hh_seed, order_adjustment, hh_att_state, pool)
+
+    saa = SAA(hh_marg, order_adjustment, order_adjustment, hh_att_state, pool)
 
     start_time = time.time()
     ###
