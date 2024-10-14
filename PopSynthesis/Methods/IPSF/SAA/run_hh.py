@@ -6,7 +6,6 @@ import pickle
 from PopSynthesis.Methods.IPSF.const import (
     data_dir,
     processed_dir,
-    output_dir,
     POOL_SIZE,
 )
 from PopSynthesis.Methods.IPSF.utils.pool_utils import create_pool
