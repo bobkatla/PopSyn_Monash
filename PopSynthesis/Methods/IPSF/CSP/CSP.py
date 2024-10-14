@@ -1,6 +1,7 @@
 """
 Here defind the object of CSP that will take in synthetic households to generate people
 
+Inputs: 
 This will create the pools for households and people (by each pairs)
 Go through pair hh-main to get main (ensure the main people match all exist in pools)
 Then main with other rela and update the pools of main and other rela as well
