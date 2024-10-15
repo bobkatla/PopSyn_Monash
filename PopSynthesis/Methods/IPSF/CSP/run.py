@@ -38,9 +38,13 @@ def main():
         # we only need matching columns that we wish to process for BN
         # this excludes relationship and ids
         assert set(processed_states_ref.keys()) <= set(pair_seed.columns)
-        filtered_seed = pair_seed[list(processed_states_ref.keys())]
+        to_filter_col = list(processed_states_ref.keys())
+        if name1 == "HH":
+            # special case to add the rela cols
+            to_filter_col += list(pp_seed[rela_col].unique())
+        filtered_seed = pair_seed[to_filter_col]
         pools_ref[pair_name] = create_pool(filtered_seed, state_names=processed_states_ref, pool_sz=POOL_SIZE)
-        
+
     print(pools_ref)
     
 

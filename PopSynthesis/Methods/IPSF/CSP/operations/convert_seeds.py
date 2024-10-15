@@ -17,6 +17,7 @@ def convert_seeds_to_pairs(hh_seed: pd.DataFrame, pp_seed: pd.DataFrame, id_col:
     hh_seed[id_col] = hh_seed[id_col].astype(str)
     pp_seed[id_col] = pp_seed[id_col].astype(str)
     hh_name = "HH" # simply for naming convention
+    hh_seed = add_pp_seg_count(hh_seed, pp_seed, pp_segment_col, id_col)
 
     segmented_pp = segment_pp_seed(pp_seed, pp_segment_col)
     assert len(segmented_pp[main_state]) == len(hh_seed)
@@ -60,3 +61,14 @@ def pair_states_dict(states1: Dict[str, List[str]], states2: Dict[str, List[str]
         results[f"{s}_{name1}"] = states1[s]
         results[f"{s}_{name2}"] = states2[s]
     return results
+
+
+def add_pp_seg_count(hh_seed: pd.DataFrame, pp_seed: pd.DataFrame, segment_col: str, id_col: str) -> pd.DataFrame:
+    """Add the count for each segment (e.g. relationship) into hh_seed for CSP"""
+    possible_seg_states = list(pp_seed[segment_col].unique())
+    filtered_pp_seed = pp_seed.groupby(id_col)[segment_col].apply(lambda x: list(x))
+    def process_seg_count(r):
+        seg_count = filtered_pp_seed[r[id_col]]
+        return [seg_count.count(x) for x in possible_seg_states]
+    hh_seed[possible_seg_states] = hh_seed.apply(process_seg_count, axis=1, result_type="expand")
+    return hh_seed
