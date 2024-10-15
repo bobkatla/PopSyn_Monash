@@ -3,15 +3,12 @@
 
 import pandas as pd
 import numpy as np
-import pickle
 from PopSynthesis.Methods.IPSF.const import (
     data_dir,
-    processed_dir,
     output_dir,
+    processed_dir,
     zone_field,
-    POOL_SIZE,
 )
-from PopSynthesis.Methods.IPSF.utils.pool_utils import create_pool
 from PopSynthesis.Methods.IPSF.utils.synthetic_checked_census import adjust_kept_rec_match_census, get_diff_marg, convert_full_to_marg_count
 from PopSynthesis.Methods.IPSF.SAA.SAA import SAA
 import random
@@ -21,9 +18,7 @@ import time
 def run_main() -> None:
     hh_marg = pd.read_csv(data_dir / "hh_marginals_ipu.csv", header=[0, 1])
     hh_marg = hh_marg.drop(columns=hh_marg.columns[hh_marg.columns.get_level_values(0)=="sample_geog"][0])
-    hh_seed = pd.read_csv(data_dir / "hh_sample_ipu.csv")
-    with open(processed_dir / "dict_hh_states.pickle", "rb") as handle:
-        hh_att_state = pickle.load(handle)
+    
     order_adjustment = [
         "hhsize",
         "hhinc",
@@ -38,9 +33,8 @@ def run_main() -> None:
         "dwelltype",
         "owndwell",
     ]
-    hh_seed = hh_seed[order_adjustment]
-    pool = create_pool(seed=hh_seed, state_names=hh_att_state, pool_sz=POOL_SIZE)
 
+    pool = pd.read_csv(processed_dir / "HH_pool.csv")
     start_time = time.time()
 
     n_run_time = 0
@@ -51,7 +45,7 @@ def run_main() -> None:
         # randomly shuffle for each adjustment
         random.shuffle(order_adjustment)
         print(f"For run {n_run_time}, order is: {order_adjustment}, aim for {n_removed_err_hh} HHs")
-        saa = SAA(hh_marg, considered_atts, order_adjustment, hh_att_state, pool)
+        saa = SAA(hh_marg, considered_atts, order_adjustment, pool)
         ###
         final_syn_pop = saa.run(extra_name=f"_{n_run_time}")
         ###

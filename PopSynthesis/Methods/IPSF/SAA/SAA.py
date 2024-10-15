@@ -21,12 +21,10 @@ class SAA:
         marginal_raw: pd.DataFrame,
         considered_atts: List[str],
         ordered_to_adjust_atts: List[str],
-        att_states: Dict[str, List[str]],
         pool: pd.DataFrame,
     ) -> None:
         self.ordered_atts_to_adjust = ordered_to_adjust_atts
         self.considered_atts = considered_atts
-        self.known_att_states = att_states
         self.pool = pool
         self.init_required_inputs(marginal_raw)
 
