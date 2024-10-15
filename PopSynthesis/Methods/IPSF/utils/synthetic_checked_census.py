@@ -15,6 +15,7 @@ from itertools import combinations, product
 from PopSynthesis.Methods.IPSF.const import count_field, zone_field
 from typing import List, Literal, Tuple, Dict
 
+
 def segment_df(df: pd.DataFrame, chunk_sz: int) -> List[pd.DataFrame]:
     start = 0
     ls_df = []
@@ -25,7 +26,9 @@ def segment_df(df: pd.DataFrame, chunk_sz: int) -> List[pd.DataFrame]:
     return ls_df
 
 
-def convert_count_to_full(count_df: pd.DataFrame, count_col: str = count_field) -> pd.DataFrame:
+def convert_count_to_full(
+    count_df: pd.DataFrame, count_col: str = count_field
+) -> pd.DataFrame:
     assert count_col in count_df.columns
     repeated_idx = list(count_df.index.repeat(count_df[count_col]))
     fin = count_df.loc[repeated_idx]
@@ -35,10 +38,10 @@ def convert_count_to_full(count_df: pd.DataFrame, count_col: str = count_field) 
 
 
 def convert_full_to_marg_count(
-    full_pop: pd.DataFrame, filter_ls: list[str]=[]
+    full_pop: pd.DataFrame, filter_ls: list[str] = []
 ) -> pd.DataFrame:
     assert zone_field in full_pop.columns
-    cols = [x for x in full_pop.columns if x not in filter_ls+[zone_field]]
+    cols = [x for x in full_pop.columns if x not in filter_ls + [zone_field]]
     ls_temp_hold = []
     for att in cols:
         full_pop[att] = full_pop[att].astype(str)
@@ -59,7 +62,9 @@ def convert_full_to_marg_count(
     return new_marg_hh
 
 
-def add_0_to_missing(df: pd.DataFrame, ls_missing: List[str], axis: Literal[0, 1]) -> pd.DataFrame:
+def add_0_to_missing(
+    df: pd.DataFrame, ls_missing: List[str], axis: Literal[0, 1]
+) -> pd.DataFrame:
     for missing in ls_missing:
         if axis == 1:  # by row
             df.loc[missing] = 0
@@ -68,7 +73,9 @@ def add_0_to_missing(df: pd.DataFrame, ls_missing: List[str], axis: Literal[0, 1
     return df
 
 
-def get_diff_marg(converted_census_marg: pd.DataFrame, converted_new_hh_marg: pd.DataFrame) -> pd.DataFrame:
+def get_diff_marg(
+    converted_census_marg: pd.DataFrame, converted_new_hh_marg: pd.DataFrame
+) -> pd.DataFrame:
     print("getting the diff marg df")
     converted_census_marg.index = converted_census_marg.index.astype(str)
     converted_new_hh_marg.index = converted_new_hh_marg.index.astype(str)
@@ -104,7 +111,9 @@ def convert_to_dict_ls(tup: Tuple[Tuple[str, str]]) -> Dict[str, str]:
     return di
 
 
-def adjust_kept_rec_match_census(syn_records: pd.DataFrame, diff_census: pd.DataFrame) -> pd.DataFrame:
+def adjust_kept_rec_match_census(
+    syn_records: pd.DataFrame, diff_census: pd.DataFrame
+) -> pd.DataFrame:
     # The point is to remove the chosen in
     syn_records = syn_records.astype(str)
     count_kept = syn_records.value_counts()

@@ -124,7 +124,9 @@ def zone_adjustment(
 
     neg_states = diff_census[diff_census < 0].index.tolist()
     pos_states = diff_census[diff_census > 0].index.tolist()
-    zeros_states = diff_census[diff_census == 0].index.tolist() # Only for later processing
+    zeros_states = diff_census[
+        diff_census == 0
+    ].index.tolist()  # Only for later processing
     pairs_adjust = list(itertools.product(neg_states, pos_states))
     random.shuffle(pairs_adjust)
 
@@ -215,6 +217,8 @@ def zone_adjustment(
     )
     final_resulted_syn[zone_field] = zone
     if len(final_resulted_syn) != ori_num_syn:
-        raise ValueError(f"Error processing at zone {zone}: expected {ori_num_syn} records, got {len(final_resulted_syn)}")
+        raise ValueError(
+            f"Error processing at zone {zone}: expected {ori_num_syn} records, got {len(final_resulted_syn)}"
+        )
     print(f"Finished zone {zone}")
     return final_resulted_syn
