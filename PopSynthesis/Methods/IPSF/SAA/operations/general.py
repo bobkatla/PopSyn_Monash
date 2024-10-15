@@ -126,11 +126,12 @@ def adjust_atts_state_match_census(
         for zid, zone_states_diff in states_diff_census.iterrows():
             print(f"DOING {zid}")
             sub_syn_pop = updated_syn_pop[updated_syn_pop[zone_field] == zid]
-            zone_adjusted_syn_pop = zone_adjustment(
-                att, sub_syn_pop, zone_states_diff, pool, adjusted_atts
-            )
-            if zone_adjusted_syn_pop is not None:
-                pop_syn_across_zones.append(zone_adjusted_syn_pop)
+            if not sub_syn_pop.empty:
+                zone_adjusted_syn_pop = zone_adjustment(
+                    att, sub_syn_pop, zone_states_diff, pool, adjusted_atts
+                )
+                if zone_adjusted_syn_pop is not None:
+                    pop_syn_across_zones.append(zone_adjusted_syn_pop)
 
         updated_syn_pop = pd.concat(pop_syn_across_zones)
 
