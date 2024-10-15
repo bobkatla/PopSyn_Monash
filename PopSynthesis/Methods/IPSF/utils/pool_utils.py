@@ -25,7 +25,7 @@ def create_pool(
     pool = inference.forward_sample(size=pool_sz, show_progress=True)
 
     # Special case, I will fix this to be dynamic later
-    if special:
+    if special and "hhinc" in pool.columns:
         while "Negative income" not in list(pool["hhinc"].unique()):
             print(list(pool["hhinc"].unique()))
             print("Not yet have it, gotta sample negative inc again")
