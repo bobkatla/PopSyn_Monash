@@ -6,7 +6,7 @@ output: paired for HH (with rela count) and Main, Main and each rela
 Maybe put the pool creation here as well (as we need to check for the synthesis of hhsize == total rela count)
 """
 import pandas as pd
-from typing import Dict
+from typing import Dict, List
 
 def convert_seeds_to_pairs(hh_seed: pd.DataFrame, pp_seed: pd.DataFrame, id_col:str, pp_segment_col: str, main_state: str) -> Dict[str, pd.DataFrame]:
     pp_states = pp_seed[pp_segment_col].unique()
@@ -43,3 +43,20 @@ def segment_pp_seed(pp_seed: pd.DataFrame, segment_col: str) -> Dict[str, pd.Dat
     for state in pp_seed[segment_col].unique():
         result_seg_pp[state] = pp_seed[pp_seed[segment_col]==state]
     return result_seg_pp
+
+
+def pair_states_dict(states1: Dict[str, List[str]], states2: Dict[str, List[str]], name1:str="x", name2:str="y") -> Dict[str, List[str]]:
+    # This is to create the states list for pool creation using BN (also as ref if needed)
+    states_in_1 = set(states1.keys())
+    states_in_2 = set(states2.keys())
+    states_unique_1 = states_in_1 - states_in_2
+    states_unique_2 = states_in_2 - states_in_1
+    states_common = states_in_1 & states_in_2
+    
+    results = {s: states1[s] for s in states_unique_1}
+    for s in states_unique_2:
+        results[s] = states2[s]
+    for s in states_common:
+        results[f"{s}_{name1}"] = states1[s]
+        results[f"{s}_{name2}"] = states2[s]
+    return results
