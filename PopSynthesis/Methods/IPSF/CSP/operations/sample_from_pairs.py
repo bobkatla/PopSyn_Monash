@@ -82,7 +82,7 @@ def sample_matching_from_pairs(given_syn: pd.DataFrame, syn_id: str, paired_pool
     # Condense both syn and pool, they will now have similar indexes
     condensed_syn = condense_evidence_syn(check_syn, syn_id, evidence_cols)
     condensed_pool = decoupling_paired_pool(check_pool, evidence_cols, sample_cols)
-    
+
     # NOTE: the sample_cols order is for pool
     # NOTE: the order for syn is, [id, count]
     comb_in_syn = set(condensed_syn.index)
@@ -114,7 +114,8 @@ def sample_matching_from_pairs(given_syn: pd.DataFrame, syn_id: str, paired_pool
         chosen_recs = np.random.choice(possible_recs, tot_samples)
         start = 0
         for sid, val in segment_by_id:
-            results.append([sid, chosen_recs[start:start + val]])
+            rec_details = np.array([list(x) + [sid] for x in chosen_recs[start:start + val]])
+            results.append(rec_details)
             start += val
         assert start == tot_samples
         return results
@@ -124,15 +125,8 @@ def sample_matching_from_pairs(given_syn: pd.DataFrame, syn_id: str, paired_pool
     combined_condense = combined_condense.drop(columns=[TO_SAMPLE_COL, ID_COUNT_COL, SUM_COUNT_COL])
     combined_condense_exploded = combined_condense.explode(sample_result_col)
 
-    def convert_samples_to_df(rec):
-        sid, rec_details = rec
-        new_rec = [list(x) for x in rec_details]
-        converted_rec = pd.DataFrame(np.array(new_rec), columns=sample_cols)
-        converted_rec[syn_id] = sid
-        return converted_rec
-    
-    combined_condense_exploded[sample_result_col] = combined_condense_exploded[sample_result_col].apply(convert_samples_to_df)
-    fin_samples = pd.concat(list(combined_condense_exploded[sample_result_col]))
+    combined_sampled_rec = np.vstack(tuple(combined_condense_exploded[sample_result_col]))
+    fin_samples = pd.DataFrame(combined_sampled_rec, columns=sample_cols+[syn_id])
 
     return fin_samples, rm_syn_rec, kept_syn_rec
 
