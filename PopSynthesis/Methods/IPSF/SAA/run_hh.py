@@ -34,13 +34,15 @@ def run_main() -> None:
         "owndwell",
     ]
 
-    pool = pd.read_csv(processed_dir / "HH_pool.csv")
+    hh_marg = hh_marg.head(2)
+    pool = pd.read_csv(processed_dir / "HH_pool_small_test.csv")
     start_time = time.time()
 
     n_run_time = 0
     n_removed_err_hh = np.inf
     MAX_RUN_TIME = 30
     chosen_hhs = []
+    err_rm_hh = []
     while n_run_time < MAX_RUN_TIME and n_removed_err_hh > 0:
         # randomly shuffle for each adjustment
         random.shuffle(order_adjustment)
@@ -73,6 +75,7 @@ def run_main() -> None:
 
         n_run_time += 1
         n_removed_err_hh = len(final_syn_pop) - len(kept_hh)
+        err_rm_hh.append(n_removed_err_hh)
         if n_run_time == MAX_RUN_TIME:
             # not adjusting anymore
             chosen_hhs.append(final_syn_pop)
@@ -88,6 +91,7 @@ def run_main() -> None:
     hours, rem = divmod(elapsed_time, 3600)  # 3600 seconds in an hour
     minutes, seconds = divmod(rem, 60)  # 60 seconds in a minute
     print(f"Processing took {int(hours)}h-{int(minutes)}m-{seconds:.2f}s")
+    print(f"Error hh rm are: {err_rm_hh}")
 
     # output
     final_syn_hh.to_csv(output_dir / "SAA_HH_only_looped.csv")
