@@ -58,9 +58,10 @@ def condense_evidence_syn(given_syn: pd.DataFrame, syn_id: str, evidence_cols: L
 
 def decoupling_paired_pool(paired_pool: pd.DataFrame, evidence_cols: List[str], sample_cols: List[str]) -> pd.DataFrame:
     """Output special df that seperate the evidence and to sample as index and values"""
-    target_pool = paired_pool.copy(deep=True)
+    target_pool = paired_pool.copy(deep=True).reset_index(drop=True)
     # Note the order is important here
-    target_pool.loc[:, TO_SAMPLE_COL] = pd.Series(list(paired_pool[sample_cols].to_numpy()))
+    target_pool.loc[:, TO_SAMPLE_COL] = pd.Series(list(target_pool[sample_cols].to_numpy()))
+    assert not target_pool[TO_SAMPLE_COL].isna().any()
     pool_gb_evidences = target_pool.groupby(evidence_cols)[TO_SAMPLE_COL].apply(lambda x: np.array(x))
     return pd.DataFrame(pool_gb_evidences) # 1 col only
 
@@ -81,6 +82,7 @@ def sample_matching_from_pairs(given_syn: pd.DataFrame, syn_id: str, paired_pool
     # Condense both syn and pool, they will now have similar indexes
     condensed_syn = condense_evidence_syn(check_syn, syn_id, evidence_cols)
     condensed_pool = decoupling_paired_pool(check_pool, evidence_cols, sample_cols)
+    
     # NOTE: the sample_cols order is for pool
     # NOTE: the order for syn is, [id, count]
     comb_in_syn = set(condensed_syn.index)
@@ -114,6 +116,7 @@ def sample_matching_from_pairs(given_syn: pd.DataFrame, syn_id: str, paired_pool
         for sid, val in segment_by_id:
             results.append([sid, chosen_recs[start:start + val]])
             start += val
+        assert start == tot_samples
         return results
     
     sample_result_col = "sample_results"
@@ -121,13 +124,14 @@ def sample_matching_from_pairs(given_syn: pd.DataFrame, syn_id: str, paired_pool
     combined_condense = combined_condense.drop(columns=[TO_SAMPLE_COL, ID_COUNT_COL, SUM_COUNT_COL])
     combined_condense_exploded = combined_condense.explode(sample_result_col)
 
-    def convert_samples_to_df(r):
-        sid, rec_details = r[sample_result_col]
-        converted_rec = pd.DataFrame(rec_details, columns=sample_cols)
+    def convert_samples_to_df(rec):
+        sid, rec_details = rec
+        new_rec = [list(x) for x in rec_details]
+        converted_rec = pd.DataFrame(np.array(new_rec), columns=sample_cols)
         converted_rec[syn_id] = sid
         return converted_rec
     
-    combined_condense_exploded[sample_result_col] = combined_condense_exploded[sample_result_col].apply(convert_samples_to_df, axis=1)
+    combined_condense_exploded[sample_result_col] = combined_condense_exploded[sample_result_col].apply(convert_samples_to_df)
     fin_samples = pd.concat(list(combined_condense_exploded[sample_result_col]))
 
     return fin_samples, rm_syn_rec, kept_syn_rec
