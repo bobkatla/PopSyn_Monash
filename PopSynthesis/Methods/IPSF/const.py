@@ -49,7 +49,6 @@ HH_ATTS = ["hhid", "dwelltype", "owndwell", "hhinc", "totalvehs", "hhsize"]
 
 PP_ATTS = [
     "persid",
-    "hhid",
     "age",
     "sex",
     "relationship",

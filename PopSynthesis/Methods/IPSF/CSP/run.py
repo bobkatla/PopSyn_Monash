@@ -1,14 +1,8 @@
 """Run the CSP from a given syn HH (also SAA to adjust again)"""
 
 
-import pandas as pd
 import pickle
-from PopSynthesis.Methods.IPSF.const import data_dir, POOL_SIZE, processed_dir
-from PopSynthesis.Methods.IPSF.CSP.operations.convert_seeds import (
-    convert_seeds_to_pairs,
-    pair_states_dict,
-)
-from PopSynthesis.Methods.IPSF.utils.pool_utils import create_pool
+from PopSynthesis.Methods.IPSF.const import processed_dir, PP_ATTS, NOT_INCLUDED_IN_BN_LEARN
 
 
 def main():
@@ -16,7 +10,9 @@ def main():
     # get the data
     with open(processed_dir / "dict_pool_pairs.pickle", "rb") as handle:
         pools_ref = pickle.load(handle)
-    print(pools_ref)
+    pp_atts = list(set(PP_ATTS) - set(NOT_INCLUDED_IN_BN_LEARN))
+    print(pp_atts)
+    # rename the HH-Main so the so Main match the rest
 
 
 if __name__ == "__main__":
