@@ -14,7 +14,8 @@ TO_SAMPLE_COL = "to_sample"  # for condensed pool
 
 def create_count_col(syn_with_count: pd.DataFrame, cou_col: str) -> pd.DataFrame:
     """Update the syn with the rela_count based on the seed"""
-    syn_with_count[COUNT_COL] = syn_with_count[cou_col]
+    syn_with_count = syn_with_count.copy(deep=True)
+    syn_with_count.loc[:, COUNT_COL] = list(syn_with_count[cou_col])
     return syn_with_count
 
 
