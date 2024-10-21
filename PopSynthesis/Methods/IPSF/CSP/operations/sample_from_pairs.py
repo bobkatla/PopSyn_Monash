@@ -3,8 +3,6 @@
 import pandas as pd
 from typing import List, Tuple, Dict
 import numpy as np
-
-
 # NOTE: make sure it can synthesize something for each rela
 
 
@@ -60,6 +58,7 @@ def condense_evidence_syn(
 ) -> pd.DataFrame:
     """condense the given df to have comb as """
     assert COUNT_COL in given_syn.columns
+    given_syn[COUNT_COL] = given_syn[COUNT_COL].astype(int)
     check_syn = given_syn[evidence_cols + [COUNT_COL, syn_id]]
     syn_gb_ids = (
         check_syn.groupby(evidence_cols)[[syn_id, COUNT_COL]]
