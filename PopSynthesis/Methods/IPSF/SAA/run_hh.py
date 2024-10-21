@@ -30,14 +30,14 @@ def run_main() -> None:
         "totalvehs",
         "dwelltype",
         "owndwell",
-    ] # these must exist in both marg and syn
+    ]  # these must exist in both marg and syn
     considered_atts = [
         "hhsize",
         "hhinc",
         "totalvehs",
         "dwelltype",
         "owndwell",
-    ] # exist in final syn
+    ]  # exist in final syn
 
     pool = pd.read_csv(processed_dir / "HH_pool.csv")
     start_time = time.time()
