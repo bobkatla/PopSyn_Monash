@@ -83,12 +83,15 @@ def main():
             main_pp = rela_pp
         else:
             rm_main_pp.append(removed_syn)
-            main_pp = kept_syn
             pp_results[main_rela] = kept_syn
+            kept_hhid = list(kept_syn[HHID])
+            main_pp = main_pp[main_pp[HHID].isin(kept_hhid)]
 
-    print(rm_hh)
-    print(rm_main_pp)
-    print(pp_results)
+    # Ok working,
+    # We need to concat them
+    # Remove hh will be used to update the pools for regeneration (SAA)
+    # Removed Main will be used to update the paired pool with Main
+    # Rerun the whole thing again (quite concerning with 40k removed)
 
 if __name__ == "__main__":
     main()
