@@ -58,7 +58,7 @@ def main():
         evidence_cols = hh_atts
         sample_cols = main_atts + all_rela
     
-        if rela == main_rela:
+        if rela != main_rela:
             # override
             main_pp[rela] = main_pp[rela].astype(int)
             to_process_syn = main_pp[main_pp[rela] > 0]
