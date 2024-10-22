@@ -48,7 +48,6 @@ LS_HH_INC = [
 HH_ATTS = ["hhid", "dwelltype", "owndwell", "hhinc", "totalvehs", "hhsize"]
 
 PP_ATTS = [
-    "persid",
     "age",
     "sex",
     "relationship",
@@ -63,6 +62,7 @@ hhid_field = "serialno"
 count_field = "count"  # THIS IS THE DEFAULT FROM value_counts in pandas
 
 POOL_SIZE = int(1e7 / 2)
+HH_TAG = "HH"
 
 data_dir = Path(__file__).parent.resolve() / "data" / "raw"
 processed_dir = Path(__file__).parent.resolve() / "data" / "processed"

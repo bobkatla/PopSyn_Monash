@@ -6,7 +6,39 @@ output: paired for HH (with rela count) and Main, Main and each rela
 Maybe put the pool creation here as well (as we need to check for the synthesis of hhsize == total rela count)
 """
 import pandas as pd
-from typing import Dict, List
+from typing import Dict, List, Tuple
+from PopSynthesis.Methods.IPSF.const import HH_TAG
+
+
+def _pre_process_seeds(hh_seed: pd.DataFrame, pp_seed: pd.DataFrame, id_col: str, pp_segment_col: str, main_state: str) -> Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
+    pp_states = pp_seed[pp_segment_col].unique()
+    assert main_state in pp_states
+    assert id_col in hh_seed.columns
+    assert id_col in pp_seed.columns
+
+    hh_seed[id_col] = hh_seed[id_col].astype(str)
+    pp_seed[id_col] = pp_seed[id_col].astype(str)
+    hh_seed = add_pp_seg_count(hh_seed, pp_seed, pp_segment_col, id_col)
+
+    segmented_pp = segment_pp_seed(pp_seed, pp_segment_col)
+    assert len(segmented_pp[main_state]) == len(hh_seed)
+    return hh_seed, segmented_pp
+
+
+def convert_seeds_by_ordered_pairs(ordered_pairs: List[List[Tuple[str, str]]], hh_seed: pd.DataFrame, pp_seed: pd.DataFrame, id_col: str, pp_segment_col: str, main_state: str) -> Dict[str, pd.DataFrame]:
+    hh_seed, to_pair_dfs = _pre_process_seeds(hh_seed, pp_seed, id_col, pp_segment_col, main_state)
+    to_pair_dfs[HH_TAG] = hh_seed
+    result_paired_df = {}
+    for level in ordered_pairs:
+        for evidence_state, sample_state in level:
+            result_paired_df[f"{evidence_state}-{sample_state}"] = pair_by_id(
+                to_pair_dfs[evidence_state],
+                to_pair_dfs[sample_state],
+                id_col,
+                evidence_state,
+                sample_state,
+            )
+    return result_paired_df
 
 
 def convert_seeds_to_pairs(
@@ -16,27 +48,16 @@ def convert_seeds_to_pairs(
     pp_segment_col: str,
     main_state: str,
 ) -> Dict[str, pd.DataFrame]:
-    pp_states = pp_seed[pp_segment_col].unique()
-    assert main_state in pp_states
-    assert id_col in hh_seed.columns
-    assert id_col in pp_seed.columns
-
-    hh_seed[id_col] = hh_seed[id_col].astype(str)
-    pp_seed[id_col] = pp_seed[id_col].astype(str)
-    hh_name = "HH"  # simply for naming convention
-    hh_seed = add_pp_seg_count(hh_seed, pp_seed, pp_segment_col, id_col)
-
-    segmented_pp = segment_pp_seed(pp_seed, pp_segment_col)
-    assert len(segmented_pp[main_state]) == len(hh_seed)
+    hh_seed, segmented_pp = _pre_process_seeds(hh_seed, pp_seed, id_col, pp_segment_col, main_state)
 
     # pair up HH - Main first
     result_pairs = {
-        f"{hh_name}-{main_state}": pair_by_id(
-            hh_seed, segmented_pp[main_state], id_col, hh_name, main_state
+        f"{HH_TAG}-{main_state}": pair_by_id(
+            hh_seed, segmented_pp[main_state], id_col, HH_TAG, main_state
         )
     }
-    assert len(result_pairs[f"{hh_name}-{main_state}"]) == len(hh_seed)
-    for pp_state in pp_states:
+    assert len(result_pairs[f"{HH_TAG}-{main_state}"]) == len(hh_seed)
+    for pp_state in segmented_pp.keys():
         if pp_state != main_state:
             result_pairs[f"{main_state}-{pp_state}"] = pair_by_id(
                 segmented_pp[main_state],
@@ -56,7 +77,6 @@ def pair_by_id(
     join_result = df1.merge(
         df2, on=id, how="inner", suffixes=[f"_{name1}", f"_{name2}"]
     )
-    assert len(join_result) == min(len(df1), len(df2))
     return join_result
 
 
