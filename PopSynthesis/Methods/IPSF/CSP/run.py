@@ -14,6 +14,8 @@ from PopSynthesis.Methods.IPSF.CSP.operations.extra_filters import filter_mismat
 from PopSynthesis.Methods.IPSF.CSP.operations.sample_from_pairs import (
     sample_matching_from_pairs,
     create_count_col,
+    update_by_rm_for_pool,
+    update_by_rm_for_all_pools,
 )
 
 
@@ -30,6 +32,7 @@ def main():
     syn_hh["hhid"] = syn_hh.index
     with open(processed_dir / "dict_pool_pairs.pickle", "rb") as handle:
         pools_ref = pickle.load(handle)
+    hh_pool = pd.read_csv(processed_dir / "HH_pool.csv")
     
     # get attributes
     pp_atts = list(set(PP_ATTS) - set(NOT_INCLUDED_IN_BN_LEARN))
@@ -46,8 +49,7 @@ def main():
     # NOTE: the syn main people will be updated with the new values, it is the first val in the array
     assert all_rela[0] == main_rela
     main_pp = None
-    rm_hh = []
-    kept_hh = []
+    rm_hh = None
     rm_main_pp = []
     pp_results = {}
     main_atts = list(rename_main.values())
@@ -67,7 +69,7 @@ def main():
             evidence_cols = main_atts
             sample_cols = [f"{x}_{rela}" for x in pp_atts]
         
-        rela_pp, removed_syn, kept_syn = sample_matching_from_pairs(
+        rela_pp, removed_syn, _ = sample_matching_from_pairs(
             given_syn=to_process_syn,
             syn_id=HHID,
             paired_pool=pools_ref[pool_name],
@@ -78,19 +80,27 @@ def main():
         pp_results[rela] = rela_pp
 
         if rela == main_rela:
-            rm_hh.append(removed_syn)
-            kept_hh.append(kept_syn)
+            rm_hh = removed_syn # happens only once
             main_pp = rela_pp
         else:
             rm_main_pp.append(removed_syn)
-            pp_results[main_rela] = kept_syn
-            kept_hhid = list(kept_syn[HHID])
-            main_pp = main_pp[main_pp[HHID].isin(kept_hhid)]
+            rm_hhid = list(removed_syn[HHID])
+            main_pp = main_pp[~main_pp[HHID].isin(rm_hhid)]
 
-    # Ok working,
+
+    # THERE IS THE ISSUE WITH AGE ORDER (GrandParent is younger than Parent, wronggggg)
+
+    pp_results[main_rela] = main_pp.drop(columns=all_rela)
     # We need to concat them
+    temp_pp = []
+    for rela, df in pp_results.items():
+        rename_rela = {f"{x}_{rela}": x for x in pp_atts}
+        temp_pp.append(df.rename(columns=rename_rela))
+    final_pp = pd.concat(temp_pp, ignore_index=True)
     # Remove hh will be used to update the pools for regeneration (SAA)
+    hh_pool = update_by_rm_for_pool(rm_hh, hh_pool, hh_atts)
     # Removed Main will be used to update the paired pool with Main
+    pools_ref = update_by_rm_for_all_pools(rm_main_pp, pools_ref, main_atts)
     # Rerun the whole thing again (quite concerning with 40k removed)
 
 if __name__ == "__main__":
