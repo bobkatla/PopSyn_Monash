@@ -10,13 +10,14 @@ from PopSynthesis.Methods.IPSF.const import (
     NOT_INCLUDED_IN_BN_LEARN,
     zone_field,
 )
-from PopSynthesis.Methods.IPSF.CSP.operations.extra_filters import filter_mismatch_hhsz
 from PopSynthesis.Methods.IPSF.CSP.operations.sample_from_pairs import (
     sample_matching_from_pairs,
     create_count_col,
     update_by_rm_for_pool,
     update_by_rm_for_all_pools,
 )
+import numpy as np
+from typing import Literal
 
 
 def main():
@@ -30,6 +31,7 @@ def main():
         output_dir / "SAA_output_HH_again.csv", index_col=0
     ).reset_index(drop=True)
     syn_hh["hhid"] = syn_hh.index
+
     with open(processed_dir / "dict_pool_pairs.pickle", "rb") as handle:
         pools_ref = pickle.load(handle)
     hh_pool = pd.read_csv(processed_dir / "HH_pool.csv")
@@ -39,20 +41,14 @@ def main():
     hh_atts = [x for x in syn_hh.columns if x not in [zone_field, HHID]]
     all_rela = [x.split("-")[-1] for x in pools_ref.keys()]
 
-    # rename the HH-Main so the so Main match the rest
-    rename_main = {x: f"{x}_{main_rela}" for x in pp_atts}
-    pools_ref[f"{hh_name}-{main_rela}"] = pools_ref[f"{hh_name}-{main_rela}"].rename(columns=rename_main)
-    pools_ref[f"{hh_name}-{main_rela}"] = filter_mismatch_hhsz(
-        pools_ref[f"{hh_name}-{main_rela}"], "hhsize", all_rela
-    )
-
     # NOTE: the syn main people will be updated with the new values, it is the first val in the array
     assert all_rela[0] == main_rela
     main_pp = None
     rm_hh = None
     rm_main_pp = []
     pp_results = {}
-    main_atts = list(rename_main.values())
+    main_atts = [f"{x}_{main_rela}" for x in pp_atts]
+    # Will do again, will do synthesis by levels to ensure the age order
     for rela in all_rela:
         print(f"Processing {rela}")
         to_process_syn = syn_hh
@@ -62,7 +58,7 @@ def main():
     
         if rela != main_rela:
             # override
-            main_pp[rela] = main_pp[rela].astype(int)
+            main_pp.loc[:, rela] = list(main_pp[rela].astype(int))
             to_process_syn = main_pp[main_pp[rela] > 0]
             to_process_syn = create_count_col(to_process_syn, rela)
             pool_name = f"{main_rela}-{rela}"
