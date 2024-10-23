@@ -65,5 +65,6 @@ POOL_SIZE = int(1e7 / 2)
 HH_TAG = "HH"
 
 data_dir = Path(__file__).parent.resolve() / "data" / "raw"
+small_test_dir = Path(__file__).parent.resolve() / "data" / "small_test"
 processed_dir = Path(__file__).parent.resolve() / "data" / "processed"
 output_dir = Path(__file__).parent.resolve() / "output"
