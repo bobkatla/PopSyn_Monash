@@ -25,19 +25,18 @@ def _pre_process_seeds(hh_seed: pd.DataFrame, pp_seed: pd.DataFrame, id_col: str
     return hh_seed, segmented_pp
 
 
-def convert_seeds_by_ordered_pairs(ordered_pairs: List[List[Tuple[str, str]]], hh_seed: pd.DataFrame, pp_seed: pd.DataFrame, id_col: str, pp_segment_col: str, main_state: str) -> Dict[str, pd.DataFrame]:
+def convert_seeds_by_pairs(pairs: List[List[Tuple[str, str]]], hh_seed: pd.DataFrame, pp_seed: pd.DataFrame, id_col: str, pp_segment_col: str, main_state: str) -> Dict[str, pd.DataFrame]:
     hh_seed, to_pair_dfs = _pre_process_seeds(hh_seed, pp_seed, id_col, pp_segment_col, main_state)
     to_pair_dfs[HH_TAG] = hh_seed
     result_paired_df = {}
-    for level in ordered_pairs:
-        for evidence_state, sample_state in level:
-            result_paired_df[f"{evidence_state}-{sample_state}"] = pair_by_id(
-                to_pair_dfs[evidence_state],
-                to_pair_dfs[sample_state],
-                id_col,
-                evidence_state,
-                sample_state,
-            )
+    for evidence_state, sample_state in pairs:
+        result_paired_df[f"{evidence_state}-{sample_state}"] = pair_by_id(
+            to_pair_dfs[evidence_state],
+            to_pair_dfs[sample_state],
+            id_col,
+            evidence_state,
+            sample_state,
+        )
     return result_paired_df
 
 

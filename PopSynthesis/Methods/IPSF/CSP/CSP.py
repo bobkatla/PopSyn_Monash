@@ -36,6 +36,7 @@ ordered_pairs =[
 ]
 
 HHID = "hhid"
+main_rela = "Main"
 
 
 def selecting_key_pp_to_sample(pp: pd.DataFrame, hhid:str, age_col:str, strategy:Literal["oldest", "youngest", "random"]) -> pd.DataFrame:
@@ -58,26 +59,31 @@ def selecting_key_pp_to_sample(pp: pd.DataFrame, hhid:str, age_col:str, strategy
 
 def CSP_run(syn_hh: pd.DataFrame, pools_pp: dict, pp_atts: list, hh_atts: list, all_rela: list) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, pd.DataFrame]]:
     """Run the CSP for the given synthetic households and pools"""
-
     syn_results = {HH_TAG: syn_hh}
     removed_recs = {}
-    
+
     for layer in ordered_pairs:
         for root_rela, sample_rela in layer:
             print(f"Processing {root_rela} - {sample_rela}")
-            pool_name = f"{root_rela}-{sample_rela}"
-            sample_cols = [f"{x}_{sample_rela}" for x in pp_atts]
 
+            sample_cols = [f"{x}_{sample_rela}" for x in pp_atts]
             if root_rela == HH_TAG:
                 to_process_syn = syn_hh
                 sample_cols = sample_cols + all_rela
                 evidence_cols = hh_atts
             else:
+                if root_rela not in syn_results:
+                    print(f"WARNING: No {root_rela} to process, fall back to using Main")
+                    root_rela = main_rela
                 to_process_syn = syn_results[root_rela]
                 to_process_syn.loc[:, sample_rela] = list(to_process_syn[sample_rela].astype(int))
                 to_process_syn = to_process_syn[to_process_syn[sample_rela] > 0]
+                if len(to_process_syn) == 0:
+                    print(f"WARNING: No {sample_rela} to process")
+                    continue
                 to_process_syn = create_count_col(to_process_syn, sample_rela)
                 evidence_cols = [f"{x}_{root_rela}" for x in pp_atts]
+            pool_name = f"{root_rela}-{sample_rela}"
             
             # process to_process_syn if duplicated hhid
             if to_process_syn[HHID].duplicated().any():

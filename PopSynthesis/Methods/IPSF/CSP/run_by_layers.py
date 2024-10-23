@@ -75,6 +75,7 @@ def update_CSP_combined_syn_hhmarg_pools(syn_hh: pd.DataFrame, hh_marg: pd.DataF
     updated_pp = syn_pp[syn_pp[HHID].isin(updated_hh[HHID])]
     updated_pool_ref = {}
     # update pools by error recs
+    print("Updating pools")
     for rela, error_rec in error_recs.items():
         check_cols = hh_atts if rela == "HH" else [f"{x}_{rela}" for x in pp_atts]
         updated_pool_ref[rela] = update_by_rm_for_pool(error_rec, pools_ref[rela], check_cols)
@@ -89,7 +90,7 @@ def main():
     # get attributes
     pp_atts = list(set(PP_ATTS) - set(NOT_INCLUDED_IN_BN_LEARN))
     hh_atts = [x for x in syn_hh.columns if x not in [zone_field, HHID]]
-    all_rela = [x.split("-")[-1] for x in pools_ref.keys()]
+    all_rela = list(set([x.split("-")[-1] for x in pools_ref.keys()]))
 
     # Run the CSP - first run
     updated_syn_hh, syn_pp, hh_marg, pools_ref = update_CSP_combined_syn_hhmarg_pools(syn_hh, hh_marg, pools_ref, pp_atts, hh_atts, all_rela)
