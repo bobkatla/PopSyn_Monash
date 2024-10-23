@@ -48,7 +48,7 @@ def get_all_data() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict[str, 
 
 def get_remaining_hh_n_new_marg(hh_marg: pd.DataFrame, final_syn_pop: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
     # get the marg from the kept hh
-    marg_from_kept_hh = convert_full_to_marg_count(final_syn_pop, [zone_field])
+    marg_from_kept_hh = convert_full_to_marg_count(final_syn_pop.drop(columns=[HHID], errors="ignore"), [zone_field])
     # get the marg from the original marg
     converted_hh_marg = hh_marg.set_index(
         hh_marg.columns[hh_marg.columns.get_level_values(0) == zone_field][0]
@@ -58,7 +58,7 @@ def get_remaining_hh_n_new_marg(hh_marg: pd.DataFrame, final_syn_pop: pd.DataFra
     # adjust the kept hh
     kept_hh = adjust_kept_rec_match_census(final_syn_pop, diff_marg)
     # checking
-    kept_marg = convert_full_to_marg_count(kept_hh, [zone_field])
+    kept_marg = convert_full_to_marg_count(kept_hh.drop(columns=[HHID], errors="ignore"), [zone_field])
     new_diff_marg = get_diff_marg(converted_hh_marg, kept_marg)
     # check it is no neg indeed
     checking_not_neg = new_diff_marg < 0
