@@ -77,8 +77,11 @@ def update_CSP_combined_syn_hhmarg_pools(syn_hh: pd.DataFrame, hh_marg: pd.DataF
     # update pools by error recs
     print("Updating pools")
     for rela, error_rec in error_recs.items():
+        related_pools = [x for x in pools_ref.keys() if rela in x]
         check_cols = hh_atts if rela == "HH" else [f"{x}_{rela}" for x in pp_atts]
-        updated_pool_ref[rela] = update_by_rm_for_pool(error_rec, pools_ref[rela], check_cols)
+        for pool_name in related_pools:
+            print(f"Updating {pool_name}")
+            updated_pool_ref[pool_name] = update_by_rm_for_pool(error_rec, pools_ref[pool_name], check_cols)
 
     return updated_hh, updated_pp, updated_hh_marg, updated_pool_ref
 
