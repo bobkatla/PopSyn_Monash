@@ -3,6 +3,7 @@ import pickle
 import pandas as pd
 from PopSynthesis.Methods.IPSF.const import (
     data_dir,
+    small_test_dir,
     processed_dir,
     output_dir,
     zone_field,
@@ -20,6 +21,24 @@ from PopSynthesis.Methods.IPSF.utils.synthetic_checked_census import (
 from PopSynthesis.Methods.IPSF.CSP.CSP import CSP_run, HHID
 from PopSynthesis.Methods.IPSF.SAA.SAA import SAA
 from typing import Tuple, Dict, List
+
+
+def get_test_data() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict[str, pd.DataFrame]]:
+    # Get stored data
+    print("Loading data")
+    syn_hh = pd.read_csv(
+        small_test_dir / "SAA_HH_small.csv", index_col=0
+    ).reset_index(drop=True)
+    syn_hh[HHID] = syn_hh.index
+
+    hh_pool = pd.read_csv(small_test_dir / "HH_pool_small_test.csv")
+
+    hh_marg = pd.read_csv(small_test_dir / "hh_marginals_small.csv", header=[0, 1])
+
+    with open(small_test_dir / "dict_pool_pairs_by_layers_small.pickle", "rb") as handle:
+        pools_ref = pickle.load(handle)
+
+    return syn_hh, hh_pool, hh_marg, pools_ref
 
 
 def get_all_data() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict[str, pd.DataFrame]]:
@@ -83,7 +102,7 @@ def update_CSP_combined_syn_hhmarg_pools(syn_hh: pd.DataFrame, hh_marg: pd.DataF
     return updated_hh, updated_pp, updated_hh_marg, updated_pool_ref
 
 
-def ipsf_full_loop(order_adjustment, syn_hh, hh_pool, hh_marg, pools_ref, max_run_time=30):
+def ipsf_full_loop(order_adjustment, syn_hh, hh_pool, hh_marg, pools_ref, max_run_time=30, output_each_step=False):
     # get attributes
     pp_atts = list(set(PP_ATTS) - set(NOT_INCLUDED_IN_BN_LEARN))
     hh_atts = [x for x in syn_hh.columns if x not in [zone_field, HHID]]
@@ -95,21 +114,20 @@ def ipsf_full_loop(order_adjustment, syn_hh, hh_pool, hh_marg, pools_ref, max_ru
     # init with the total HH we want
     chosen_hhs = [updated_syn_hh]
     chosen_pp = [syn_pp]
-    err_rm_hh = []
     highest_id = updated_syn_hh[HHID].astype(int).max()
     left_over_hh = None
 
     n_removed_err = hh_marg.sum().sum() / len(order_adjustment)
     n_run_time = 0
+    err_rm_hh = [n_removed_err]
     while n_run_time < max_run_time and n_removed_err > 0:
         # randomly shuffle for each adjustment
-        err_rm_hh.append(n_removed_err)
         print(
             f"For run {n_run_time}, order is: {order_adjustment}, aim for {n_removed_err} HHs"
         )
         saa = SAA(hh_marg, order_adjustment, order_adjustment, hh_pool)
         ###
-        added_syn_hh = saa.run(extra_name=f"_IPSF_{n_run_time}")
+        added_syn_hh = saa.run(output_each_step=output_each_step, extra_name=f"_IPSF_{n_run_time}")
         added_syn_hh[HHID] = range(highest_id+1, highest_id+len(added_syn_hh)+1)
         ###
         # error check
@@ -122,10 +140,11 @@ def ipsf_full_loop(order_adjustment, syn_hh, hh_pool, hh_marg, pools_ref, max_ru
         highest_id = new_syn_hh[HHID].astype(int).max()
         n_run_time += 1
         n_removed_err = len(added_syn_hh) - len(new_syn_hh)
+        err_rm_hh.append(n_removed_err)
 
         if n_run_time == max_run_time and n_removed_err > 0:
             # not adjusting anymore
-            left_over_hh = added_syn_hh[~added_syn_hh[HHID].isin(new_syn_hh[HHID])]
+            left_over_hh = added_syn_hh[~added_syn_hh[HHID].astype(str).isin(new_syn_hh[HHID])]
             assert len(left_over_hh) == n_removed_err
 
     if left_over_hh is not None: # meaning the there are some hh withour pp assigned
