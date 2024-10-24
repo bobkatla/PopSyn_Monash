@@ -45,7 +45,7 @@ LS_HH_INC = [
     "$8,000 or more ($416,000 or more)",
 ]
 
-HH_ATTS = ["hhid", "dwelltype", "owndwell", "hhinc", "totalvehs", "hhsize"]
+HH_ATTS = ["dwelltype", "owndwell", "hhinc", "totalvehs", "hhsize"]
 
 PP_ATTS = [
     "age",
