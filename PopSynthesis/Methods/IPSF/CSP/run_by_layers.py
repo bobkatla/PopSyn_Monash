@@ -2,7 +2,7 @@
 
 
 from PopSynthesis.Methods.IPSF.const import output_dir
-from PopSynthesis.Methods.IPSF.CSP.common_run_funcs import get_all_data, ipsf_full_loop
+from PopSynthesis.Methods.IPSF.CSP.common_run_funcs import ipsf_full_loop, get_cross_checked_data
 import time
 
 
@@ -18,11 +18,11 @@ order_adjustment = [
 
 def main():
     # TODO: is there anyway to use pp marg
-    syn_hh, hh_pool, hh_marg, pools_ref = get_all_data()
+    syn_hh, hh_pool, hh_marg, pools_ref = get_cross_checked_data()
 
     start_time = time.time()
     ##
-    final_syn_hh, final_syn_pp, err_rm = ipsf_full_loop(order_adjustment=order_adjustment, syn_hh=syn_hh, hh_pool=hh_pool, hh_marg=hh_marg, pools_ref=pools_ref)
+    final_syn_hh, final_syn_pp, err_rm = ipsf_full_loop(order_adjustment=order_adjustment, syn_hh=syn_hh, hh_pool=hh_pool, hh_marg=hh_marg, pools_ref=pools_ref, max_run_time=5)
     ##
 
     # record time

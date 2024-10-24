@@ -42,6 +42,7 @@ def get_cross_checked_data() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, 
 
     hh_pool = pools_ref[HH_TAG]
 
+    del pools_ref[HH_TAG]
     # removed HHs not existing in pools (normally if we used the same pool we would not need this step)
     # TODO
 
