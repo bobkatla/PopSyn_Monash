@@ -9,6 +9,7 @@ from PopSynthesis.Methods.IPSF.const import (
     zone_field,
     PP_ATTS,
     HH_TAG,
+    HH_ATTS,
     NOT_INCLUDED_IN_BN_LEARN,
 )
 from PopSynthesis.Methods.IPSF.CSP.operations.sample_from_pairs import (
@@ -34,7 +35,7 @@ def get_cross_checked_test() -> Tuple[
     ) as handle:
         pools_ref = pickle.load(handle)
 
-    syn_hh = pd.read_csv(small_test_dir / "SAA_HH_small.csv", index_col=0).reset_index(
+    syn_hh = pd.read_csv(small_test_dir / "SAA_HH_small.csv", index_col=0, dtype={x: str for x in HH_ATTS}).reset_index(
         drop=True
     )
     syn_hh[HHID] = syn_hh.index
@@ -58,7 +59,7 @@ def get_cross_checked_data() -> Tuple[
     with open(processed_dir / "dict_pool_pairs_check_HH_main.pickle", "rb") as handle:
         pools_ref = pickle.load(handle)
 
-    syn_hh = pd.read_csv(output_dir / "SAA_HH_fixed_ad.csv", index_col=0).reset_index(
+    syn_hh = pd.read_csv(output_dir / "SAA_HH_fixed_ad.csv", index_col=0, dtype={x: str for x in HH_ATTS}).reset_index(
         drop=True
     )
     syn_hh[HHID] = syn_hh.index
@@ -82,7 +83,7 @@ def get_test_data() -> Tuple[
 ]:
     # Get stored data
     print("Loading test data")
-    syn_hh = pd.read_csv(small_test_dir / "SAA_HH_small.csv", index_col=0).reset_index(
+    syn_hh = pd.read_csv(small_test_dir / "SAA_HH_small.csv", index_col=0, dtype={x: str for x in HH_ATTS}).reset_index(
         drop=True
     )
     syn_hh[HHID] = syn_hh.index
@@ -104,7 +105,7 @@ def get_full_data() -> Tuple[
 ]:
     # Get stored data
     print("Loading full data")
-    syn_hh = pd.read_csv(output_dir / "SAA_HH_fixed_ad.csv", index_col=0).reset_index(
+    syn_hh = pd.read_csv(output_dir / "SAA_HH_fixed_ad.csv", index_col=0, dtype={x: str for x in HH_ATTS}).reset_index(
         drop=True
     )
     syn_hh[HHID] = syn_hh.index
