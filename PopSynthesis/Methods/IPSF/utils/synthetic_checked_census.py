@@ -14,6 +14,7 @@ import numpy as np
 from itertools import combinations, product
 from PopSynthesis.Methods.IPSF.const import count_field, zone_field
 from typing import List, Literal, Tuple, Dict
+import sys
 
 
 def segment_df(df: pd.DataFrame, chunk_sz: int) -> List[pd.DataFrame]:
@@ -120,7 +121,8 @@ def adjust_kept_rec_match_census(
     # diff_census = diff_census.head(10) # sample to check smaller
     # diff_census = diff_census.set_index(diff_census.columns[diff_census.columns.get_level_values(0)==zone_field])
     for zone, r in diff_census.iterrows():
-        print(f"DOING deleting to match cencus diff for {zone}")
+        sys.stdout.write(f"\rDOING deleting to match cencus diff for {zone}")
+        sys.stdout.flush()
         sub_count_kept = count_kept.loc[
             count_kept.index.get_level_values(zone_field) == zone
         ]
@@ -184,7 +186,7 @@ def adjust_kept_rec_match_census(
         after_sum = count_kept.loc[
             count_kept.index.get_level_values(zone_field) == zone
         ].sum()
-        print(
-            f"FNISHED deleting {before_sum - after_sum} records to match cencus diff for {zone}"
-        )
+        # sys.stdout.write(f"\rFINISHED deleting {before_sum - after_sum} records to match cencus diff for {zone}")
+        # sys.stdout.flush()
+    print()
     return convert_count_to_full(count_kept.reset_index())

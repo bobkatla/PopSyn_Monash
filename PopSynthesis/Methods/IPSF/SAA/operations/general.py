@@ -10,6 +10,7 @@ from PopSynthesis.Methods.IPSF.SAA.operations.compare_census import (
     calculate_states_diff,
 )
 from PopSynthesis.Methods.IPSF.SAA.operations.zone_adjustment import zone_adjustment
+import sys
 
 
 def process_raw_ipu_marg(marg: pd.DataFrame, atts: List[str]) -> pd.DataFrame:
@@ -125,7 +126,8 @@ def adjust_atts_state_match_census(
         # With state diff we can now do adjustment for each zone, can parallel it?
         pop_syn_across_zones = []
         for zid, zone_states_diff in states_diff_census.iterrows():
-            print(f"DOING {zid}")
+            sys.stdout.write(f"\rDOING zone {zid}")
+            sys.stdout.flush()
             sub_syn_pop = updated_syn_pop[updated_syn_pop[zone_field] == zid]
             if not sub_syn_pop.empty:
                 zone_adjusted_syn_pop = zone_adjustment(
@@ -133,7 +135,7 @@ def adjust_atts_state_match_census(
                 )
                 if zone_adjusted_syn_pop is not None:
                     pop_syn_across_zones.append(zone_adjusted_syn_pop)
-
+        print()
         updated_syn_pop = pd.concat(pop_syn_across_zones)
 
     return updated_syn_pop

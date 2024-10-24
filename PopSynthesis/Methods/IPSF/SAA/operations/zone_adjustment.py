@@ -220,5 +220,4 @@ def zone_adjustment(
         raise ValueError(
             f"Error processing at zone {zone}: expected {ori_num_syn} records, got {len(final_resulted_syn)}"
         )
-    print(f"Finished zone {zone}")
     return final_resulted_syn
