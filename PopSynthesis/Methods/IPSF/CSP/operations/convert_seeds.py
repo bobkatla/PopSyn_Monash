@@ -10,7 +10,13 @@ from typing import Dict, List, Tuple
 from PopSynthesis.Methods.IPSF.const import HH_TAG
 
 
-def _pre_process_seeds(hh_seed: pd.DataFrame, pp_seed: pd.DataFrame, id_col: str, pp_segment_col: str, main_state: str) -> Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
+def _pre_process_seeds(
+    hh_seed: pd.DataFrame,
+    pp_seed: pd.DataFrame,
+    id_col: str,
+    pp_segment_col: str,
+    main_state: str,
+) -> Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
     pp_states = pp_seed[pp_segment_col].unique()
     assert main_state in pp_states
     assert id_col in hh_seed.columns
@@ -25,8 +31,17 @@ def _pre_process_seeds(hh_seed: pd.DataFrame, pp_seed: pd.DataFrame, id_col: str
     return hh_seed, segmented_pp
 
 
-def convert_seeds_by_pairs(pairs: List[List[Tuple[str, str]]], hh_seed: pd.DataFrame, pp_seed: pd.DataFrame, id_col: str, pp_segment_col: str, main_state: str) -> Dict[str, pd.DataFrame]:
-    hh_seed, to_pair_dfs = _pre_process_seeds(hh_seed, pp_seed, id_col, pp_segment_col, main_state)
+def convert_seeds_by_pairs(
+    pairs: List[List[Tuple[str, str]]],
+    hh_seed: pd.DataFrame,
+    pp_seed: pd.DataFrame,
+    id_col: str,
+    pp_segment_col: str,
+    main_state: str,
+) -> Dict[str, pd.DataFrame]:
+    hh_seed, to_pair_dfs = _pre_process_seeds(
+        hh_seed, pp_seed, id_col, pp_segment_col, main_state
+    )
     to_pair_dfs[HH_TAG] = hh_seed
     result_paired_df = {}
     for evidence_state, sample_state in pairs:
@@ -47,7 +62,9 @@ def convert_seeds_to_pairs(
     pp_segment_col: str,
     main_state: str,
 ) -> Dict[str, pd.DataFrame]:
-    hh_seed, segmented_pp = _pre_process_seeds(hh_seed, pp_seed, id_col, pp_segment_col, main_state)
+    hh_seed, segmented_pp = _pre_process_seeds(
+        hh_seed, pp_seed, id_col, pp_segment_col, main_state
+    )
 
     # pair up HH - Main first
     result_pairs = {

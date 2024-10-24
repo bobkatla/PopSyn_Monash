@@ -19,10 +19,18 @@ def filter_mismatch_hhsz(
     return df
 
 
-def filter_paired_pool_agegr(pool: pd.DataFrame, agegr_col_younger: str, agegr_col_older: str, min_gap: int) -> pd.DataFrame:
+def filter_paired_pool_agegr(
+    pool: pd.DataFrame, agegr_col_younger: str, agegr_col_older: str, min_gap: int
+) -> pd.DataFrame:
     """Filter the pool to have the agegr gap"""
     # convert the agegr to int
-    pool["younger"] = pool[agegr_col_younger].apply(lambda x: int(x.split("-")[0].replace("+", "")))
-    pool["older"] = pool[agegr_col_older].apply(lambda x: int(x.split("-")[0].replace("+", "")))
-    pool = pool[pool["older"] - pool["younger"] >= min_gap].drop(columns=["younger", "older"])
+    pool["younger"] = pool[agegr_col_younger].apply(
+        lambda x: int(x.split("-")[0].replace("+", ""))
+    )
+    pool["older"] = pool[agegr_col_older].apply(
+        lambda x: int(x.split("-")[0].replace("+", ""))
+    )
+    pool = pool[pool["older"] - pool["younger"] >= min_gap].drop(
+        columns=["younger", "older"]
+    )
     return pool

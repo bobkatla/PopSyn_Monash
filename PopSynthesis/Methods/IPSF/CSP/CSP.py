@@ -18,33 +18,37 @@ from PopSynthesis.Methods.IPSF.CSP.operations.sample_from_pairs import (
 import numpy as np
 from typing import Literal, Dict, Tuple
 
-ordered_pairs =[
+ordered_pairs = [
+    [("HH", "Main")],
     [
-        ("HH", "Main")
-    ],
-    [
-        ("Main", "Spouse"), 
-        ("Main", "Child"), 
+        ("Main", "Spouse"),
+        ("Main", "Child"),
         ("Main", "Parent"),
         ("Main", "Sibling"),
-        ("Main", "Others")
-    ], 
-    [
-        ("Child", "Grandchild"), 
-        ("Parent", "Grandparent")
-    ]
+        ("Main", "Others"),
+    ],
+    [("Child", "Grandchild"), ("Parent", "Grandparent")],
 ]
 
 HHID = "hhid"
 main_rela = "Main"
 
 
-def selecting_key_pp_to_sample(pp: pd.DataFrame, hhid:str, age_col:str, strategy:Literal["oldest", "youngest", "random"]) -> pd.DataFrame:
+def selecting_key_pp_to_sample(
+    pp: pd.DataFrame,
+    hhid: str,
+    age_col: str,
+    strategy: Literal["oldest", "youngest", "random"],
+) -> pd.DataFrame:
     """Filter the pp so each hh only have 1 pp so it can be used for sampling later"""
     pp = pp.copy(deep=True).reset_index(drop=True)
     pp["ppid"] = pp.index
-    pp["converted_age"] = pp[age_col].apply(lambda x: int(x.split("-")[0].replace("+", "")))
-    gb_hhid = pp.groupby(hhid)[["ppid", "converted_age"]].apply(lambda x: list(x.to_numpy()))
+    pp["converted_age"] = pp[age_col].apply(
+        lambda x: int(x.split("-")[0].replace("+", ""))
+    )
+    gb_hhid = pp.groupby(hhid)[["ppid", "converted_age"]].apply(
+        lambda x: list(x.to_numpy())
+    )
     gb_hhid = gb_hhid.apply(lambda x: sorted(x, key=lambda x: x[1]))
     if strategy == "oldest":
         gb_hhid = gb_hhid.apply(lambda x: x[-1][0])
@@ -57,7 +61,9 @@ def selecting_key_pp_to_sample(pp: pd.DataFrame, hhid:str, age_col:str, strategy
     return pp[pp["ppid"].isin(gb_hhid)].drop(columns=["ppid", "converted_age"])
 
 
-def CSP_run(syn_hh: pd.DataFrame, pools_pp: dict, pp_atts: list, hh_atts: list, all_rela: list) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, pd.DataFrame]]:
+def CSP_run(
+    syn_hh: pd.DataFrame, pools_pp: dict, pp_atts: list, hh_atts: list, all_rela: list
+) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, pd.DataFrame]]:
     """Run the CSP for the given synthetic households and pools"""
     syn_results = {HH_TAG: syn_hh}
     removed_recs = {}
@@ -73,10 +79,14 @@ def CSP_run(syn_hh: pd.DataFrame, pools_pp: dict, pp_atts: list, hh_atts: list, 
                 evidence_cols = hh_atts
             else:
                 if root_rela not in syn_results:
-                    print(f"WARNING: No {root_rela} to process, fall back to using Main")
+                    print(
+                        f"WARNING: No {root_rela} to process, fall back to using Main"
+                    )
                     root_rela = main_rela
                 to_process_syn = syn_results[root_rela]
-                to_process_syn.loc[:, sample_rela] = list(to_process_syn[sample_rela].astype(int))
+                to_process_syn.loc[:, sample_rela] = list(
+                    to_process_syn[sample_rela].astype(int)
+                )
                 to_process_syn = to_process_syn[to_process_syn[sample_rela] > 0]
                 if len(to_process_syn) == 0:
                     print(f"WARNING: No {sample_rela} to process")
@@ -84,10 +94,12 @@ def CSP_run(syn_hh: pd.DataFrame, pools_pp: dict, pp_atts: list, hh_atts: list, 
                 to_process_syn = create_count_col(to_process_syn, sample_rela)
                 evidence_cols = [f"{x}_{root_rela}" for x in pp_atts]
             pool_name = f"{root_rela}-{sample_rela}"
-            
+
             # process to_process_syn if duplicated hhid
             if to_process_syn[HHID].duplicated().any():
-                to_process_syn = selecting_key_pp_to_sample(to_process_syn, HHID, f"age_{root_rela}", "random")
+                to_process_syn = selecting_key_pp_to_sample(
+                    to_process_syn, HHID, f"age_{root_rela}", "random"
+                )
 
             rela_pp, removed_syn, _ = sample_matching_from_pairs(
                 given_syn=to_process_syn,
@@ -102,10 +114,12 @@ def CSP_run(syn_hh: pd.DataFrame, pools_pp: dict, pp_atts: list, hh_atts: list, 
                 removed_recs[root_rela].append(removed_syn)
             else:
                 removed_recs[root_rela] = [removed_syn]
-            
+
             # speical process for second layer
             if sample_rela == "Parent":
-                map_dict = dict(zip(to_process_syn[HHID], to_process_syn["Grandparent"]))
+                map_dict = dict(
+                    zip(to_process_syn[HHID], to_process_syn["Grandparent"])
+                )
                 rela_pp["Grandparent"] = rela_pp[HHID].map(map_dict)
             elif sample_rela == "Child":
                 map_dict = dict(zip(to_process_syn[HHID], to_process_syn["Grandchild"]))
@@ -114,17 +128,21 @@ def CSP_run(syn_hh: pd.DataFrame, pools_pp: dict, pp_atts: list, hh_atts: list, 
             rela_pp["relationship"] = sample_rela
             syn_results[sample_rela] = rela_pp
             rm_hhid = list(removed_syn[HHID])
-            syn_results[root_rela] = syn_results[root_rela][~syn_results[root_rela][HHID].isin(rm_hhid)]
-    
+            syn_results[root_rela] = syn_results[root_rela][
+                ~syn_results[root_rela][HHID].isin(rm_hhid)
+            ]
+
     print("Concatenating results and output")
     # We need to concat them
     temp_pp = []
     for rela, df in syn_results.items():
         if rela != HH_TAG:
             rename_rela = {f"{x}_{rela}": x for x in pp_atts}
-            temp_pp.append(df.rename(columns=rename_rela).drop(columns=all_rela, errors="ignore"))
+            temp_pp.append(
+                df.rename(columns=rename_rela).drop(columns=all_rela, errors="ignore")
+            )
     final_pp = pd.concat(temp_pp, ignore_index=True)
-    
+
     # return impossible combinations by values
     for rela, removed in removed_recs.items():
         removed_recs[rela] = pd.concat(removed, ignore_index=True)
@@ -133,5 +151,3 @@ def CSP_run(syn_hh: pd.DataFrame, pools_pp: dict, pp_atts: list, hh_atts: list, 
     final_hh = final_hh[final_hh[HHID].isin(list(final_pp[HHID]))]
 
     return final_hh, final_pp, removed_recs
-
-
