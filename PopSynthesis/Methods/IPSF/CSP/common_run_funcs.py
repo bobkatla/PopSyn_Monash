@@ -8,6 +8,7 @@ from PopSynthesis.Methods.IPSF.const import (
     output_dir,
     zone_field,
     PP_ATTS,
+    HH_TAG,
     NOT_INCLUDED_IN_BN_LEARN,
 )
 from PopSynthesis.Methods.IPSF.CSP.operations.sample_from_pairs import (
@@ -23,9 +24,33 @@ from PopSynthesis.Methods.IPSF.SAA.SAA import SAA
 from typing import Tuple, Dict, List
 
 
+def get_cross_checked_data() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict[str, pd.DataFrame]]:
+    # Get stored data
+    print("Loading cross-checked data")
+    with open(processed_dir / "dict_pool_pairs_check_HH_main.pickle", "rb") as handle:
+        pools_ref = pickle.load(handle)
+
+    syn_hh = pd.read_csv(
+        output_dir / "SAA_HH_fixed_ad.csv", index_col=0
+    ).reset_index(drop=True)
+    syn_hh[HHID] = syn_hh.index
+
+    hh_marg = pd.read_csv(data_dir / "hh_marginals_ipu.csv", header=[0, 1])
+    hh_marg = hh_marg.drop(
+        columns=hh_marg.columns[hh_marg.columns.get_level_values(0) == "sample_geog"][0]
+    )
+
+    hh_pool = pools_ref[HH_TAG]
+
+    # removed HHs not existing in pools (normally if we used the same pool we would not need this step)
+    # TODO
+
+    return syn_hh, hh_pool, hh_marg, pools_ref
+
+
 def get_test_data() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict[str, pd.DataFrame]]:
     # Get stored data
-    print("Loading data")
+    print("Loading test data")
     syn_hh = pd.read_csv(
         small_test_dir / "SAA_HH_small.csv", index_col=0
     ).reset_index(drop=True)
@@ -41,9 +66,9 @@ def get_test_data() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict[str,
     return syn_hh, hh_pool, hh_marg, pools_ref
 
 
-def get_all_data() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict[str, pd.DataFrame]]:
+def get_full_data() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict[str, pd.DataFrame]]:
     # Get stored data
-    print("Loading data")
+    print("Loading full data")
     syn_hh = pd.read_csv(
         output_dir / "SAA_HH_fixed_ad.csv", index_col=0
     ).reset_index(drop=True)
@@ -154,7 +179,7 @@ def ipsf_full_loop(order_adjustment, syn_hh, hh_pool, hh_marg, pools_ref, max_ru
         chosen_hhs.append(syn_pp)
         remaining_unadjustable_hh = len(left_over_hh) - len(syn_hh)
         if remaining_unadjustable_hh > 0:
-            print(f"WARNING: There are {remaining_unadjustable_hh} HHs that cannot be adjusted")
+            print(f"WARNING: There are {remaining_unadjustable_hh} HHs that cannot assign people to")
         else:
             print("All HHs are adjusted and have pp assigned")
 
