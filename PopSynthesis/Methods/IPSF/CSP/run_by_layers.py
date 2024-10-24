@@ -22,7 +22,7 @@ def main():
 
     start_time = time.time()
     ##
-    final_syn_hh, final_syn_pp, err_rm = ipsf_full_loop(order_adjustment=order_adjustment, syn_hh=syn_hh, hh_pool=hh_pool, hh_marg=hh_marg, pools_ref=pools_ref, max_run_time=5)
+    final_syn_hh, final_syn_pp, err_rm, cannot_assign_hh = ipsf_full_loop(order_adjustment=order_adjustment, syn_hh=syn_hh, hh_pool=hh_pool, hh_marg=hh_marg, pools_ref=pools_ref, max_run_time=5)
     ##
 
     # record time
@@ -34,8 +34,10 @@ def main():
     print(f"Error hh rm are: {err_rm}")
 
     # output
-    final_syn_hh.to_csv(output_dir / "IPSF_HH.csv")
-    final_syn_pp.to_csv(output_dir / "IPSF_PP.csv")
+    final_syn_hh.to_csv(output_dir / "IPSF_HH.csv", index=False)
+    final_syn_pp.to_csv(output_dir / "IPSF_PP.csv", index=False)
+    if cannot_assign_hh is not None:
+        cannot_assign_hh.to_csv(output_dir / "IPSF_cannot_assign_hh.csv", index=False)
    
 
 if __name__ == "__main__":

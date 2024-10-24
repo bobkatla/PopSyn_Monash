@@ -21,7 +21,29 @@ from PopSynthesis.Methods.IPSF.utils.synthetic_checked_census import (
 )
 from PopSynthesis.Methods.IPSF.CSP.CSP import CSP_run, HHID
 from PopSynthesis.Methods.IPSF.SAA.SAA import SAA
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict, List, Union
+
+
+def get_cross_checked_test() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict[str, pd.DataFrame]]:
+    # Get stored data
+    print("Loading cross-checked test data")
+    with open(small_test_dir / "dict_pool_pairs_check_HH_main_test.pickle", "rb") as handle:
+        pools_ref = pickle.load(handle)
+
+    syn_hh = pd.read_csv(
+        small_test_dir / "SAA_HH_small.csv", index_col=0
+    ).reset_index(drop=True)
+    syn_hh[HHID] = syn_hh.index
+
+    hh_marg = pd.read_csv(small_test_dir / "hh_marginals_small.csv", header=[0, 1])
+
+    hh_pool = pools_ref[HH_TAG]
+
+    del pools_ref[HH_TAG]
+    # removed HHs not existing in pools (normally if we used the same pool we would not need this step)
+    # TODO
+
+    return syn_hh, hh_pool, hh_marg, pools_ref
 
 
 def get_cross_checked_data() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict[str, pd.DataFrame]]:
@@ -122,13 +144,13 @@ def update_CSP_combined_syn_hhmarg_pools(syn_hh: pd.DataFrame, hh_marg: pd.DataF
         related_pools = [x for x in pools_ref.keys() if rela in x]
         check_cols = hh_atts if rela == "HH" else [f"{x}_{rela}" for x in pp_atts]
         for pool_name in related_pools:
-            print(f"Updating {pool_name}")
+            print(f"Updating {pool_name} for {rela}")
             updated_pool_ref[pool_name] = update_by_rm_for_pool(error_rec, pools_ref[pool_name], check_cols)
 
     return updated_hh, updated_pp, updated_hh_marg, updated_pool_ref
 
 
-def ipsf_full_loop(order_adjustment, syn_hh, hh_pool, hh_marg, pools_ref, max_run_time=30, output_each_step=False):
+def ipsf_full_loop(order_adjustment, syn_hh, hh_pool, hh_marg, pools_ref, max_run_time=30, output_each_step=False) -> Tuple[pd.DataFrame, pd.DataFrame, List[int], Union[pd.DataFrame, None]]:
     # get attributes
     pp_atts = list(set(PP_ATTS) - set(NOT_INCLUDED_IN_BN_LEARN))
     hh_atts = [x for x in syn_hh.columns if x not in [zone_field, HHID]]
@@ -173,17 +195,18 @@ def ipsf_full_loop(order_adjustment, syn_hh, hh_pool, hh_marg, pools_ref, max_ru
             left_over_hh = added_syn_hh[~added_syn_hh[HHID].astype(str).isin(new_syn_hh[HHID])]
             assert len(left_over_hh) == n_removed_err
 
+    cannot_adjust_hh = None
     if left_over_hh is not None: # meaning the there are some hh withour pp assigned
         # run the last CSP
         syn_hh, syn_pp, _ = CSP_run(left_over_hh, pools_ref, pp_atts, hh_atts, all_rela)
         chosen_hhs.append(syn_hh)
-        chosen_hhs.append(syn_pp)
-        remaining_unadjustable_hh = len(left_over_hh) - len(syn_hh)
-        if remaining_unadjustable_hh > 0:
-            print(f"WARNING: There are {remaining_unadjustable_hh} HHs that cannot assign people to")
+        chosen_pp.append(syn_pp)
+        cannot_adjust_hh = left_over_hh[left_over_hh[HHID].astype(str).isin(syn_hh[HHID])]
+        if len(cannot_adjust_hh) > 0:
+            print(f"WARNING: There are {len(cannot_adjust_hh)} HHs that cannot assign people to")
         else:
             print("All HHs are adjusted and have pp assigned")
 
     final_syn_hh = pd.concat(chosen_hhs)
     final_syn_pp = pd.concat(chosen_pp)
-    return final_syn_hh, final_syn_pp, err_rm_hh
+    return final_syn_hh, final_syn_pp, err_rm_hh, cannot_adjust_hh

@@ -126,7 +126,7 @@ def adjust_kept_rec_match_census(
         sub_count_kept = count_kept.loc[
             count_kept.index.get_level_values(zone_field) == zone
         ]
-        before_sum = sub_count_kept.sum()
+        # before_sum = sub_count_kept.sum()
         prev_indexs = sub_count_kept.index
         neg_cols = r[r < 0]
         # re check with neg val
@@ -183,9 +183,9 @@ def adjust_kept_rec_match_census(
         count_kept.loc[sub_count_kept.index] = sub_count_kept
         count_kept.loc[list(zero_indexes)] = 0
         assert neg_cols.sum() == 0
-        after_sum = count_kept.loc[
-            count_kept.index.get_level_values(zone_field) == zone
-        ].sum()
+        # after_sum = count_kept.loc[
+        #     count_kept.index.get_level_values(zone_field) == zone
+        # ].sum()
         # sys.stdout.write(f"\rFINISHED deleting {before_sum - after_sum} records to match cencus diff for {zone}")
         # sys.stdout.flush()
     print()
