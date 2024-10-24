@@ -6,6 +6,8 @@ from PopSynthesis.Methods.IPSF.const import (
     processed_dir,
     output_dir,
     zone_field,
+    PP_ATTS,
+    NOT_INCLUDED_IN_BN_LEARN,
 )
 from PopSynthesis.Methods.IPSF.CSP.operations.sample_from_pairs import (
     update_by_rm_for_pool,
@@ -16,6 +18,7 @@ from PopSynthesis.Methods.IPSF.utils.synthetic_checked_census import (
     convert_full_to_marg_count,
 )
 from PopSynthesis.Methods.IPSF.CSP.CSP import CSP_run, HHID
+from PopSynthesis.Methods.IPSF.SAA.SAA import SAA
 from typing import Tuple, Dict, List
 
 
@@ -78,3 +81,64 @@ def update_CSP_combined_syn_hhmarg_pools(syn_hh: pd.DataFrame, hh_marg: pd.DataF
             updated_pool_ref[pool_name] = update_by_rm_for_pool(error_rec, pools_ref[pool_name], check_cols)
 
     return updated_hh, updated_pp, updated_hh_marg, updated_pool_ref
+
+
+def ipsf_full_loop(order_adjustment, syn_hh, hh_pool, hh_marg, pools_ref, max_run_time=30):
+    # get attributes
+    pp_atts = list(set(PP_ATTS) - set(NOT_INCLUDED_IN_BN_LEARN))
+    hh_atts = [x for x in syn_hh.columns if x not in [zone_field, HHID]]
+    all_rela = list(set([x.split("-")[-1] for x in pools_ref.keys()]))
+
+    # Run the CSP - first run
+    updated_syn_hh, syn_pp, hh_marg, pools_ref = update_CSP_combined_syn_hhmarg_pools(syn_hh, hh_marg, pools_ref, pp_atts, hh_atts, all_rela)
+
+    # init with the total HH we want
+    chosen_hhs = [updated_syn_hh]
+    chosen_pp = [syn_pp]
+    err_rm_hh = []
+    highest_id = updated_syn_hh[HHID].astype(int).max()
+    left_over_hh = None
+
+    n_removed_err = hh_marg.sum().sum() / len(order_adjustment)
+    n_run_time = 0
+    while n_run_time < max_run_time and n_removed_err > 0:
+        # randomly shuffle for each adjustment
+        err_rm_hh.append(n_removed_err)
+        print(
+            f"For run {n_run_time}, order is: {order_adjustment}, aim for {n_removed_err} HHs"
+        )
+        saa = SAA(hh_marg, order_adjustment, order_adjustment, hh_pool)
+        ###
+        added_syn_hh = saa.run(extra_name=f"_IPSF_{n_run_time}")
+        added_syn_hh[HHID] = range(highest_id+1, highest_id+len(added_syn_hh)+1)
+        ###
+        # error check
+        new_syn_hh, new_syn_pp, hh_marg, pools_ref = update_CSP_combined_syn_hhmarg_pools(added_syn_hh, hh_marg, pools_ref, pp_atts, hh_atts, all_rela)
+
+        # added the adjusted ones
+        chosen_hhs.append(new_syn_hh)
+        chosen_pp.append(new_syn_pp)
+
+        highest_id = new_syn_hh[HHID].astype(int).max()
+        n_run_time += 1
+        n_removed_err = len(added_syn_hh) - len(new_syn_hh)
+
+        if n_run_time == max_run_time and n_removed_err > 0:
+            # not adjusting anymore
+            left_over_hh = added_syn_hh[~added_syn_hh[HHID].isin(new_syn_hh[HHID])]
+            assert len(left_over_hh) == n_removed_err
+
+    if left_over_hh is not None: # meaning the there are some hh withour pp assigned
+        # run the last CSP
+        syn_hh, syn_pp, _ = CSP_run(left_over_hh, pools_ref, pp_atts, hh_atts, all_rela)
+        chosen_hhs.append(syn_hh)
+        chosen_hhs.append(syn_pp)
+        remaining_unadjustable_hh = len(left_over_hh) - len(syn_hh)
+        if remaining_unadjustable_hh > 0:
+            print(f"WARNING: There are {remaining_unadjustable_hh} HHs that cannot be adjusted")
+        else:
+            print("All HHs are adjusted and have pp assigned")
+
+    final_syn_hh = pd.concat(chosen_hhs)
+    final_syn_pp = pd.concat(chosen_pp)
+    return final_syn_hh, final_syn_pp, err_rm_hh
