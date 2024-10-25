@@ -31,7 +31,7 @@ def main():
         hh_pool=hh_pool,
         hh_marg=hh_marg,
         pools_ref=pools_ref,
-        max_run_time=5,
+        max_run_time=2,
     )
     ##
 
@@ -44,10 +44,10 @@ def main():
     print(f"Error hh rm are: {err_rm}")
 
     # output
-    final_syn_hh.to_csv(output_dir / "IPSF_HH.csv", index=False)
-    final_syn_pp.to_csv(output_dir / "IPSF_PP.csv", index=False)
+    final_syn_hh.to_csv(output_dir / "IPSF_HH_2rrun.csv", index=False)
+    final_syn_pp.to_csv(output_dir / "IPSF_PP_2rrun.csv", index=False)
     if cannot_assign_hh is not None:
-        cannot_assign_hh.to_csv(output_dir / "IPSF_cannot_assign_hh.csv", index=False)
+        cannot_assign_hh.to_csv(output_dir / "IPSF_cannot_assign_hh_2rrun.csv", index=False)
 
 
 if __name__ == "__main__":
