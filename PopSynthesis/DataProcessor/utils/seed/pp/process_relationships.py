@@ -165,8 +165,9 @@ def convert_simple_income(income_str: str) -> int:
         return -1
     elif "Missing" in income_str:
         # This should not happen as we will filter no income
+        print(f"WARNING: Missing income should not exist: {income_str}")
         return -2
-    elif "Zero" in income_str:
+    elif "Zero" in income_str or "Nil" in income_str:
         return 0
     elif "-" in income_str:
         return int(income_str.split("-")[0].replace("$", ""))
