@@ -57,6 +57,8 @@ PP_ATTS = [
 ]
 NOT_INCLUDED_IN_BN_LEARN = ["serialno", "persid", "relationship", "sample_geog"]
 
+ALL_RELA = ["Main", "Spouse", "Child", "Grandchild", "Parent", "Grandparent", "Sibling", "Other"]
+
 zone_field = "zone_id"
 hhid_field = "serialno"
 count_field = "count"  # THIS IS THE DEFAULT FROM value_counts in pandas
