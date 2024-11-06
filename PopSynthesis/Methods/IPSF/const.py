@@ -70,3 +70,19 @@ data_dir = Path(__file__).parent.resolve() / "data" / "raw"
 small_test_dir = Path(__file__).parent.resolve() / "data" / "small_test"
 processed_dir = Path(__file__).parent.resolve() / "data" / "processed"
 output_dir = Path(__file__).parent.resolve() / "output"
+
+SAA_ODERED_ATTS_HH = [
+        "hhsize",
+        "hhinc",
+        "totalvehs",
+        "dwelltype",
+        "owndwell",
+]  # these must exist in both marg and syn, it is in order of adjustment
+
+CONSIDERED_ATTS_HH = [
+    "hhsize",
+    "hhinc",
+    "totalvehs",
+    "dwelltype",
+    "owndwell",
+]  # exist in final syn
