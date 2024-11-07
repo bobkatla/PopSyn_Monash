@@ -12,7 +12,7 @@ def run_main() -> None:
 
     start_time = time.time()
     # saa run
-    final_syn_hh, err_rm = saa_run(hh_marg, hh_pool, considered_atts=CONSIDERED_ATTS_HH, ordered_to_adjust_atts=SAA_ODERED_ATTS_HH, max_run_time=5)
+    final_syn_hh, err_rm = saa_run(hh_marg, hh_pool, considered_atts=CONSIDERED_ATTS_HH, ordered_to_adjust_atts=SAA_ODERED_ATTS_HH, max_run_time=5, shuffle_order=["hhsize", "hhinc"])
 
     # record time
     end_time = time.time()
