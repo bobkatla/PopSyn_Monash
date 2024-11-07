@@ -7,8 +7,6 @@ from PopSynthesis.Methods.IPSF.const import (
     small_test_dir,
     processed_dir,
     zone_field,
-    SAA_ODERED_ATTS_HH,
-    CONSIDERED_ATTS_HH,
 )
 from PopSynthesis.Methods.IPSF.utils.synthetic_checked_census import (
     adjust_kept_rec_match_census,
@@ -16,12 +14,13 @@ from PopSynthesis.Methods.IPSF.utils.synthetic_checked_census import (
     convert_full_to_marg_count,
 )
 from PopSynthesis.Methods.IPSF.SAA.SAA import SAA
-from typing import Tuple, List
+from typing import Tuple, List, Union
 import random
 
 
 def get_test_hh() -> Tuple[pd.DataFrame, pd.DataFrame]:
     hh_marg = pd.read_csv(small_test_dir / "hh_marginals_small.csv", header=[0, 1])
+    hh_marg = hh_marg.set_index(hh_marg.columns[hh_marg.columns.get_level_values(0) == zone_field][0])
     pool = pd.read_csv(small_test_dir / "HH_pool_small_test.csv")
     return hh_marg, pool
 
@@ -30,7 +29,7 @@ def get_hh_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
     hh_marg = pd.read_csv(data_dir / "hh_marginals_ipu.csv", header=[0, 1])
     hh_marg = hh_marg.drop(
         columns=hh_marg.columns[hh_marg.columns.get_level_values(0) == "sample_geog"][0]
-    )
+    ).set_index(hh_marg.columns[hh_marg.columns.get_level_values(0) == zone_field][0])
     pool = pd.read_csv(processed_dir / "HH_pool.csv")
     return hh_marg, pool
 
@@ -38,9 +37,7 @@ def get_hh_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
 def err_check_against_marg(syn_pop: pd.DataFrame, marg: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
     # error check
     marg_from_created = convert_full_to_marg_count(syn_pop, [zone_field])
-    converted_marg = marg.set_index(
-        marg.columns[marg.columns.get_level_values(0) == zone_field][0]
-    )
+    converted_marg = marg
     diff_marg = get_diff_marg(converted_marg, marg_from_created)
 
     kept_syn = adjust_kept_rec_match_census(syn_pop, diff_marg)
@@ -54,23 +51,28 @@ def err_check_against_marg(syn_pop: pd.DataFrame, marg: pd.DataFrame) -> Tuple[p
     # now get the new marg
     new_diff_marg.index = new_diff_marg.index.astype(int)
     new_diff_marg.index.name = zone_field
-    return kept_syn, new_diff_marg.reset_index()
+    return kept_syn, new_diff_marg
 
 
-def saa_run(targeted_marg: pd.DataFrame, pool: pd.DataFrame, max_run_time:int=30) -> Tuple[pd.DataFrame, List[int]]:
+def saa_run(targeted_marg: pd.DataFrame, pool: pd.DataFrame, considered_atts=List[str], ordered_to_adjust_atts=List[str], shuffle_order:Union[bool, List[str]]=False, max_run_time:int=30) -> Tuple[pd.DataFrame, List[int]]:
+    assert set(ordered_to_adjust_atts) <= set(considered_atts)
+    atts_in_marg = set(targeted_marg.columns.get_level_values(0)) - {zone_field}
+    assert set(ordered_to_adjust_atts) <= atts_in_marg
+    assert zone_field in targeted_marg.index.name
+
     n_run_time = 0
     # init with the total HH we want
-    n_removed_err = targeted_marg.sum().sum() / len(SAA_ODERED_ATTS_HH)
+    n_removed_err = targeted_marg.sum().sum() / len(atts_in_marg)
     chosen_syn = []
     err_rm = []
     while n_run_time < max_run_time and n_removed_err > 0:
         # randomly shuffle for each adjustment
-        random.shuffle(SAA_ODERED_ATTS_HH)
+        random.shuffle(ordered_to_adjust_atts)
         err_rm.append(n_removed_err)
         print(
-            f"For run {n_run_time}, order is: {SAA_ODERED_ATTS_HH}, aim for {n_removed_err} HHs"
+            f"For run {n_run_time}, order is: {ordered_to_adjust_atts}, aim for {n_removed_err} HHs"
         )
-        saa = SAA(targeted_marg, CONSIDERED_ATTS_HH, SAA_ODERED_ATTS_HH, pool)
+        saa = SAA(targeted_marg, considered_atts, ordered_to_adjust_atts, pool)
         ###
         final_syn_pop = saa.run(extra_name=f"_{n_run_time}")
         ###

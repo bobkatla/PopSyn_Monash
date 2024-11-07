@@ -12,7 +12,7 @@ from PopSynthesis.Methods.IPSF.SAA.operations.general import (
     process_raw_ipu_marg,
     adjust_atts_state_match_census,
 )
-from typing import List, Dict
+from typing import List
 
 
 class SAA:
@@ -34,7 +34,7 @@ class SAA:
         )
         self.segmented_marg = converted_segment_marg
 
-    def run(self, output_each_step: bool = True, extra_name: str = "") -> pd.DataFrame:
+    def run(self, output_each_step: bool = False, extra_name: str = "") -> pd.DataFrame:
         # Output the synthetic population, the main point
         curr_syn_pop = None
         adjusted_atts = []

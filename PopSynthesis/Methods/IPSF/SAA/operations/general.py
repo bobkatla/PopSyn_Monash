@@ -13,10 +13,9 @@ from PopSynthesis.Methods.IPSF.SAA.operations.zone_adjustment import zone_adjust
 import sys
 
 
-def process_raw_ipu_marg(marg: pd.DataFrame, atts: List[str]) -> pd.DataFrame:
+def process_raw_ipu_marg(marg: pd.DataFrame, atts: List[str]) -> Dict[str, pd.DataFrame]:
     segmented_marg = {}
-    zones = marg[marg.columns[marg.columns.get_level_values(0) == zone_field]].values
-    zones = [z[0] for z in zones]
+    zones = marg.index.values
     for att in atts:
         sub_marg = marg[marg.columns[marg.columns.get_level_values(0) == att]]
         if sub_marg.empty:

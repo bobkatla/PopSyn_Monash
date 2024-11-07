@@ -1,17 +1,18 @@
 """Main place to run SAA for households synthesis"""
 
-from PopSynthesis.Methods.IPSF.const import output_dir
+from PopSynthesis.Methods.IPSF.const import SAA_ODERED_ATTS_HH, CONSIDERED_ATTS_HH
 from PopSynthesis.Methods.IPSF.SAA.operations.wrapper_saa_run import saa_run, get_test_hh
 import time
 
 
 def run_main() -> None:
-    # How long: 0h-0m-0.00
+    # Processing took 0h-1m-2.17s
+    # Error hh rm are: [48928.0, 25119, 18762, 12693, 10850]
     hh_marg, hh_pool = get_test_hh()
 
     start_time = time.time()
     # saa run
-    final_syn_hh, err_rm = saa_run(hh_marg, hh_pool, max_run_time=5)
+    final_syn_hh, err_rm = saa_run(hh_marg, hh_pool, considered_atts=CONSIDERED_ATTS_HH, ordered_to_adjust_atts=SAA_ODERED_ATTS_HH, max_run_time=5)
 
     # record time
     end_time = time.time()
