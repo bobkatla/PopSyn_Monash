@@ -105,9 +105,11 @@ def saa_run(
         saa = SAA(targeted_marg, considered_atts, ordered_to_adjust_atts, pool)
         ###
         final_syn_pop = saa.run(extra_name=f"_{n_run_time}")
+        assert len(final_syn_pop) == n_removed_err
         ###
         kept_syn, new_marg = err_check_against_marg(final_syn_pop, targeted_marg)
 
+        n_run_time += 1
         # append to the chosen
         if n_run_time == max_run_time:
             # not adjusting anymore
@@ -117,7 +119,6 @@ def saa_run(
             chosen_syn.append(kept_syn)
 
         # Update for next run
-        n_run_time += 1
         n_removed_err = len(final_syn_pop) - len(kept_syn)
         targeted_marg = new_marg
 
