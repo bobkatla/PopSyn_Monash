@@ -47,7 +47,9 @@ def main():
     final_syn_hh.to_csv(output_dir / "IPSF_HH_2rrun.csv", index=False)
     final_syn_pp.to_csv(output_dir / "IPSF_PP_2rrun.csv", index=False)
     if cannot_assign_hh is not None:
-        cannot_assign_hh.to_csv(output_dir / "IPSF_cannot_assign_hh_2rrun.csv", index=False)
+        cannot_assign_hh.to_csv(
+            output_dir / "IPSF_cannot_assign_hh_2rrun.csv", index=False
+        )
 
 
 if __name__ == "__main__":

@@ -35,9 +35,11 @@ def get_cross_checked_test() -> Tuple[
     ) as handle:
         pools_ref = pickle.load(handle)
 
-    syn_hh = pd.read_csv(small_test_dir / "SAA_HH_small.csv", index_col=0, dtype={x: str for x in HH_ATTS}).reset_index(
-        drop=True
-    )
+    syn_hh = pd.read_csv(
+        small_test_dir / "SAA_HH_small.csv",
+        index_col=0,
+        dtype={x: str for x in HH_ATTS},
+    ).reset_index(drop=True)
     syn_hh[HHID] = syn_hh.index
 
     hh_marg = pd.read_csv(small_test_dir / "hh_marginals_small.csv", header=[0, 1])
@@ -59,9 +61,9 @@ def get_cross_checked_data() -> Tuple[
     with open(processed_dir / "dict_pool_pairs_check_HH_main.pickle", "rb") as handle:
         pools_ref = pickle.load(handle)
 
-    syn_hh = pd.read_csv(output_dir / "SAA_HH_fixed_ad.csv", index_col=0, dtype={x: str for x in HH_ATTS}).reset_index(
-        drop=True
-    )
+    syn_hh = pd.read_csv(
+        output_dir / "SAA_HH_fixed_ad.csv", index_col=0, dtype={x: str for x in HH_ATTS}
+    ).reset_index(drop=True)
     syn_hh[HHID] = syn_hh.index
 
     hh_marg = pd.read_csv(data_dir / "hh_marginals_ipu.csv", header=[0, 1])
@@ -83,9 +85,11 @@ def get_test_data() -> Tuple[
 ]:
     # Get stored data
     print("Loading test data")
-    syn_hh = pd.read_csv(small_test_dir / "SAA_HH_small.csv", index_col=0, dtype={x: str for x in HH_ATTS}).reset_index(
-        drop=True
-    )
+    syn_hh = pd.read_csv(
+        small_test_dir / "SAA_HH_small.csv",
+        index_col=0,
+        dtype={x: str for x in HH_ATTS},
+    ).reset_index(drop=True)
     syn_hh[HHID] = syn_hh.index
 
     hh_pool = pd.read_csv(small_test_dir / "HH_pool_small_test.csv")
@@ -105,9 +109,9 @@ def get_full_data() -> Tuple[
 ]:
     # Get stored data
     print("Loading full data")
-    syn_hh = pd.read_csv(output_dir / "SAA_HH_fixed_ad.csv", index_col=0, dtype={x: str for x in HH_ATTS}).reset_index(
-        drop=True
-    )
+    syn_hh = pd.read_csv(
+        output_dir / "SAA_HH_fixed_ad.csv", index_col=0, dtype={x: str for x in HH_ATTS}
+    ).reset_index(drop=True)
     syn_hh[HHID] = syn_hh.index
 
     hh_pool = pd.read_csv(processed_dir / "HH_pool.csv")
@@ -184,8 +188,8 @@ def ipsf_full_loop(
     hh_pool: pd.DataFrame,
     hh_marg: pd.DataFrame,
     pools_ref: Dict[str, pd.DataFrame],
-    max_run_time:int=30,
-    output_each_step:bool=False,
+    max_run_time: int = 30,
+    output_each_step: bool = False,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, List[int], Union[pd.DataFrame, None]]:
     # get attributes
     pp_atts = list(set(PP_ATTS) - set(NOT_INCLUDED_IN_BN_LEARN))

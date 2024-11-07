@@ -4,7 +4,9 @@
 import pandas as pd
 import polars as pl
 from typing import List
-from PopSynthesis.DataProcessor.utils.seed.pp.process_relationships import convert_simple_income
+from PopSynthesis.DataProcessor.utils.seed.pp.process_relationships import (
+    convert_simple_income,
+)
 
 
 def filter_mismatch_hhsz(
@@ -45,7 +47,5 @@ def filter_paired_pool_incgr(
     # convert the incgr to int
     pool["lower"] = pool[incgr_col_lower].apply(convert_simple_income)
     pool["higher"] = pool[incgr_col_higher].apply(convert_simple_income)
-    pool = pool[pool["higher"] >= pool["lower"]].drop(
-        columns=["lower", "higher"]
-    )
+    pool = pool[pool["higher"] >= pool["lower"]].drop(columns=["lower", "higher"])
     return pool

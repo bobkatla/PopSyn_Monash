@@ -12,7 +12,9 @@ def condense_df(df: Union[pl.DataFrame, pd.DataFrame], id_col: str) -> pl.DataFr
     assert id_col in df.columns
     if isinstance(df, pd.DataFrame):
         df = pl.from_pandas(df)
-    return df.groupby(pl.exclude(id_col)).agg(pl.col(id_col), pl.len().alias(count_field))
+    return df.groupby(pl.exclude(id_col)).agg(
+        pl.col(id_col), pl.len().alias(count_field)
+    )
 
 
 def explode_df(df: pl.DataFrame, id_col: str) -> pl.DataFrame:
@@ -21,4 +23,3 @@ def explode_df(df: pl.DataFrame, id_col: str) -> pl.DataFrame:
     assert count_field in df.columns
     df = df.drop(count_field)
     return df.explode(id_col)
-

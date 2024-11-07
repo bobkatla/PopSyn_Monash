@@ -57,7 +57,16 @@ PP_ATTS = [
 ]
 NOT_INCLUDED_IN_BN_LEARN = ["serialno", "persid", "relationship", "sample_geog"]
 
-ALL_RELA = ["Main", "Spouse", "Child", "Grandchild", "Parent", "Grandparent", "Sibling", "Other"]
+ALL_RELA = [
+    "Main",
+    "Spouse",
+    "Child",
+    "Grandchild",
+    "Parent",
+    "Grandparent",
+    "Sibling",
+    "Other",
+]
 
 zone_field = "zone_id"
 hhid_field = "serialno"
@@ -72,11 +81,11 @@ processed_dir = Path(__file__).parent.resolve() / "data" / "processed"
 output_dir = Path(__file__).parent.resolve() / "output"
 
 SAA_ODERED_ATTS_HH = [
-        "hhsize",
-        "hhinc",
-        "totalvehs",
-        "dwelltype",
-        "owndwell",
+    "hhsize",
+    "hhinc",
+    "totalvehs",
+    "dwelltype",
+    "owndwell",
 ]  # these must exist in both marg and syn, it is in order of adjustment
 
 CONSIDERED_ATTS_HH = [
