@@ -4,6 +4,7 @@
 import pandas as pd
 from PopSynthesis.Methods.IPSF.const import (
     data_dir,
+    small_test_dir,
     processed_dir,
     zone_field,
     SAA_ODERED_ATTS_HH,
@@ -17,6 +18,12 @@ from PopSynthesis.Methods.IPSF.utils.synthetic_checked_census import (
 from PopSynthesis.Methods.IPSF.SAA.SAA import SAA
 from typing import Tuple, List
 import random
+
+
+def get_test_hh() -> Tuple[pd.DataFrame, pd.DataFrame]:
+    hh_marg = pd.read_csv(small_test_dir / "hh_marginals_small.csv", header=[0, 1])
+    pool = pd.read_csv(small_test_dir / "HH_pool_small_test.csv")
+    return hh_marg, pool
 
 
 def get_hh_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
