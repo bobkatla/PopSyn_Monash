@@ -9,8 +9,8 @@ import time
 
 
 def run_main() -> None:
-    # Processing took 0h-1m-2.17s
-    # Error hh rm are: [48928.0, 25119, 18762, 12693, 10850]
+    # Processing took 0h-0m-20.34s
+    # Error hh rm are: [45923.0, 29522]
     hh_marg, hh_pool = get_test_hh()
 
     start_time = time.time()
@@ -20,7 +20,7 @@ def run_main() -> None:
         hh_pool,
         considered_atts=CONSIDERED_ATTS_HH,
         ordered_to_adjust_atts=SAA_ODERED_ATTS_HH,
-        max_run_time=5,
+        max_run_time=2,
         shuffle_order=["hhsize", "hhinc"],
     )
 

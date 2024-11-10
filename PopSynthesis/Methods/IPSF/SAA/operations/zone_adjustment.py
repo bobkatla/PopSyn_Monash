@@ -176,9 +176,6 @@ def zone_adjustment(
         condensed_pop_check, remaining_pop = filter_by_SAA_adjusted(
             condensed_pop_check, list(possible_prev_comb), adjusted_atts
         )
-        condensed_pool_check, _ = filter_by_SAA_adjusted(
-            condensed_pool_check, list(possible_prev_comb), adjusted_atts
-        )
 
         to_remove_pop_ids, to_add_pool_ids, n_not_adjusted = sample_syn_and_pool_adjust(
             condensed_pop_check, condensed_pool_check, adjusted_atts, n_adjust

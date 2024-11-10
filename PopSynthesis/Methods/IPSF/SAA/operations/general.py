@@ -93,43 +93,33 @@ def wrapper_multiprocessing_zones(args):
 
 def adjust_atts_state_match_census(
     att: str,
-    curr_syn_pop: Union[None, pd.DataFrame],
+    curr_syn_pop: Union[None, pl.DataFrame, pd.DataFrame],
     census_data_by_att: pd.DataFrame,
     adjusted_atts: List[str],
     pool: pd.DataFrame,
 ) -> pd.DataFrame:
     print(f"ADJUSTING FOR {att}")
     if curr_syn_pop is None:
-        updated_syn_pop = init_syn_pop_saa(att, census_data_by_att, pool).to_pandas()
+        updated_syn_pop = init_syn_pop_saa(att, census_data_by_att, pool)
     else:
-        updated_syn_pop = curr_syn_pop
+        temp_syn_copy = curr_syn_pop
+        if isinstance(curr_syn_pop, pd.DataFrame):
+            temp_syn_copy = pl.from_pandas(curr_syn_pop)
+        census_data_by_att = pl.from_pandas(census_data_by_att)
 
         states_diff_census = calculate_states_diff(
-            att, curr_syn_pop, census_data_by_att
+            att, temp_syn_copy, census_data_by_att
         )
-        assert (states_diff_census.sum(axis=1) == 0).all()
-        # # Prepare arguments for each row
-        # args = [
-        #     (
-        #         att,
-        #         updated_syn_pop[updated_syn_pop[zone_field] == zid],
-        #         zone_states_diff.copy(deep=True),
-        #         pool,
-        #         adjusted_atts,
-        #     )
-        #     for zid, zone_states_diff in states_diff_census.iterrows()
-        # ]
-
-        # # Use multiprocessing Pool
-        # with mp.Pool(mp.cpu_count()) as pool:
-        #     pop_syn_across_zones = pool.map(wrapper_multiprocessing_zones, args)
-
+        assert (states_diff_census.select(pl.exclude([zone_field])).sum(axis=1)==0).all()
+        temp_syn_copy = temp_syn_copy.to_pandas()
+        states_diff_census = states_diff_census.to_pandas().set_index(zone_field)
         # With state diff we can now do adjustment for each zone, can parallel it?
+        # NOTE: biggggggg errrr
         pop_syn_across_zones = []
         for zid, zone_states_diff in states_diff_census.iterrows():
             sys.stdout.write(f"\rDOING zone {zid}")
             sys.stdout.flush()
-            sub_syn_pop = updated_syn_pop[updated_syn_pop[zone_field] == zid]
+            sub_syn_pop = temp_syn_copy[temp_syn_copy[zone_field] == zid]
             if not sub_syn_pop.empty:
                 zone_adjusted_syn_pop = zone_adjustment(
                     att, sub_syn_pop, zone_states_diff, pool, adjusted_atts
