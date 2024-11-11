@@ -2,8 +2,6 @@
 
 
 import pandas as pd
-import polars as pl
-import numpy as np
 from pulp import LpProblem, LpVariable, lpSum, LpStatus, LpMinimize
 from pathlib import Path
 
@@ -43,7 +41,7 @@ def _ILP_solving_adjustment(count_table: pd.DataFrame, states_diff: pd.Series) -
     problem = LpProblem("MatrixAdjustment", LpMinimize)
 
     # Initialize adjustment variables
-    adjustments = {(i, j): LpVariable(f"A_{i}_{j}", lowBound=-count_table.loc[i, j], cat="Continuous") 
+    adjustments = {(i, j): LpVariable(f"A_{i}_{j}", lowBound=-count_table.loc[i, j], cat="Interger") 
                 for i in count_table.index for j in count_table.columns 
                 if pd.notnull(count_table.loc[i, j])}
 
@@ -122,9 +120,9 @@ def update_count_tables(count_table: pd.DataFrame, states_diff: pd.Series) -> pd
 
 
 def test_update_states():
-    # update_count_tables(test_df, test_diff)
-    # update_count_tables(noabs_test_df, noabs_test_diff)
-    a, b = update_count_tables(large_count_table, large_states_diff)
+    a, b = update_count_tables(test_df, test_diff)
+    # a, b = update_count_tables(noabs_test_df, noabs_test_diff)
+    # a, b = update_count_tables(large_count_table, large_states_diff)
     print(a)
     print(b)
 
