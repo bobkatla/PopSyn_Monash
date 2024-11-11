@@ -17,6 +17,87 @@ test_df = pd.DataFrame(
 )
 test_diff = pd.Series([-3, -8, 0, 5, 6], index=["s1", "s2", "s3", "s4", "s5"])
 
+# Case of no absoluate solution
+# Define a small count_table with limited flexibility in values
+noabs_test_df = pd.DataFrame(
+    {
+        "s1": [5, 3],
+        "s2": [4, 1],
+        "s3": [6, 2],
+    },
+    index=["a", "b"]
+)
+
+# Define states_diff with large adjustments that cannot be satisfied exactly
+# For example, s1 requires a reduction of -10, but the sum of s1's values in count_table is only 8.
+# Similarly, s2 requires an increase of 10, which cannot be achieved without exceeding row constraints.
+noabs_test_diff = pd.Series([-10, 10, 0], index=["s1", "s2", "s3"])
+
+
+def _ILP_solving_adjustment(count_table: pd.DataFrame, states_diff: pd.Series) -> pd.DataFrame:
+    count_table = count_table.copy()
+    # Initialize the ILP problem
+    problem = LpProblem("MatrixAdjustment", LpMinimize)
+
+    # Initialize adjustment variables
+    adjustments = {(i, j): LpVariable(f"A_{i}_{j}", cat="Integer") 
+                for i in count_table.index for j in count_table.columns 
+                if pd.notnull(count_table.loc[i, j])}
+
+    # Initialize slack variables for each column to allow deviations from target adjustments
+    slack_pos = {j: LpVariable(f"slack_pos_{j}", lowBound=0, cat="Continuous") for j in states_diff.index}
+    slack_neg = {j: LpVariable(f"slack_neg_{j}", lowBound=0, cat="Continuous") for j in states_diff.index}
+
+    # Deviation variables to penalize large deviations from original values
+    deviations = {key: LpVariable(f"dev_{key[0]}_{key[1]}", lowBound=0, cat="Continuous") 
+                for key in adjustments}
+
+    # Objective: Minimize the sum of deviations from original values and slack
+    problem += lpSum(deviations[key] + slack_pos[j] + slack_neg[j] for key in deviations for j in states_diff.index)
+
+    # Row constraints: Ensure the sum of adjustments in each row is zero
+    for i in count_table.index:
+        row_adjustments = [adjustments[(i, j)] for j in count_table.columns if (i, j) in adjustments]
+        problem += lpSum(row_adjustments) == 0
+
+    # Column constraints with positive and negative slack for deviations
+    for j, target_diff in states_diff.items():
+        col_adjustments = [adjustments[(i, j)] for i in count_table.index if (i, j) in adjustments]
+        problem += lpSum(col_adjustments) == target_diff + slack_pos[j] - slack_neg[j]
+
+    # Non-negativity constraints: Ensure each adjusted cell remains positive
+    for (i, j), var in adjustments.items():
+        original_value = count_table.loc[i, j]
+        problem += var >= -original_value  # Ensures X_ij + A_ij >= 0
+
+    # Deviation constraints: Ensure deviations represent the absolute change from the original value
+    for (i, j), adj_var in adjustments.items():
+        original_value = count_table.loc[i, j]
+        problem += deviations[(i, j)] >= adj_var               # dev >= adj
+        problem += deviations[(i, j)] >= -adj_var              # dev >= -adj
+        problem += deviations[(i, j)] >= original_value - (original_value + adj_var)  # maintain closeness to original values
+
+    # Solve the ILP
+    problem.solve()
+
+    adjustment_remaining = None
+    # Check the solution status
+    if LpStatus[problem.status] == "Optimal":
+        # Apply adjustments to count_table based on the solution
+        for (i, j), var in adjustments.items():
+            count_table.loc[i, j] += var.value()
+        
+        # Calculate the resulting actual column adjustments and print the achieved diff
+        actual_diff = {j: sum(adjustments[(i, j)].value() for i in count_table.index if (i, j) in adjustments)
+                    for j in states_diff.index}
+        adjustment_remaining = pd.Series({j: int(states_diff[j] - actual_diff[j]) for j in states_diff.index})
+    else:
+        print("No feasible solution found.")
+
+    # Resulting adjusted DataFrame
+    
+    return count_table, adjustment_remaining
+
 
 def update_count_tables(count_table: pd.DataFrame, states_diff: pd.Series) -> pd.DataFrame:
     """Temp give the func here for debugging"""
@@ -24,65 +105,20 @@ def update_count_tables(count_table: pd.DataFrame, states_diff: pd.Series) -> pd
     expected_sum_row = count_table.sum(axis=1)
     expected_sum_col = count_table.sum(axis=0) + states_diff
 
-    # Initialize the ILP problem
-    problem = LpProblem("MatrixAdjustment", LpMinimize)  # Minimize adjustments to maintain distribution
-
-    # Initialize adjustment variables and absolute value variables
-    adjustments = {(i, j): LpVariable(f"A_{i}_{j}", cat="Integer") 
-                for i in test_df.index for j in test_df.columns 
-                if pd.notnull(test_df.loc[i, j])}
-
-    # Auxiliary variables to represent the absolute value of adjustments
-    abs_adjustments = {key: LpVariable(f"abs_A_{key[0]}_{key[1]}", lowBound=0, cat="Continuous")
-                    for key in adjustments}
-
-    # Objective: Minimize the sum of absolute adjustments
-    problem += lpSum(abs_adjustments[key] for key in abs_adjustments)
-
-    # Row constraints: Ensure the sum of adjustments in each row is zero
-    for i in test_df.index:
-        row_adjustments = [adjustments[(i, j)] for j in test_df.columns if (i, j) in adjustments]
-        problem += lpSum(row_adjustments) == 0
-
-    # Column constraints: Ensure the sum of adjustments in each column matches test_diff
-    for j, diff in test_diff.items():
-        col_adjustments = [adjustments[(i, j)] for i in test_df.index if (i, j) in adjustments]
-        problem += lpSum(col_adjustments) == diff
-
-    # Non-negativity constraints: Ensure each adjusted cell remains positive
-    for (i, j), var in adjustments.items():
-        original_value = test_df.loc[i, j]
-        problem += var >= -original_value  # Ensures X_ij + A_ij >= 0
-
-    # Constraints for absolute values of adjustments
-    for key, adj_var in adjustments.items():
-        problem += abs_adjustments[key] >= adj_var  # abs_adjustment >= adjustment
-        problem += abs_adjustments[key] >= -adj_var  # abs_adjustment >= -adjustment
-
-    # Solve the ILP
-    problem.solve()
-
-    print(count_table)
-    # Check the solution status
-    if LpStatus[problem.status] == "Optimal":
-        # Apply adjustments to test_df based on the solution
-        for (i, j), var in adjustments.items():
-            count_table.loc[i, j] += var.value()
-    else:
-        print("No feasible solution found.")
+    count_table, adjustment_remaining = _ILP_solving_adjustment(count_table, states_diff)
 
     # Resulting adjusted DataFrame
     result_sum_row = count_table.sum(axis=1)
-    result_sum_col = count_table.sum(axis=0)
+    result_sum_col = count_table.sum(axis=0) + adjustment_remaining
     assert result_sum_row.equals(expected_sum_row)
     assert result_sum_col.equals(expected_sum_col)
-    print(count_table)
 
-    return None
+    return count_table
 
 
 def test_update_states():
     update_count_tables(test_df, test_diff)
+    update_count_tables(noabs_test_df, noabs_test_diff)
 
 
 test_update_states()
