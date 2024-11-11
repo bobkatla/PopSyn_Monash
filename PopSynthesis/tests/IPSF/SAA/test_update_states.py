@@ -3,8 +3,11 @@
 
 import pandas as pd
 import polars as pl
+import numpy as np
 from pulp import LpProblem, LpVariable, lpSum, LpStatus, LpMinimize
+from pathlib import Path
 
+# simple pass case
 test_df = pd.DataFrame(
     {
         "s1": [None, 1, 2, 2, 33, 3],
@@ -18,7 +21,6 @@ test_df = pd.DataFrame(
 test_diff = pd.Series([-3, -8, 0, 5, 6], index=["s1", "s2", "s3", "s4", "s5"])
 
 # Case of no absoluate solution
-# Define a small count_table with limited flexibility in values
 noabs_test_df = pd.DataFrame(
     {
         "s1": [5, 3],
@@ -27,11 +29,12 @@ noabs_test_df = pd.DataFrame(
     },
     index=["a", "b"]
 )
-
-# Define states_diff with large adjustments that cannot be satisfied exactly
-# For example, s1 requires a reduction of -10, but the sum of s1's values in count_table is only 8.
-# Similarly, s2 requires an increase of 10, which cannot be achieved without exceeding row constraints.
 noabs_test_diff = pd.Series([-10, 10, 0], index=["s1", "s2", "s3"])
+
+########### large data ###########
+data_folder = Path(__file__).parent.parent.parent.resolve() / "test_data" / "IPL"
+large_count_table = pd.read_csv(data_folder / "large_count_table.csv")
+large_states_diff = pd.read_csv(data_folder / "large_states_diff.csv").iloc[0]
 
 
 def _ILP_solving_adjustment(count_table: pd.DataFrame, states_diff: pd.Series) -> pd.DataFrame:
@@ -40,7 +43,7 @@ def _ILP_solving_adjustment(count_table: pd.DataFrame, states_diff: pd.Series) -
     problem = LpProblem("MatrixAdjustment", LpMinimize)
 
     # Initialize adjustment variables
-    adjustments = {(i, j): LpVariable(f"A_{i}_{j}", cat="Integer") 
+    adjustments = {(i, j): LpVariable(f"A_{i}_{j}", lowBound=-count_table.loc[i, j], cat="Continuous") 
                 for i in count_table.index for j in count_table.columns 
                 if pd.notnull(count_table.loc[i, j])}
 
@@ -113,12 +116,16 @@ def update_count_tables(count_table: pd.DataFrame, states_diff: pd.Series) -> pd
     assert result_sum_row.equals(expected_sum_row)
     assert result_sum_col.equals(expected_sum_col)
 
-    return count_table
+    err_remaining = (adjustment_remaining ** 2).sum()
+
+    return count_table, err_remaining
 
 
 def test_update_states():
-    update_count_tables(test_df, test_diff)
-    update_count_tables(noabs_test_df, noabs_test_diff)
-
+    # update_count_tables(test_df, test_diff)
+    # update_count_tables(noabs_test_df, noabs_test_diff)
+    a, b = update_count_tables(large_count_table, large_states_diff)
+    print(a)
+    print(b)
 
 test_update_states()
