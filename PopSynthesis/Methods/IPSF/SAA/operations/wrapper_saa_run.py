@@ -115,14 +115,17 @@ def saa_run(
         # append to the chosen
         if n_run_time == max_run_time:
             # not adjusting anymore
+            final_syn_pop = final_syn_pop.with_columns(pl.col(zone_field).cast(pl.String))
             chosen_syn.append(final_syn_pop)
         elif len(kept_syn) > 0:
             # continue with adjusting for missing
-            chosen_syn.append(pl.from_pandas(kept_syn))
+            chosen = pl.from_pandas(kept_syn)
+            chosen = chosen.with_columns(pl.col(zone_field).cast(pl.String))
+            chosen_syn.append(chosen)
 
         # Update for next run
         n_removed_err = len(final_syn_pop) - len(kept_syn)
         targeted_marg = new_marg
 
-    final_syn_hh = pl.concat([df.select(considered_atts) for df in chosen_syn])
+    final_syn_hh = pl.concat([df.select(considered_atts+[zone_field]) for df in chosen_syn])
     return final_syn_hh, err_rm
