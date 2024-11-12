@@ -105,7 +105,6 @@ def sample_syn_and_pool_adjust(
     return removed_ids_syn, add_ids_pool, total_cannot_sample
 
 
-
 def naive_zone_adjustment(
     att: str,
     curr_syn: pd.DataFrame,
