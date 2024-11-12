@@ -12,7 +12,7 @@ def calculate_states_diff(
     att: str, syn_pop: pl.DataFrame, sub_census: pl.DataFrame
 ) -> pl.DataFrame:
     """ This calculate the differences between current syn_pop and the census at a specific geo_lev """
-    sub_syn_pop_count = syn_pop.groupby([zone_field, att]).len(name=count_field)
+    sub_syn_pop_count = syn_pop.group_by([zone_field, att]).len(name=count_field)
     tranformed_sub_syn_count = sub_syn_pop_count.pivot(
         index=zone_field, columns=att, values=count_field
     ).fill_nan(0)
