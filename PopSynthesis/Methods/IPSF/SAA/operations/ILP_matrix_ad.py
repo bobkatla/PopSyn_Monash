@@ -1,6 +1,25 @@
 import polars as pl
 from pulp import LpProblem, LpVariable, lpSum, LpStatus, LpMinimize, PULP_CBC_CMD
-from typing import Tuple, Dict
+from typing import Tuple, Dict, List
+from PopSynthesis.Methods.IPSF.const import count_field
+
+
+def convert_to_required_ILP_format(syn_count: pl.DataFrame, att:str, adjusted_atts: List[str]) -> pl.DataFrame:
+    """Convert the disagg data to the required format for ILP"""
+    # group by and pivot the syn to have adjusted_atts as index and states in att as columns
+    assert count_field in syn_count.columns
+    gb_syn = syn_count.group_by(pl.col(adjusted_atts+[att])).agg(pl.sum(count_field).alias(count_field))
+    ILP_formatted_syn = gb_syn.pivot(att, index=adjusted_atts, values=count_field)
+    return ILP_formatted_syn
+
+
+def convert_back_to_syn_count(ILP_formatted_syn: pl.DataFrame, att:str, adjusted_atts: List[str]) -> pl.DataFrame:
+    """Convert the ILP output to the original format"""
+    # NOTE: this assumes all the other cols are the states
+    states_of_att = [x for x in ILP_formatted_syn.columns if x not in adjusted_atts]
+    unpivoted_df = ILP_formatted_syn.unpivot(states_of_att, index=adjusted_atts, variable_name=att, value_name=count_field).filter(pl.col(count_field).is_not_null())
+    return unpivoted_df
+
 
 def _ILP_solving_adjustment(count_df: pl.DataFrame, states_diff: Dict[str, int], id_col=str, basic_filter:bool=True) -> Tuple[pl.DataFrame, Dict[str, int]]:
     # Clone count_table to prevent changes to the original
@@ -88,6 +107,7 @@ def _ILP_solving_adjustment(count_df: pl.DataFrame, states_diff: Dict[str, int],
 
     # Drop the row_id column before returning
     return ori_count_table, adjustment_remaining
+
 
 def update_count_tables(count_table: pl.DataFrame, states_diff: Dict[str, int], id_col:str) -> Tuple[pl.DataFrame, int]:
     """Update count table with adjustments, ensuring row and column sums meet expected values."""
