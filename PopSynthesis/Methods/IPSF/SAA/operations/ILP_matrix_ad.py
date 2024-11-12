@@ -10,6 +10,7 @@ def convert_to_required_ILP_format(syn_count: pl.DataFrame, att:str, adjusted_at
     assert count_field in syn_count.columns
     gb_syn = syn_count.group_by(pl.col(adjusted_atts+[att])).agg(pl.sum(count_field).alias(count_field))
     ILP_formatted_syn = gb_syn.pivot(att, index=adjusted_atts, values=count_field)
+    ILP_formatted_syn = ILP_formatted_syn.cast({x: pl.Int32 for x in ILP_formatted_syn.columns if x not in adjusted_atts})
     return ILP_formatted_syn
 
 
