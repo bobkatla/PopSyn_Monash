@@ -2,12 +2,23 @@ import polars as pl
 from pulp import LpProblem, LpVariable, lpSum, LpStatus, LpMinimize, PULP_CBC_CMD
 from typing import Tuple, Dict
 
-def _ILP_solving_adjustment(count_table: pl.DataFrame, states_diff: Dict[str, int], id_col=str) -> Tuple[pl.DataFrame, Dict[str, int]]:
+def _ILP_solving_adjustment(count_df: pl.DataFrame, states_diff: Dict[str, int], id_col=str, basic_filter:bool=True) -> Tuple[pl.DataFrame, Dict[str, int]]:
     # Clone count_table to prevent changes to the original
-    count_table = count_table.clone()
+    ori_count_table = count_df.clone()
+    count_table = count_df.clone()
 
     assert not count_table.select(pl.col(id_col)).is_duplicated().any()
-    
+
+    # Filter out not needed rows and columns
+    zero_val_states = []
+    if basic_filter:
+        zero_val_states = [x for x in states_diff.keys() if states_diff[x] == 0]
+        count_table = count_table.drop(zero_val_states)
+        pos_states = [x for x in states_diff.keys() if states_diff[x] > 0]
+        neg_states = [x for x in states_diff.keys() if states_diff[x] < 0]
+        count_table = count_table.filter(~pl.all_horizontal(pl.col(pos_states).is_null()))
+        count_table = count_table.filter(~pl.all_horizontal(pl.col(neg_states).is_null()))
+ 
     # Ensure each row has a unique identifier so we can reference rows without using an index
     rows = count_table[id_col].to_list()
     r_idx = {row: i for i, row in enumerate(rows)} # NOTE: order must match
@@ -40,8 +51,9 @@ def _ILP_solving_adjustment(count_table: pl.DataFrame, states_diff: Dict[str, in
 
     # Column constraints with positive and negative slack for deviations
     for j, target_diff in states_diff.items():
-        col_adjustments = [adjustments[(i, j)] for i in rows if (i, j) in adjustments]
-        problem += lpSum(col_adjustments) == target_diff + slack_pos[j] - slack_neg[j]
+        if j not in zero_val_states:
+            col_adjustments = [adjustments[(i, j)] for i in rows if (i, j) in adjustments]
+            problem += lpSum(col_adjustments) == target_diff + slack_pos[j] - slack_neg[j]
 
     # Non-negativity constraints: Ensure each adjusted cell remains positive
     for (i, j), var in adjustments.items():
@@ -56,26 +68,26 @@ def _ILP_solving_adjustment(count_table: pl.DataFrame, states_diff: Dict[str, in
         problem += deviations[(i, j)] >= original_value - (original_value + adj_var)  # maintain closeness to original values
 
     # Solve the ILP
-    problem.solve(PULP_CBC_CMD(msg=True))
+    problem.solve(PULP_CBC_CMD(msg=False))
 
     adjustment_remaining = {}
     # Check the solution status
     if LpStatus[problem.status] == "Optimal":
         # Apply adjustments to count_table based on the solution
         for (i, j), var in adjustments.items():
-            count_table = count_table.with_columns(
-                pl.when(pl.col(id_col) == i).then(count_table[j] + var.value()).otherwise(count_table[j]).alias(j)
+            ori_count_table = ori_count_table.with_columns(
+                pl.when(pl.col(id_col) == i).then(ori_count_table[j] + var.value()).otherwise(ori_count_table[j]).alias(j)
             )
 
         # Calculate the resulting actual column adjustments and print the achieved diff
         actual_diff = {j: sum(adjustments[(i, j)].value() for i in rows if (i, j) in adjustments)
                        for j in columns}
-        adjustment_remaining = {j: int(states_diff[j] - actual_diff[j]) for j in columns}
+        adjustment_remaining = {j: int(states_diff[j] - actual_diff[j]) for j in columns} | {j: 0 for j in zero_val_states}
     else:
         print("No feasible solution found.")
 
     # Drop the row_id column before returning
-    return count_table, adjustment_remaining
+    return ori_count_table, adjustment_remaining
 
 def update_count_tables(count_table: pl.DataFrame, states_diff: Dict[str, int], id_col:str) -> Tuple[pl.DataFrame, int]:
     """Update count table with adjustments, ensuring row and column sums meet expected values."""
