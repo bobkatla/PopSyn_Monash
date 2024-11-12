@@ -116,7 +116,7 @@ def saa_run(
         if n_run_time == max_run_time:
             # not adjusting anymore
             chosen_syn.append(final_syn_pop)
-        else:
+        elif len(kept_syn) > 0:
             # continue with adjusting for missing
             chosen_syn.append(pl.from_pandas(kept_syn))
 

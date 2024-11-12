@@ -9,20 +9,23 @@ from PopSynthesis.Methods.IPSF.SAA.operations.wrapper_saa_run import (
     saa_run,
     get_hh_data,
 )
+from PopSynthesis.Methods.IPSF.utils.condensed import condense_df
 import time
 
 
 def run_main() -> None:
     hh_marg, hh_pool = get_hh_data()
+    condensed_hh_pool = condense_df(hh_pool)
 
     start_time = time.time()
     # saa run
     final_syn_hh, err_rm = saa_run(
         hh_marg,
-        hh_pool,
+        condensed_hh_pool,
         considered_atts=CONSIDERED_ATTS_HH,
         ordered_to_adjust_atts=SAA_ODERED_ATTS_HH,
-        max_run_time=33,
+        max_run_time=50,
+        shuffle_order=["hhsize", "hhinc"],
     )
 
     # record time
@@ -33,7 +36,7 @@ def run_main() -> None:
     print(f"Processing took {int(hours)}h-{int(minutes)}m-{seconds:.2f}s")
     print(f"Error hh rm are: {err_rm}")
     # output
-    final_syn_hh.to_csv(output_dir / "SAA_HH_only_looped.csv")
+    final_syn_hh.write_csv(output_dir / "SAA_HH_IPL.csv")
 
 
 if __name__ == "__main__":
