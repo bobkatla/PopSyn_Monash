@@ -20,9 +20,14 @@ def condense_df(df: Union[pl.DataFrame, pd.DataFrame], id_col: Union[None, str]=
     return df.group_by(expr).agg(*to_agg)
 
 
-def explode_df_by_id(df: pl.DataFrame, id_col: str) -> pl.DataFrame:
+def explode_df(df: pl.DataFrame, id_col: Union[str, None]=None, weight_col: Union[str, None] = None) -> pl.DataFrame:
     """Convert the condensed data back to the disaggregated format."""
-    assert id_col in df.columns
     assert count_field in df.columns
-    df = df.drop(count_field)
-    return df.explode(id_col)
+    if id_col is not None:
+        assert id_col in df.columns
+        df = df.drop(count_field)
+        return df.explode(id_col)
+    else:
+        return df.with_columns(
+            pl.exclude(weight_col).repeat_by(pl.col(weight_col))
+        ).select(pl.exclude(weight_col).arr.explode())
