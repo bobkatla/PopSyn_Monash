@@ -6,10 +6,9 @@ import numpy as np
 
 from typing import List, Union, Tuple, Dict
 from PopSynthesis.Methods.IPSF.const import count_field, zone_field
-from PopSynthesis.Methods.IPSF.SAA.operations.compare_census import (
-    calculate_states_diff,
-)
-from PopSynthesis.Methods.IPSF.SAA.operations.naive_zone_ad import zone_adjustment
+from PopSynthesis.Methods.IPSF.SAA.operations.compare_census import calculate_states_diff
+from PopSynthesis.Methods.IPSF.SAA.operations.ILP_zone_ad import ILP_zone_adjustment
+from PopSynthesis.Methods.IPSF.utils.condensed import condense_df
 import sys
 
 
@@ -52,10 +51,8 @@ def sample_from_pl(
 
 
 def init_syn_pop_saa(
-    att: str, marginal_data: pd.DataFrame, pool: pd.DataFrame
+    att: str, marginal_data: pl.DataFrame, pool: pl.DataFrame
 ) -> pl.DataFrame:
-    pool = pl.from_pandas(pool)
-    marginal_data = pl.from_pandas(marginal_data)
     assert zone_field in marginal_data
     states = list(pool[att].unique())
     assert set(states + [zone_field]) == set(marginal_data.columns)
@@ -82,47 +79,32 @@ def init_syn_pop_saa(
     return pl.concat(sub_pops)
 
 
-def wrapper_multiprocessing_zones(args):
-    att, sub_syn_pop, zone_states_diff, pool, adjusted_atts = args
-    # Process row with parameters
-    result_zone_syn = zone_adjustment(
-        att, sub_syn_pop, zone_states_diff, pool, adjusted_atts
-    )
-    return result_zone_syn
-
-
 def adjust_atts_state_match_census(
     att: str,
-    curr_syn_pop: Union[None, pl.DataFrame, pd.DataFrame],
-    census_data_by_att: pd.DataFrame,
+    curr_syn_pop: Union[None, pl.DataFrame],
+    census_data_by_att: pl.DataFrame,
     adjusted_atts: List[str],
-    pool: pd.DataFrame,
+    pool_count: pl.DataFrame,
 ) -> pd.DataFrame:
     print(f"ADJUSTING FOR {att}")
     if curr_syn_pop is None:
-        updated_syn_pop = init_syn_pop_saa(att, census_data_by_att, pool)
+        updated_syn_pop = init_syn_pop_saa(att, census_data_by_att, pool_count)
     else:
-        temp_syn_copy = curr_syn_pop
-        if isinstance(curr_syn_pop, pd.DataFrame):
-            temp_syn_copy = pl.from_pandas(curr_syn_pop)
-        census_data_by_att = pl.from_pandas(census_data_by_att)
-
         states_diff_census = calculate_states_diff(
-            att, temp_syn_copy, census_data_by_att
+            att, curr_syn_pop, census_data_by_att
         )
-        assert (states_diff_census.select(pl.exclude([zone_field])).sum(axis=1)==0).all()
-        temp_syn_copy = temp_syn_copy.to_pandas()
-        states_diff_census = states_diff_census.to_pandas().set_index(zone_field)
+        assert (states_diff_census.select(pl.exclude([zone_field])).sum_horizontal()==0).all()
         # With state diff we can now do adjustment for each zone, can parallel it?
-        # NOTE: biggggggg errrr
         pop_syn_across_zones = []
-        for zid, zone_states_diff in states_diff_census.iterrows():
+        for zone_marg in states_diff_census.iter_rows(named=True):
+            zid = zone_marg.pop(zone_field)
             sys.stdout.write(f"\rDOING zone {zid}")
             sys.stdout.flush()
-            sub_syn_pop = temp_syn_copy[temp_syn_copy[zone_field] == zid]
+            sub_syn_pop = curr_syn_pop.filter(pl.col(zone_field) == zid)
+            condensed_syn = condense_df(sub_syn_pop)
             if not sub_syn_pop.empty:
-                zone_adjusted_syn_pop = zone_adjustment(
-                    att, sub_syn_pop, zone_states_diff, pool, adjusted_atts
+                zone_adjusted_syn_pop = ILP_zone_adjustment(
+                    att, condensed_syn, zone_marg, pool_count, adjusted_atts
                 )
                 if zone_adjusted_syn_pop is not None:
                     pop_syn_across_zones.append(zone_adjusted_syn_pop)

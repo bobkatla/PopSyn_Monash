@@ -6,6 +6,7 @@ Will thinking of doing in Polars
 """
 
 import pandas as pd
+import polars as pl
 
 from PopSynthesis.Methods.IPSF.const import output_dir
 from PopSynthesis.Methods.IPSF.SAA.operations.general import (
@@ -21,11 +22,11 @@ class SAA:
         marginal_raw: pd.DataFrame,
         considered_atts: List[str],
         ordered_to_adjust_atts: List[str],
-        pool: pd.DataFrame,
+        count_pool: pl.DataFrame,
     ) -> None:
         self.ordered_atts_to_adjust = ordered_to_adjust_atts
         self.considered_atts = considered_atts
-        self.pool = pool
+        self.pool = count_pool
         self.init_required_inputs(marginal_raw)
 
     def init_required_inputs(self, marginal_raw: pd.DataFrame):
@@ -34,12 +35,13 @@ class SAA:
         )
         self.segmented_marg = converted_segment_marg
 
-    def run(self, output_each_step: bool = False, extra_name: str = "") -> pd.DataFrame:
+    def run(self, output_each_step: bool = False, extra_name: str = "") -> pl.DataFrame:
         # Output the synthetic population, the main point
         curr_syn_pop = None
         adjusted_atts = []
         for att in self.ordered_atts_to_adjust:
             sub_census = self.segmented_marg[att].reset_index()
+            sub_census = pl.from_pandas(sub_census)
             curr_syn_pop = adjust_atts_state_match_census(
                 att, curr_syn_pop, sub_census, adjusted_atts, self.pool
             )

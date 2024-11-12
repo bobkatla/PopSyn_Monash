@@ -14,6 +14,7 @@ from PopSynthesis.Methods.IPSF.utils.synthetic_checked_census import (
     convert_full_to_marg_count,
 )
 from PopSynthesis.Methods.IPSF.SAA.SAA import SAA
+import polars as pl
 from typing import Tuple, List, Union
 import random
 
@@ -77,7 +78,7 @@ def process_shuffle_order(
 
 def saa_run(
     targeted_marg: pd.DataFrame,
-    pool: pd.DataFrame,
+    count_pool: pl.DataFrame,
     considered_atts=List[str],
     ordered_to_adjust_atts=List[str],
     shuffle_order: Union[bool, List[str]] = False,
@@ -102,12 +103,13 @@ def saa_run(
         print(
             f"For run {n_run_time}, order is: {ordered_to_adjust_atts}, aim for {n_removed_err} HHs"
         )
-        saa = SAA(targeted_marg, considered_atts, ordered_to_adjust_atts, pool)
+        saa = SAA(targeted_marg, considered_atts, ordered_to_adjust_atts, count_pool)
         ###
         final_syn_pop = saa.run(extra_name=f"_{n_run_time}")
         assert len(final_syn_pop) == n_removed_err
         ###
-        kept_syn, new_marg = err_check_against_marg(final_syn_pop, targeted_marg)
+        to_check_syn = final_syn_pop.to_pandas()
+        kept_syn, new_marg = err_check_against_marg(to_check_syn, targeted_marg)
 
         n_run_time += 1
         # append to the chosen
@@ -116,12 +118,12 @@ def saa_run(
             chosen_syn.append(final_syn_pop)
         else:
             # continue with adjusting for missing
-            chosen_syn.append(kept_syn)
+            chosen_syn.append(pl.from_pandas(kept_syn))
 
         # Update for next run
         n_removed_err = len(final_syn_pop) - len(kept_syn)
         targeted_marg = new_marg
 
-    final_syn_hh = pd.concat(chosen_syn)
+    final_syn_hh = pl.concat(chosen_syn)
 
     return final_syn_hh, err_rm
