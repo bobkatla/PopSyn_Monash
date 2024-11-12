@@ -22,18 +22,26 @@ def calculate_states_diff(
         tranformed_sub_syn_count[zone_field]
     )
     add_missing_zones = pl.DataFrame(
-       {zone_field: list(missing_zones)}
-        | {att: [0] * len(missing_zones) for att in tranformed_sub_syn_count.columns if att != zone_field},
-        schema=tranformed_sub_syn_count.schema
+        {zone_field: list(missing_zones)}
+        | {
+            att: [0] * len(missing_zones)
+            for att in tranformed_sub_syn_count.columns
+            if att != zone_field
+        },
+        schema=tranformed_sub_syn_count.schema,
     )
     tranformed_sub_syn_count = tranformed_sub_syn_count.vstack(add_missing_zones)
-    
+
     # Missing states
     missing_states = set(sub_census.columns) - set(tranformed_sub_syn_count.columns)
-    tranformed_sub_syn_count = tranformed_sub_syn_count.with_columns([pl.lit(0).alias(s) for s in missing_states])
-    
+    tranformed_sub_syn_count = tranformed_sub_syn_count.with_columns(
+        [pl.lit(0).alias(s) for s in missing_states]
+    )
+
     sub_census = sub_census.to_pandas().set_index(zone_field).fillna(0)
-    tranformed_sub_syn_count = tranformed_sub_syn_count.to_pandas().set_index(zone_field).fillna(0)
+    tranformed_sub_syn_count = (
+        tranformed_sub_syn_count.to_pandas().set_index(zone_field).fillna(0)
+    )
     results = sub_census - tranformed_sub_syn_count
     # no nan values
     assert not results.isna().any().any()

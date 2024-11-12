@@ -110,7 +110,9 @@ def adjust_atts_state_match_census(
         states_diff_census = calculate_states_diff(
             att, temp_syn_copy, census_data_by_att
         )
-        assert (states_diff_census.select(pl.exclude([zone_field])).sum(axis=1)==0).all()
+        assert (
+            states_diff_census.select(pl.exclude([zone_field])).sum(axis=1) == 0
+        ).all()
         temp_syn_copy = temp_syn_copy.to_pandas()
         states_diff_census = states_diff_census.to_pandas().set_index(zone_field)
         # With state diff we can now do adjustment for each zone, can parallel it?
