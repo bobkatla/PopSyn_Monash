@@ -5,6 +5,7 @@ from PopSynthesis.Methods.IPSF.SAA.operations.wrapper_saa_run import (
     saa_run,
     get_test_hh,
 )
+from PopSynthesis.Methods.IPSF.utils.condensed import condense_df
 import time
 
 
@@ -12,12 +13,12 @@ def run_main() -> None:
     # Processing took 0h-0m-20.34s
     # Error hh rm are: [45923.0, 29522]
     hh_marg, hh_pool = get_test_hh()
-
+    condensed_hh_pool = condense_df(hh_pool)
     start_time = time.time()
     # saa run
     final_syn_hh, err_rm = saa_run(
         hh_marg,
-        hh_pool,
+        condensed_hh_pool,
         considered_atts=CONSIDERED_ATTS_HH,
         ordered_to_adjust_atts=SAA_ODERED_ATTS_HH,
         max_run_time=2,

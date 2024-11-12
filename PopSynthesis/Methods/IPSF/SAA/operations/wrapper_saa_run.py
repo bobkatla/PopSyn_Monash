@@ -124,6 +124,5 @@ def saa_run(
         n_removed_err = len(final_syn_pop) - len(kept_syn)
         targeted_marg = new_marg
 
-    final_syn_hh = pl.concat(chosen_syn)
-
+    final_syn_hh = pl.concat([df.select(considered_atts) for df in chosen_syn])
     return final_syn_hh, err_rm

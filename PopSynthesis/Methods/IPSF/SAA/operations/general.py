@@ -96,19 +96,23 @@ def adjust_atts_state_match_census(
         assert (states_diff_census.select(pl.exclude([zone_field])).sum_horizontal()==0).all()
         # With state diff we can now do adjustment for each zone, can parallel it?
         pop_syn_across_zones = []
+        records_err = {}
         for zone_marg in states_diff_census.iter_rows(named=True):
             zid = zone_marg.pop(zone_field)
             sys.stdout.write(f"\rDOING zone {zid}")
             sys.stdout.flush()
             sub_syn_pop = curr_syn_pop.filter(pl.col(zone_field) == zid)
-            condensed_syn = condense_df(sub_syn_pop)
-            if not sub_syn_pop.empty:
-                zone_adjusted_syn_pop = ILP_zone_adjustment(
+            if not sub_syn_pop.is_empty():
+                condensed_syn = condense_df(sub_syn_pop)
+                zone_adjusted_syn_pop, err_remain = ILP_zone_adjustment(
                     att, condensed_syn, zone_marg, pool_count, adjusted_atts
                 )
+                records_err[zid] = err_remain
                 if zone_adjusted_syn_pop is not None:
+                    assert len(zone_adjusted_syn_pop) == len(sub_syn_pop)
                     pop_syn_across_zones.append(zone_adjusted_syn_pop)
         print()
-        updated_syn_pop = pd.concat(pop_syn_across_zones)
+        updated_syn_pop = pl.concat(pop_syn_across_zones)
+        assert len(updated_syn_pop) == len(curr_syn_pop)
 
     return updated_syn_pop

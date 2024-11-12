@@ -2,6 +2,7 @@ import polars as pl
 from pulp import LpProblem, LpVariable, lpSum, LpStatus, LpMinimize, PULP_CBC_CMD
 from typing import Tuple, Dict, List
 from PopSynthesis.Methods.IPSF.const import count_field
+from math import sqrt
 
 
 def convert_to_required_ILP_format(
@@ -197,4 +198,4 @@ def update_count_tables(
     # Calculate remaining error as sum of squared remaining adjustments
     err_score = sum(value ** 2 for value in adjustment_remaining.values())
 
-    return count_table, err_score
+    return count_table, sqrt(err_score)
