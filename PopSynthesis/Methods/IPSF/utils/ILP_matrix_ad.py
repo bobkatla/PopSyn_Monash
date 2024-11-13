@@ -6,36 +6,9 @@ from math import sqrt
 
 
 # Define a small epsilon value
-EPSILON = 1e-6 # solve division by zeros
-
-
-def convert_to_required_ILP_format(
-    syn_count: pl.DataFrame, att: str, adjusted_atts: List[str]
-) -> pl.DataFrame:
-    """Convert the disagg data to the required format for ILP"""
-    # group by and pivot the syn to have adjusted_atts as index and states in att as columns
-    assert count_field in syn_count.columns
-    gb_syn = syn_count.group_by(pl.col(adjusted_atts + [att])).agg(
-        pl.sum(count_field).alias(count_field)
-    )
-    ILP_formatted_syn = gb_syn.pivot(att, index=adjusted_atts, values=count_field)
-    ILP_formatted_syn = ILP_formatted_syn.cast(
-        {x: pl.Int32 for x in ILP_formatted_syn.columns if x not in adjusted_atts}
-    )
-    return ILP_formatted_syn
-
-
-def convert_back_to_syn_count(
-    ILP_formatted_syn: pl.DataFrame, att: str, adjusted_atts: List[str]
-) -> pl.DataFrame:
-    """Convert the ILP output to the original format"""
-    # NOTE: this assumes all the other cols are the states
-    states_of_att = [x for x in ILP_formatted_syn.columns if x not in adjusted_atts]
-    unpivoted_df = ILP_formatted_syn.unpivot(
-        states_of_att, index=adjusted_atts, variable_name=att, value_name=count_field
-    ).filter(pl.col(count_field).is_not_null())
-    return unpivoted_df
-
+EPSILON = 1e-6  # Solve division by zeros
+SPREAD_PENALTY = 0.1  # Small penalty to encourage wider distribution of adjustments
+LARGE_M = 1e6  # Large M value for binary activation variables
 
 def _ILP_solving_adjustment(
     count_df: pl.DataFrame,
@@ -90,15 +63,19 @@ def _ILP_solving_adjustment(
         j: LpVariable(f"slack_neg_{j}", lowBound=0, cat="Continuous") for j in columns
     }
 
-    # Initialize deviation variables for each cell with a non-null value
+    # Initialize deviation variables and activation indicators for each cell with a non-null value
     deviations = {
         (i, j): LpVariable(f"rel_dev_{i}_{j}", lowBound=0, cat="Continuous")
         for (i, j) in adjustments
     }
+    # Binary activation variables to encourage spreading adjustments
+    activations = {
+        (i, j): LpVariable(f"act_{i}_{j}", cat="Binary") for (i, j) in adjustments
+    }
 
-    # Objective: Minimize the sum of deviations from original values and slack
+    # Objective: Minimize the sum of deviations, slack, and activation penalties
     problem += lpSum(
-        deviations[key] + slack_pos[j] + slack_neg[j]
+        deviations[key] + slack_pos[j] + slack_neg[j] + SPREAD_PENALTY * activations[key]
         for key in deviations
         for j in columns
     )
@@ -120,6 +97,7 @@ def _ILP_solving_adjustment(
                 lpSum(col_adjustments) == target_diff + slack_pos[j] - slack_neg[j]
             )
 
+    # Deviation and activation constraints
     for (i, j), var in adjustments.items():
         original_value = count_table[r_idx[i], j]
         # Non-negativity constraints
@@ -137,9 +115,13 @@ def _ILP_solving_adjustment(
             )  # maintain closeness to original values
         else:
             raise ValueError(f"Unknown deviation type: {deviation_type}")
+
         # Deviation constraints
         problem += check_dev >= var  # dev >= adj
         problem += check_dev >= -var  # dev >= -adj
+
+        # Link the activation variable to the deviation: activate if deviation > 0
+        problem += deviations[(i, j)] <= activations[(i, j)] * LARGE_M  # Large M constraint
 
     # Solve the ILP
     problem.solve(PULP_CBC_CMD(msg=False))
@@ -167,7 +149,6 @@ def _ILP_solving_adjustment(
     else:
         print("No feasible solution found.")
 
-    # Drop the row_id column before returning
     return ori_count_table, adjustment_remaining
 
 
