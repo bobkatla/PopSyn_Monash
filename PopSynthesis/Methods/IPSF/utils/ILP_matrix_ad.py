@@ -5,6 +5,10 @@ from PopSynthesis.Methods.IPSF.const import count_field
 from math import sqrt
 
 
+# Define a small epsilon value
+EPSILON = 1e-6 # solve division by zeros
+
+
 def convert_to_required_ILP_format(
     syn_count: pl.DataFrame, att: str, adjusted_atts: List[str]
 ) -> pl.DataFrame:
@@ -38,6 +42,7 @@ def _ILP_solving_adjustment(
     states_diff: Dict[str, int],
     id_col=str,
     basic_filter: bool = True,
+    deviation_type: str = "relative",
 ) -> Tuple[pl.DataFrame, Dict[str, int]]:
     # Clone count_table to prevent changes to the original
     ori_count_table = count_df.clone()
@@ -85,10 +90,10 @@ def _ILP_solving_adjustment(
         j: LpVariable(f"slack_neg_{j}", lowBound=0, cat="Continuous") for j in columns
     }
 
-    # Deviation variables to penalize large deviations from original values
+    # Initialize deviation variables for each cell with a non-null value
     deviations = {
-        key: LpVariable(f"dev_{key[0]}_{key[1]}", lowBound=0, cat="Continuous")
-        for key in adjustments
+        (i, j): LpVariable(f"rel_dev_{i}_{j}", lowBound=0, cat="Continuous")
+        for (i, j) in adjustments
     }
 
     # Objective: Minimize the sum of deviations from original values and slack
@@ -115,19 +120,26 @@ def _ILP_solving_adjustment(
                 lpSum(col_adjustments) == target_diff + slack_pos[j] - slack_neg[j]
             )
 
-    # Non-negativity constraints: Ensure each adjusted cell remains positive
     for (i, j), var in adjustments.items():
         original_value = count_table[r_idx[i], j]
+        # Non-negativity constraints
         problem += var >= -original_value  # Ensures X_ij + A_ij >= 0
 
-    # Deviation constraints: Ensure deviations represent the absolute change from the original value
-    for (i, j), adj_var in adjustments.items():
-        original_value = count_table[r_idx[i], j]
-        problem += deviations[(i, j)] >= adj_var  # dev >= adj
-        problem += deviations[(i, j)] >= -adj_var  # dev >= -adj
-        problem += deviations[(i, j)] >= original_value - (
-            original_value + adj_var
-        )  # maintain closeness to original values
+        check_dev = None
+        if deviation_type == "relative":
+            # Handle zero values by assigning epsilon
+            adjusted_value = original_value if original_value != 0 else EPSILON
+            check_dev = deviations[(i, j)] * adjusted_value
+        elif deviation_type == "absolute":
+            check_dev = deviations[(i, j)]
+            problem += check_dev >= original_value - (
+                original_value + var
+            )  # maintain closeness to original values
+        else:
+            raise ValueError(f"Unknown deviation type: {deviation_type}")
+        # Deviation constraints
+        problem += check_dev >= var  # dev >= adj
+        problem += check_dev >= -var  # dev >= -adj
 
     # Solve the ILP
     problem.solve(PULP_CBC_CMD(msg=False))
@@ -160,7 +172,7 @@ def _ILP_solving_adjustment(
 
 
 def update_count_tables(
-    count_table: pl.DataFrame, states_diff: Dict[str, int], id_col: str
+    count_table: pl.DataFrame, states_diff: Dict[str, int], id_col: str, deviation_type: str = "relative"
 ) -> Tuple[pl.DataFrame, int]:
     """Update count table with adjustments, ensuring row and column sums meet expected values."""
     assert sum(states_diff.values()) == 0
@@ -177,7 +189,7 @@ def update_count_tables(
     )
 
     count_table, adjustment_remaining = _ILP_solving_adjustment(
-        count_table, states_diff, id_col
+        count_table, states_diff, id_col, deviation_type=deviation_type
     )
     # Resulting adjusted DataFrame
     result_sum_row = count_table.select(
