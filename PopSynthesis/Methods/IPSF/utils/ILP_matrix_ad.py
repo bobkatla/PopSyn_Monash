@@ -6,7 +6,6 @@ from math import sqrt
 
 # Define a small epsilon value
 EPSILON = 1e-6  # Solve division by zeros
-SPREAD_PENALTY = 0 # Small penalty to encourage wider distribution of adjustments
 LARGE_M = 1e6  # Large M value for binary activation variables
 
 
@@ -44,6 +43,7 @@ def _ILP_solving_adjustment(
     id_col=str,
     basic_filter: bool = True,
     deviation_type: str = "relative",
+    spread_penalty: float = 0,
 ) -> Tuple[pl.DataFrame, Dict[str, int]]:
     # Clone count_table to prevent changes to the original
     ori_count_table = count_df.clone()
@@ -103,7 +103,7 @@ def _ILP_solving_adjustment(
 
     # Objective: Minimize the sum of deviations, slack, and activation penalties
     problem += lpSum(
-        deviations[key] + slack_pos[j] + slack_neg[j] + SPREAD_PENALTY * activations[key]
+        deviations[key] + slack_pos[j] + slack_neg[j] + spread_penalty * activations[key]
         for key in deviations
         for j in columns
     )
@@ -181,7 +181,7 @@ def _ILP_solving_adjustment(
 
 
 def update_count_tables(
-    count_table: pl.DataFrame, states_diff: Dict[str, int], id_col: str, deviation_type: str = "relative"
+    count_table: pl.DataFrame, states_diff: Dict[str, int], id_col: str, deviation_type: str = "relative", spread_penalty: float = 0
 ) -> Tuple[pl.DataFrame, int]:
     """Update count table with adjustments, ensuring row and column sums meet expected values."""
     assert sum(states_diff.values()) == 0
@@ -198,7 +198,7 @@ def update_count_tables(
     )
 
     count_table, adjustment_remaining = _ILP_solving_adjustment(
-        count_table, states_diff, id_col, deviation_type=deviation_type
+        count_table, states_diff, id_col, deviation_type=deviation_type, spread_penalty=spread_penalty
     )
     # Resulting adjusted DataFrame
     result_sum_row = count_table.select(

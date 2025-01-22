@@ -37,7 +37,7 @@ large_states_diff = pl.read_csv(data_folder / "large_states_diff.csv").row(0, na
 def test_update_states():
     # Test the update on each case by uncommenting as needed
     id_col = "row_id"
-    a, b = update_count_tables(test_df, test_diff, id_col, deviation_type="relative")
+    a, b = update_count_tables(test_df, test_diff, id_col, deviation_type="absolute", spread_penalty=0.0001)
     # a, b = update_count_tables(noabs_test_df, noabs_test_diff, id_col)
     # a, b = update_count_tables(large_count_table, large_states_diff, id_col)
     print(a)
