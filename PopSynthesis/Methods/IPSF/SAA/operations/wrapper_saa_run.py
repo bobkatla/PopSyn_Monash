@@ -83,6 +83,7 @@ def saa_run(
     ordered_to_adjust_atts=List[str],
     shuffle_order: Union[bool, List[str]] = False,
     max_run_time: int = 30,
+    output_each_step: bool = False,
 ) -> Tuple[pd.DataFrame, List[int]]:
     assert set(ordered_to_adjust_atts) <= set(considered_atts)
     atts_in_marg = set(targeted_marg.columns.get_level_values(0)) - {zone_field}
@@ -105,7 +106,7 @@ def saa_run(
         )
         saa = SAA(targeted_marg, considered_atts, ordered_to_adjust_atts, count_pool)
         ###
-        final_syn_pop = saa.run(extra_name=f"_{n_run_time}")
+        final_syn_pop = saa.run(extra_name=f"_{n_run_time}", output_each_step=output_each_step)
         assert len(final_syn_pop) == n_removed_err
         ###
         to_check_syn = final_syn_pop.to_pandas()
