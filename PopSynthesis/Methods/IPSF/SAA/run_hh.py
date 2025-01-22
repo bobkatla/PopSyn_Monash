@@ -24,8 +24,8 @@ def run_main() -> None:
         condensed_hh_pool,
         considered_atts=CONSIDERED_ATTS_HH,
         ordered_to_adjust_atts=SAA_ODERED_ATTS_HH,
-        max_run_time=50,
-        shuffle_order=["hhsize", "hhinc"],
+        max_run_time=15,
+        shuffle_order=True,
     )
 
     # record time
@@ -36,7 +36,7 @@ def run_main() -> None:
     print(f"Processing took {int(hours)}h-{int(minutes)}m-{seconds:.2f}s")
     print(f"Error hh rm are: {err_rm}")
     # output
-    final_syn_hh.write_csv(output_dir / "SAA_HH_IPL.csv")
+    final_syn_hh.write_csv(output_dir / "SAA_HH_IPL_abs_no_order_no_penal.csv")
 
 
 if __name__ == "__main__":

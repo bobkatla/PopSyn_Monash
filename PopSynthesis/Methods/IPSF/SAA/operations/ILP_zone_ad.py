@@ -149,7 +149,7 @@ def ILP_zone_adjustment(
     store_prev_atts_with_id = converted_syn[adjusted_atts + [row_id]]
     considered_atts = [x for x in converted_syn.columns if x not in adjusted_atts]
     adjusted_results, err_score = update_count_tables(
-        converted_syn[considered_atts], diff_zone_census, row_id
+        converted_syn[considered_atts], diff_zone_census, row_id, deviation_type="absolute"
     )
     updated_syn = store_prev_atts_with_id.join(adjusted_results, on=row_id).drop(row_id)
     assert len(updated_syn) == len(converted_syn)

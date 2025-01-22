@@ -6,7 +6,7 @@ from math import sqrt
 
 # Define a small epsilon value
 EPSILON = 1e-6  # Solve division by zeros
-SPREAD_PENALTY = 0.1  # Small penalty to encourage wider distribution of adjustments
+SPREAD_PENALTY = 0 # Small penalty to encourage wider distribution of adjustments
 LARGE_M = 1e6  # Large M value for binary activation variables
 
 
