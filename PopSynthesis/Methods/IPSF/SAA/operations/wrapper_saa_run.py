@@ -38,14 +38,19 @@ def get_hh_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
 
 
 def err_check_against_marg(
-    syn_pop: pd.DataFrame, marg: pd.DataFrame
+    syn_pop: pd.DataFrame, marg: pd.DataFrame, extra_rm_frac: float = 0
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    # error check
-    marg_from_created = convert_full_to_marg_count(syn_pop, [zone_field])
+    # rm extra first
+    assert extra_rm_frac <= 1 and extra_rm_frac >= 0
+    remain_syn = syn_pop
+    remain_syn = remain_syn.sample(frac=1-extra_rm_frac)
+    print(f"removed first {len(syn_pop) - len(remain_syn)} hh")
+
+    marg_from_created = convert_full_to_marg_count(remain_syn, [zone_field])
     converted_marg = marg
     diff_marg = get_diff_marg(converted_marg, marg_from_created)
 
-    kept_syn = adjust_kept_rec_match_census(syn_pop, diff_marg)
+    kept_syn = adjust_kept_rec_match_census(remain_syn, diff_marg)
 
     # checking
     kept_marg = convert_full_to_marg_count(kept_syn, [zone_field])
@@ -83,6 +88,7 @@ def saa_run(
     ordered_to_adjust_atts=List[str],
     shuffle_order: Union[bool, List[str]] = False,
     max_run_time: int = 30,
+    extra_rm_frac: float = 0,
     output_each_step: bool = False,
 ) -> Tuple[pd.DataFrame, List[int]]:
     assert set(ordered_to_adjust_atts) <= set(considered_atts)
@@ -105,12 +111,12 @@ def saa_run(
             f"For run {n_run_time}, order is: {ordered_to_adjust_atts}, aim for {n_removed_err} HHs"
         )
         saa = SAA(targeted_marg, considered_atts, ordered_to_adjust_atts, count_pool)
-        ###
+        ### Actual running to get the synthetic pop
         final_syn_pop = saa.run(extra_name=f"_{n_run_time}", output_each_step=output_each_step)
         assert len(final_syn_pop) == n_removed_err
         ###
         to_check_syn = final_syn_pop.to_pandas()
-        kept_syn, new_marg = err_check_against_marg(to_check_syn, targeted_marg)
+        kept_syn, new_marg = err_check_against_marg(to_check_syn, targeted_marg, extra_rm_frac)
 
         n_run_time += 1
         # append to the chosen
