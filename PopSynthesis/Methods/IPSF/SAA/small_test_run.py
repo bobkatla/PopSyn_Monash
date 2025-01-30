@@ -10,30 +10,31 @@ import time
 
 
 def run_main() -> None:
-    # Processing took 0h-0m-20.34s
-    # Error hh rm are: [45923.0, 29522]
-    hh_marg, hh_pool = get_test_hh()
-    condensed_hh_pool = condense_df(hh_pool)
-    start_time = time.time()
-    # saa run
-    final_syn_hh, err_rm = saa_run(
-        hh_marg,
-        condensed_hh_pool,
-        considered_atts=CONSIDERED_ATTS_HH,
-        ordered_to_adjust_atts=SAA_ODERED_ATTS_HH,
-        max_run_time=2,
-        shuffle_order=["hhsize", "hhinc"],
-    )
+    for i in range(10):
+        hh_marg, hh_pool = get_test_hh()
+        condensed_hh_pool = condense_df(hh_pool)
+        start_time = time.time()
+        extra_rm_frac = 0
+        # saa run
+        final_syn_hh, err_rm = saa_run(
+            hh_marg,
+            condensed_hh_pool,
+            considered_atts=CONSIDERED_ATTS_HH,
+            ordered_to_adjust_atts=SAA_ODERED_ATTS_HH,
+            max_run_time=5,
+            extra_rm_frac=extra_rm_frac,
+            shuffle_order=[],
+        )
 
-    # record time
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    hours, rem = divmod(elapsed_time, 3600)  # 3600 seconds in an hour
-    minutes, seconds = divmod(rem, 60)  # 60 seconds in a minute
-    print(f"Processing took {int(hours)}h-{int(minutes)}m-{seconds:.2f}s")
-    print(f"Error hh rm are: {err_rm}")
-    # output
-    print(final_syn_hh)
+        # record time
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        hours, rem = divmod(elapsed_time, 3600)  # 3600 seconds in an hour
+        minutes, seconds = divmod(rem, 60)  # 60 seconds in a minute
+        print(f"Processing took {int(hours)}h-{int(minutes)}m-{seconds:.2f}s")
+        print(f"Number of aimed to synthesis hh: {err_rm}")
+        # output
+        final_syn_hh.write_csv(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\IPSF\data\small_test_output_check\penalty" + "\\" + f"smallpenal_{extra_rm_frac}_{minutes*60 + seconds:.2f}_{i}.csv")
 
 
 if __name__ == "__main__":
