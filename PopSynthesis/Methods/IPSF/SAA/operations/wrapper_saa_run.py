@@ -15,7 +15,7 @@ from PopSynthesis.Methods.IPSF.utils.synthetic_checked_census import (
 )
 from PopSynthesis.Methods.IPSF.SAA.SAA import SAA
 import polars as pl
-from typing import Tuple, List, Union
+from typing import Tuple, List, Union, Literal
 import random
 
 
@@ -65,20 +65,23 @@ def err_check_against_marg(
 
 
 def process_shuffle_order(
-    orginal_order: List[str], shuffle_order: Union[bool, List[str]]
+    orginal_order: List[str], shuffle_order: List[str], idx_atts_states: pd.MultiIndex, check_run_time: Literal["first", "mid", "last"]
 ) -> List[str]:
-    if isinstance(shuffle_order, list):
+    if check_run_time == "first":
+        # First run, change the order from most states to least states
+        flatten_idx = idx_atts_states.to_frame(index=False, name=["att", "state"])
+        count_state = flatten_idx.groupby("att").count().sort_values("state", ascending=False)
+        return count_state.index.tolist()
+    elif check_run_time == "mid":
+        random.shuffle(orginal_order)
+        return orginal_order
+    elif check_run_time == "last":
         assert set(shuffle_order) <= set(orginal_order)
         not_in_shuffle = [x for x in orginal_order if x not in shuffle_order]
         random.shuffle(not_in_shuffle)
         return shuffle_order + not_in_shuffle
-
-    elif isinstance(shuffle_order, bool):
-        if shuffle_order:
-            random.shuffle(orginal_order)
-        return orginal_order
     else:
-        raise ValueError("Shuffle order should be a list or a boolean")
+        raise ValueError("Check run time should be first, mid or last")
 
 
 def saa_run(
@@ -86,7 +89,7 @@ def saa_run(
     count_pool: pl.DataFrame,
     considered_atts=List[str],
     ordered_to_adjust_atts=List[str],
-    shuffle_order: Union[bool, List[str]] = False,
+    shuffle_order: List[str] = [],
     max_run_time: int = 30,
     extra_rm_frac: float = 0,
     output_each_step: bool = False,
@@ -102,9 +105,14 @@ def saa_run(
     chosen_syn = []
     err_rm = []
     while n_run_time < max_run_time and n_removed_err > 0:
+        check_run_time = "mid"
+        if n_run_time == 0:
+            check_run_time = "first"
+        elif n_run_time == max_run_time - 1:
+            check_run_time = "last"
         # to randomly shuffle for each adjustment or not
         ordered_to_adjust_atts = process_shuffle_order(
-            ordered_to_adjust_atts, shuffle_order
+            ordered_to_adjust_atts, shuffle_order, targeted_marg.columns, check_run_time=check_run_time
         )
         err_rm.append(n_removed_err)
         print(
