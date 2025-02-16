@@ -5,15 +5,16 @@ from pathlib import Path
 # Simple pass case with polars, including row labels as a new column 'row_id'
 test_df = pl.DataFrame(
     {
-        "row_id": ["a", "b", "c", "d", "e", "f"],
-        "s1": [None, 1, 2, 2, 33, 3],
-        "s2": [None, 32, 12, 2, 0, None],
-        "s3": [10, 20, 30, 40, 50, 60],
-        "s4": [0, 34, None, 34, 50, 60],
-        "s5": [10, 2, None, 123, 3, 432],
+        "row_id": ["a", "b", "c", "d", "e", "f", "g"],
+        "s1": [None, 1, 2, 2, 33, 3, 0],
+        "s2": [None, 32, 12, 2, 0, None, 0],
+        "s3": [10, 20, 30, 40, 50, 60, 0],
+        "s4": [0, 34, None, 34, 50, 60, 0],
+        "s5": [10, 2, None, 123, 3, 432, 0],
+        "s6": [0, 0, 0, 0, 0, 0, 0],
     }
 )
-test_diff = dict(zip(test_df.select(pl.exclude("row_id")).columns, [-3, -8, 0, 5, 6]))
+test_diff = dict(zip(test_df.select(pl.exclude("row_id")).columns, [-3, -8, 0, 5, 3, 3]))
 
 # Case of no absolute solution with polars, including row labels as a new column 'row_id'
 noabs_test_df = pl.DataFrame(
@@ -36,6 +37,7 @@ large_states_diff = pl.read_csv(data_folder / "large_states_diff.csv").row(0, na
 
 def test_update_states():
     # Test the update on each case by uncommenting as needed
+    print(test_df)
     id_col = "row_id"
     a, b = update_count_tables(test_df, test_diff, id_col, deviation_type="absolute", spread_penalty=0.0001)
     # a, b = update_count_tables(noabs_test_df, noabs_test_diff, id_col)
