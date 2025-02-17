@@ -118,7 +118,27 @@ def sample_count_syn_to_full(
     process_df = syn_count.join(
         processed_pool, on=[x for x in syn_count.columns if x != count_field]
     )
-    assert len(process_df) == len(syn_count)
+    missing_records = syn_count.join(
+        process_df, on=[x for x in syn_count.columns if x != count_field], how="anti"
+    )
+    # Calculate the sum of the count_field of the missing records
+    missing_records_sum = missing_records[count_field].sum()
+    # Get the current total count
+    current_total = process_df[count_field].sum()
+    # Compute the proportion of each row's count relative to the total count
+    proportions = process_df[count_field] / current_total
+    # Distribute the new value according to the existing proportions
+    distributed_values = (proportions * missing_records_sum).round().cast(pl.Int64)
+    # Adjust for rounding errors to ensure the sum equals value_to_add
+    difference = missing_records_sum - distributed_values.sum()
+    if difference != 0:
+        max_idx = distributed_values.arg_max()
+        distributed_values[max_idx] += difference
+
+    # Update the count column
+    process_df = process_df.with_columns((process_df[count_field] + distributed_values).alias(count_field))
+    # Use the sum and distribute (to add) to the process_df
+    assert len(process_df) + len(missing_records) == len(syn_count)
     return sample_full_from_combined_df(
         combined_df=process_df,
         count_field=count_field,

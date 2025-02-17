@@ -55,7 +55,12 @@ def init_syn_pop_saa(
 ) -> pl.DataFrame:
     assert zone_field in marginal_data
     states = list(pool[att].unique())
-    assert set(states + [zone_field]) == set(marginal_data.columns)
+    assert set(states + [zone_field]) <= set(marginal_data.columns)
+
+    zero_cells_cases = set(marginal_data.columns) - set(states + [zone_field])
+    if len(zero_cells_cases) > 0:
+        print(f"WARNING: {att} has zero cells {zero_cells_cases}")
+        states = states + list(zero_cells_cases)
 
     if count_field not in pool.columns:
         pool = pool.with_columns([pl.lit(1).alias(count_field)])
@@ -64,8 +69,7 @@ def init_syn_pop_saa(
     for state in states:
         sub_pool = pool.filter(pl.col(att) == state)
         if len(sub_pool) == 0:
-            print(f"WARNING: cannot see {att}_{state} in the pool, sample by the rest")
-            sub_pool = pool  # if there are none, we take all
+            sub_pool = pool  # handle zero-cells
         for zone in marginal_data[zone_field]:
             condition = marginal_data.filter(pl.col(zone_field) == zone)
             census_val = condition.select(state).to_numpy()[0, 0]
@@ -114,5 +118,18 @@ def adjust_atts_state_match_census(
         print()
         updated_syn_pop = pl.concat(pop_syn_across_zones)
         assert len(updated_syn_pop) == len(curr_syn_pop)
+
+    # expected_n = census_data_by_att.with_columns(sum=pl.sum_horizontal(pl.exclude([zone_field])))
+    # # if missing, randomly sample from the pool
+    # ls_missing_pop = [updated_syn_pop]
+    # count_dict = expected_n[[zone_field, "sum"]].to_dict()
+    # for zone, n in zip(count_dict[zone_field], count_dict["sum"]):
+    #     sub_pop = updated_syn_pop.filter(pl.col(zone_field) == zone)
+    #     if len(sub_pop) < n:
+    #         # print(f"WARNING: {att} {zone} has {len(sub_pop)} < {n}, sample from pool")
+    #         adding_pop = sample_from_pl(pool_count, n - len(sub_pop))
+    #         adding_pop = adding_pop.with_columns([pl.lit(zone).alias(zone_field)])
+    #         ls_missing_pop.append(adding_pop.select(updated_syn_pop.columns))
+    # updated_syn_pop = pl.concat(ls_missing_pop)
 
     return updated_syn_pop

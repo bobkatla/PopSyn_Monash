@@ -52,10 +52,9 @@ def _ILP_solving_adjustment(
     assert not count_table.select(pl.col(id_col)).is_duplicated().any()
 
     # Filter out not needed rows and columns
-    zero_val_states = []
+    zero_adjust_states = [x for x in states_diff.keys() if states_diff[x] == 0]
     if basic_filter:
-        zero_val_states = [x for x in states_diff.keys() if states_diff[x] == 0]
-        count_table = count_table.drop(zero_val_states)
+        count_table = count_table.drop(zero_adjust_states)
         pos_states = [x for x in states_diff.keys() if states_diff[x] > 0]
         neg_states = [x for x in states_diff.keys() if states_diff[x] < 0]
         count_table = count_table.filter(
@@ -117,7 +116,7 @@ def _ILP_solving_adjustment(
 
     # Column constraints with positive and negative slack for deviations
     for j, target_diff in states_diff.items():
-        if j not in zero_val_states:
+        if j not in zero_adjust_states:
             col_adjustments = [
                 adjustments[(i, j)] for i in rows if (i, j) in adjustments
             ]
@@ -173,7 +172,7 @@ def _ILP_solving_adjustment(
         }
         adjustment_remaining = {
             j: int(states_diff[j] - actual_diff[j]) for j in columns
-        } | {j: 0 for j in zero_val_states}
+        } | {j: 0 for j in zero_adjust_states}
     else:
         print("No feasible solution found.")
 
@@ -185,6 +184,12 @@ def update_count_tables(
 ) -> Tuple[pl.DataFrame, int]:
     """Update count table with adjustments, ensuring row and column sums meet expected values."""
     assert sum(states_diff.values()) == 0
+
+    zero_celss = set(states_diff.keys()) - set(count_table.columns)
+    if len(zero_celss) > 0:
+        count_table = count_table.with_columns(
+            [pl.lit(0).alias(x) for x in zero_celss]
+        )
 
     expected_sum_row = count_table.select(
         pl.sum_horizontal(pl.exclude(id_col)).alias("row_sum")
