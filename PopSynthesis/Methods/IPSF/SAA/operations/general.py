@@ -10,7 +10,7 @@ from PopSynthesis.Methods.IPSF.SAA.operations.compare_census import calculate_st
 from PopSynthesis.Methods.IPSF.SAA.operations.ILP_zone_ad import ILP_zone_adjustment
 from PopSynthesis.Methods.IPSF.utils.condensed import condense_df
 import sys
-
+from PopSynthesis.Methods.IPSF.SAA.operations.shared_vars import update_zero_cells
 
 def process_raw_ipu_marg(
     marg: pd.DataFrame, atts: List[str]
@@ -59,7 +59,8 @@ def init_syn_pop_saa(
 
     zero_cells_cases = set(marginal_data.columns) - set(states + [zone_field])
     if len(zero_cells_cases) > 0:
-        print(f"WARNING: {att} has zero cells {zero_cells_cases}")
+        for case in zero_cells_cases:
+            update_zero_cells(att, case)
         states = states + list(zero_cells_cases)
 
     if count_field not in pool.columns:
@@ -118,5 +119,5 @@ def adjust_atts_state_match_census(
         print()
         updated_syn_pop = pl.concat(pop_syn_across_zones)
         assert len(updated_syn_pop) == len(curr_syn_pop)
-        
+
     return updated_syn_pop

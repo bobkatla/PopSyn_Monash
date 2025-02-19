@@ -185,12 +185,6 @@ def update_count_tables(
     """Update count table with adjustments, ensuring row and column sums meet expected values."""
     assert sum(states_diff.values()) == 0
 
-    zero_celss = set(states_diff.keys()) - set(count_table.columns)
-    if len(zero_celss) > 0:
-        count_table = count_table.with_columns(
-            [pl.lit(0).alias(x) for x in zero_celss]
-        )
-
     expected_sum_row = count_table.select(
         pl.sum_horizontal(pl.exclude(id_col)).alias("row_sum")
     )
