@@ -56,6 +56,8 @@ def process_pool_to_sample_count(
 ) -> pl.DataFrame:
     """Process the pool to sample count"""
     assert count_field in pool.columns
+    if len(not_considered_atts) == 0:
+        return pool
     pool = pool.with_columns(pl.concat_list(not_considered_atts).alias(other_atts_col))
     gb_pool = pool.group_by(considered_atts).agg(
         pl.col(other_atts_col), pl.col(count_field).alias(weights_col)
@@ -112,10 +114,6 @@ def sample_count_syn_to_full(
     considered_atts = [x for x in syn_count.columns if x != count_field]
     not_considered_atts = [x for x in pool.columns if x not in considered_atts+[count_field]]
     
-    if len(not_considered_atts) == 0:
-        # this is for the last att adjustment
-        return explode_df(syn_count, weight_col=count_field)
-    
     expected_sum = int(syn_count[count_field].sum())
     processed_pool = process_pool_to_sample_count(
         pool, considered_atts, not_considered_atts, other_atts_col, weights_col
@@ -126,29 +124,34 @@ def sample_count_syn_to_full(
     missing_records = syn_count.join(
         process_df, on=[x for x in syn_count.columns if x != count_field], how="anti"
     )
+    
     if len(process_df) == 0:
         # Weird case but can happen, random sample from pool
         temp_pool = pool.to_pandas()
         random_syn = temp_pool.sample(n=expected_sum, replace=True, weights=count_field)
         return pl.from_pandas(random_syn.drop(columns=[count_field]))
+    
+    # Calculate the sum of the count_field of the missing records
+    missing_records_sum = missing_records[count_field].sum()
+    # Get the current total count
+    current_total = process_df[count_field].sum()
+    # Compute the proportion of each row's count relative to the total count
+    proportions = process_df[count_field] / current_total
+    # Use TRS to adjust, not rounding
+    # Distribute the new value according to the existing proportions
+    distributed_values = (proportions * missing_records_sum)
+    rounded_distributed_values = TRS(list(distributed_values), missing_records_sum)
+    assert sum(rounded_distributed_values) == missing_records_sum
+    
+    # Update the count column
+    process_df = process_df.with_columns((process_df[count_field] + rounded_distributed_values).alias(count_field))
+    assert process_df[count_field].sum() == expected_sum
+    # Use the sum and distribute (to add) to the process_df
+    assert len(process_df) + len(missing_records) == len(syn_count)
+    if len(not_considered_atts) == 0:
+        # this is for the last att adjustment
+        return explode_df(process_df, weight_col=count_field)
     else:
-        # Calculate the sum of the count_field of the missing records
-        missing_records_sum = missing_records[count_field].sum()
-        # Get the current total count
-        current_total = process_df[count_field].sum()
-        # Compute the proportion of each row's count relative to the total count
-        proportions = process_df[count_field] / current_total
-        # Use TRS to adjust, not rounding
-        # Distribute the new value according to the existing proportions
-        distributed_values = (proportions * missing_records_sum)
-        rounded_distributed_values = TRS(list(distributed_values), missing_records_sum)
-        assert sum(rounded_distributed_values) == missing_records_sum
-        
-        # Update the count column
-        process_df = process_df.with_columns((process_df[count_field] + rounded_distributed_values).alias(count_field))
-        assert process_df[count_field].sum() == expected_sum
-        # Use the sum and distribute (to add) to the process_df
-        assert len(process_df) + len(missing_records) == len(syn_count)
         return sample_full_from_combined_df(
             combined_df=process_df,
             count_field=count_field,
