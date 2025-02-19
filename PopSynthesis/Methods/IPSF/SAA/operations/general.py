@@ -114,22 +114,9 @@ def adjust_atts_state_match_census(
                 records_err[zid] = err_remain
                 if zone_adjusted_syn_pop is not None:
                     assert len(zone_adjusted_syn_pop) == len(sub_syn_pop)
-                    pop_syn_across_zones.append(zone_adjusted_syn_pop)
+                    pop_syn_across_zones.append(zone_adjusted_syn_pop.select(curr_syn_pop.columns))
         print()
         updated_syn_pop = pl.concat(pop_syn_across_zones)
         assert len(updated_syn_pop) == len(curr_syn_pop)
-
-    # expected_n = census_data_by_att.with_columns(sum=pl.sum_horizontal(pl.exclude([zone_field])))
-    # # if missing, randomly sample from the pool
-    # ls_missing_pop = [updated_syn_pop]
-    # count_dict = expected_n[[zone_field, "sum"]].to_dict()
-    # for zone, n in zip(count_dict[zone_field], count_dict["sum"]):
-    #     sub_pop = updated_syn_pop.filter(pl.col(zone_field) == zone)
-    #     if len(sub_pop) < n:
-    #         # print(f"WARNING: {att} {zone} has {len(sub_pop)} < {n}, sample from pool")
-    #         adding_pop = sample_from_pl(pool_count, n - len(sub_pop))
-    #         adding_pop = adding_pop.with_columns([pl.lit(zone).alias(zone_field)])
-    #         ls_missing_pop.append(adding_pop.select(updated_syn_pop.columns))
-    # updated_syn_pop = pl.concat(ls_missing_pop)
-
+        
     return updated_syn_pop
