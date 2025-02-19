@@ -46,7 +46,7 @@ def process_from_census_data(geo_lev="POA"):
     return final_df
 
 
-def TRS(initial_weights, know_tot=None):
+def TRS(initial_weights: list[float], know_tot: int = None):
     # Desired total constraint
     desired_total = know_tot if know_tot else sum(initial_weights)
 
