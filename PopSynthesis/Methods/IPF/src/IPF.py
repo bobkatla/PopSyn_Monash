@@ -34,7 +34,6 @@ def IPF_sampling(constraints, round_basic=False, tot=None):
             print(f"SAMPLING got till {round(check, 2)}%")
 
         if constraints[i]:
-            # TODO: instead of just rounding like this, use the papers method of int rounding
             to_sample = constraints[i] if round_basic else round_vals[count]
             ls_repeat = np.repeat([i], to_sample, axis=0)
             if ls is None:
@@ -118,14 +117,6 @@ def simple_synthesize(marg, joint_dist, marginal_zero_sub=0.01, jd_zero_sub=0.00
     # IPF
     constraint, iterations = ipf.calculate_constraints(marg, joint_dist.frequency)
     tot = int(marg.sum() / len(set(marg.index.get_level_values(0))))
-
-    idx_temp = constraint.index.names
-    temp = constraint.reset_index()
-    temp = temp[
-        temp["hhinc"] != "Negative income"
-    ]  # this does not make sense or we can keep this as well
-    constraint = temp.set_index(idx_temp)
-    constraint = constraint[0]
 
     # constraint.index = joint_dist.cat_id
     result = IPF_sampling(constraint, round_basic=False, tot=tot)
