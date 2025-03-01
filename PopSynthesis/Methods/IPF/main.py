@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 import os
 import pathlib
-
+import time
 
 def test_IPF_on_full_pop():
     min_rate, max_rate, tot = 0.1, 1, 10
@@ -45,18 +45,24 @@ def main():
     name_f = lambda x: os.path.join(
         pathlib.Path(__file__).parent.resolve(), loc_data, f"{x}.csv"
     )
-    hh_marg_file = name_f("hh_marginals_small")
+    hh_marg_file = name_f("hh_marginals_ipu")
     # expected sum
     expected_sum = calculate_expected_sum(hh_marg_file)
-    hh_sample_file = name_f("HH_pool_small_test_zerocell")
+    hh_sample_file = name_f("HH_pool")
+    # time the IPF
+    start_time = time.time()
     synthetic_hh = run_IPF(hh_marg_file, hh_sample_file)
-    assert expected_sum == len(synthetic_hh)
+    end_time = time.time()
+    
     synthetic_hh.to_csv(
         os.path.join(
-            pathlib.Path(__file__).parent.resolve(), loc_output, "IPF_re_HH_only.csv"
+            pathlib.Path(__file__).parent.resolve(), loc_output, "IPF_using_BN_pool.csv"
         ),
         index=False,
     )
+    
+    print(f"Time taken: {end_time - start_time} seconds")
+    assert expected_sum == len(synthetic_hh)
 
 if __name__ == "__main__":
     main()
