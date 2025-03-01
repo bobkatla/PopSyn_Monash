@@ -7,12 +7,13 @@ from PopSynthesis.Methods.IPF.src.IPF import (
     simple_synthesize_all_zones,
 )
 from PopSynthesis.Methods.IPF.src.data_process import simple_load_data
+import pandas as pd
 import numpy as np
 import os
 import pathlib
 
 
-def main():
+def test_IPF_on_full_pop():
     min_rate, max_rate, tot = 0.1, 1, 10
     results, results_rmse = eval_based_on_full_pop(
         loc_data=loc_data, range_sample=np.linspace(min_rate, max_rate, tot)
@@ -25,15 +26,31 @@ def main():
     print(results_rmse)
 
 
-def test_new_only_hh():
+def run_IPF(marg_file, sample_file):
+    marg, samples, xwalks = simple_load_data(marg_file, sample_file)
+    synthetic_agents = simple_synthesize_all_zones(marg, samples, xwalks)
+    return synthetic_agents
+
+
+def calculate_expected_sum(marg_file):
+    marg = pd.read_csv(marg_file, header=[0,1])
+    n_atts = len(set(marg.columns.get_level_values(0)) - {"zone_id", "sample_geog"})
+    marg.columns = marg.columns.to_flat_index()
+    cols_to_sum = [col for col in marg.columns if col[0] not in ["zone_id", "sample_geog"]]
+    sum_tot = marg[cols_to_sum].sum().sum() / n_atts
+    return int(sum_tot)
+
+
+def main():
     name_f = lambda x: os.path.join(
         pathlib.Path(__file__).parent.resolve(), loc_data, f"{x}.csv"
     )
-    hh_marg_file = name_f("hh_marginals_ipu")
-    hh_sample_file = name_f("hh_sample_ipu")
-    hh_marg, hh_sample, xwalks = simple_load_data(hh_marg_file, hh_sample_file)
-    synthetic_hh = simple_synthesize_all_zones(hh_marg, hh_sample, xwalks)
-    print(synthetic_hh)
+    hh_marg_file = name_f("hh_marginals_small")
+    # expected sum
+    expected_sum = calculate_expected_sum(hh_marg_file)
+    hh_sample_file = name_f("HH_pool_small_test_zerocell")
+    synthetic_hh = run_IPF(hh_marg_file, hh_sample_file)
+    assert expected_sum == len(synthetic_hh)
     synthetic_hh.to_csv(
         os.path.join(
             pathlib.Path(__file__).parent.resolve(), loc_output, "IPF_re_HH_only.csv"
@@ -41,7 +58,5 @@ def test_new_only_hh():
         index=False,
     )
 
-
 if __name__ == "__main__":
-    # main()
-    test_new_only_hh()
+    main()

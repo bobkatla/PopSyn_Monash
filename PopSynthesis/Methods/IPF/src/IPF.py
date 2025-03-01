@@ -18,14 +18,14 @@ from PopSynthesis.Benchmark.CompareCensus.compare import compare_RMS_census
 from PopSynthesis.Generator_data.generate_combine_census.utils import TRS
 
 
-def IPF_sampling(constraints, round_basic=True, tot=None):
+def IPF_sampling(constraints, round_basic=False, tot=None):
     # constraints.to_csv('./Joint_dist_result_IPF.csv')
     round_vals = None
     if round_basic:
         constraints = constraints.apply(lambda x: int(x))
     else:
         ls_vals = constraints.to_list()
-        round_vals = TRS(ls_vals, int(tot))
+        round_vals = TRS(ls_vals, tot)
 
     ls = None
     for count, i in enumerate(constraints.index):
@@ -117,7 +117,7 @@ def simple_synthesize(marg, joint_dist, marginal_zero_sub=0.01, jd_zero_sub=0.00
 
     # IPF
     constraint, iterations = ipf.calculate_constraints(marg, joint_dist.frequency)
-    tot = constraint.sum()
+    tot = int(marg.sum() / len(set(marg.index.get_level_values(0))))
 
     idx_temp = constraint.index.names
     temp = constraint.reset_index()
