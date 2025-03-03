@@ -1,4 +1,5 @@
 import pandas as pd
+from typing import List, Literal
 
 
 def convert_full_to_marg_count(
@@ -24,3 +25,44 @@ def convert_full_to_marg_count(
     )
     new_marg_hh = new_marg_hh.drop(columns=ls_drop_m)
     return new_marg_hh
+
+
+def add_0_to_missing(
+    df: pd.DataFrame, ls_missing: List[str], axis: Literal[0, 1]
+) -> pd.DataFrame:
+    for missing in ls_missing:
+        if axis == 1:  # by row
+            df.loc[missing] = 0
+        elif axis == 0:  # by col
+            df[missing] = 0
+    return df
+
+
+def impute_new_marg(
+    converted_census_marg: pd.DataFrame, converted_new_hh_marg: pd.DataFrame
+) -> pd.DataFrame:
+    converted_census_marg.index = converted_census_marg.index.astype(str)
+    converted_new_hh_marg.index = converted_new_hh_marg.index.astype(str)
+    # make sure they both have the same rows and cols, if not it means 0
+    missing_cols_ori = set(converted_new_hh_marg.columns) - set(
+        converted_census_marg.columns
+    )
+    missing_cols_kept = set(converted_census_marg.columns) - set(
+        converted_new_hh_marg.columns
+    )
+    missing_rows_ori = set(converted_new_hh_marg.index) - set(
+        converted_census_marg.index
+    )
+    missing_rows_kept = set(converted_census_marg.index) - set(
+        converted_new_hh_marg.index
+    )
+
+    converted_new_hh_marg = add_0_to_missing(
+        converted_new_hh_marg, missing_cols_kept, 0
+    )
+    converted_new_hh_marg = add_0_to_missing(
+        converted_new_hh_marg, missing_rows_kept, 1
+    )
+    converted_census_marg = add_0_to_missing(converted_census_marg, missing_cols_ori, 0)
+    converted_census_marg = add_0_to_missing(converted_census_marg, missing_rows_ori, 1)
+    return converted_new_hh_marg
