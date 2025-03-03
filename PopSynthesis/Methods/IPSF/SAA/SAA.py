@@ -47,7 +47,7 @@ class SAA:
             )
             adjusted_atts.append(att)
             if output_each_step:
-                curr_syn_pop.to_csv(
+                curr_syn_pop.write_csv(
                     output_dir / f"syn_pop_adjusted_{att}{extra_name}.csv"
                 )
         return curr_syn_pop
