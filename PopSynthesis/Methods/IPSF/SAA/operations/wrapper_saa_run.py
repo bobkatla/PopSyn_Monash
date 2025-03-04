@@ -42,7 +42,7 @@ def err_check_against_marg(
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     # rm extra first
     assert extra_rm_frac <= 1 and extra_rm_frac >= 0
-    remain_syn = syn_pop
+    remain_syn = syn_pop.copy()
     remain_syn = remain_syn.sample(frac=1-extra_rm_frac)
     print(f"removed first {len(syn_pop) - len(remain_syn)} hh")
 
@@ -116,6 +116,7 @@ def saa_run(
         ordered_to_adjust_atts = process_shuffle_order(
             ordered_to_adjust_atts, shuffle_order, targeted_marg.columns, check_run_time=check_run_time
         )
+        ordered_to_adjust_atts = ["hhsize", "totalvehs", "hhinc", "dwelltype", "owndwell"]
         err_rm.append(n_removed_err)
         print(
             f"For run {n_run_time}, order is: {ordered_to_adjust_atts}, aim for {n_removed_err} HHs"
@@ -125,24 +126,25 @@ def saa_run(
         final_syn_pop = saa.run(extra_name=f"_{add_name_for_step_output}_{n_run_time}", output_each_step=output_each_step, include_zero_cell_values=include_zero_cell_values)
         assert len(final_syn_pop) == n_removed_err
         ###
-        to_check_syn = final_syn_pop.to_pandas()
-        kept_syn, new_marg = err_check_against_marg(to_check_syn, targeted_marg, extra_rm_frac)
 
         n_run_time += 1
         # append to the chosen
         if n_run_time == max_run_time:
-            # not adjusting anymore
+            # not adjusting anymore, last run
             final_syn_pop = final_syn_pop.with_columns(pl.col(zone_field).cast(pl.String))
             chosen_syn.append(final_syn_pop)
-        elif len(kept_syn) > 0:
-            # continue with adjusting for missing
-            chosen = pl.from_pandas(kept_syn)
-            chosen = chosen.with_columns(pl.col(zone_field).cast(pl.String))
-            chosen_syn.append(chosen)
+        else:
+            to_check_syn = final_syn_pop.to_pandas()
+            kept_syn, new_marg = err_check_against_marg(to_check_syn, targeted_marg, extra_rm_frac)
+            if len(kept_syn) > 0:
+                # continue with adjusting for missing
+                chosen = pl.from_pandas(kept_syn)
+                chosen = chosen.with_columns(pl.col(zone_field).cast(pl.String))
+                chosen_syn.append(chosen)
 
-        # Update for next run
-        n_removed_err = len(final_syn_pop) - len(kept_syn)
-        targeted_marg = new_marg
+            # Update for next run
+            n_removed_err = len(final_syn_pop) - len(kept_syn)
+            targeted_marg = new_marg
 
     final_syn_hh = pl.concat([df.select(considered_atts+[zone_field]) for df in chosen_syn])
     return final_syn_hh, err_rm

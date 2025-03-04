@@ -109,9 +109,6 @@ def handle_zero_cells(process_df: pl.DataFrame, missing_records: pl.DataFrame, p
     # Handle zero cells directly or delete completely
     # NOTE: working in progress for now, not sure how to handle yet
     if include_value:
-        print(process_df)
-        print(missing_records)
-        print(processed_pool)
         if not last_adjustment:
             # if this the last adjustment, just return process_df concat with missing_records
             zero_cells = get_zero_cells_all()
