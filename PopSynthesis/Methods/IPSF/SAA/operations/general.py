@@ -90,6 +90,7 @@ def adjust_atts_state_match_census(
     census_data_by_att: pl.DataFrame,
     adjusted_atts: List[str],
     pool_count: pl.DataFrame,
+    include_value: bool = False,
 ) -> pd.DataFrame:
     print(f"ADJUSTING FOR {att}")
     if curr_syn_pop is None:
@@ -110,7 +111,7 @@ def adjust_atts_state_match_census(
             if not sub_syn_pop.is_empty():
                 condensed_syn = condense_df(sub_syn_pop)
                 zone_adjusted_syn_pop, err_remain = ILP_zone_adjustment(
-                    att, condensed_syn, zone_marg, pool_count, adjusted_atts
+                    att, condensed_syn, zone_marg, pool_count, adjusted_atts, include_value=include_value
                 )
                 records_err[zid] = err_remain
                 if zone_adjusted_syn_pop is not None:

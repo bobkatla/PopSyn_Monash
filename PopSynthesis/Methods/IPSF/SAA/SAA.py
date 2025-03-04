@@ -35,7 +35,7 @@ class SAA:
         )
         self.segmented_marg = converted_segment_marg
 
-    def run(self, output_each_step: bool = False, extra_name: str = "") -> pl.DataFrame:
+    def run(self, output_each_step: bool = False, extra_name: str = "", include_zero_cell_values: bool = False) -> pl.DataFrame:
         # Output the synthetic population, the main point
         curr_syn_pop = None
         adjusted_atts = []
@@ -43,7 +43,7 @@ class SAA:
             sub_census = self.segmented_marg[att].reset_index()
             sub_census = pl.from_pandas(sub_census)
             curr_syn_pop = adjust_atts_state_match_census(
-                att, curr_syn_pop, sub_census, adjusted_atts, self.pool
+                att, curr_syn_pop, sub_census, adjusted_atts, self.pool, include_value=include_zero_cell_values
             )
             adjusted_atts.append(att)
             if output_each_step:

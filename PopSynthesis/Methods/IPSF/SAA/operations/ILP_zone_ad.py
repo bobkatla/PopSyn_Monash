@@ -169,7 +169,7 @@ def simple_zero_cells_handle(process_df: pl.DataFrame, missing_records: pl.DataF
 
 
 def sample_count_syn_to_full(
-    syn_count: pl.DataFrame, pool: pl.DataFrame
+    syn_count: pl.DataFrame, pool: pl.DataFrame, include_value: bool = False
 ) -> pl.DataFrame:
     """Sample the syn_count to full records"""
     assert set(syn_count.columns) <= set(pool.columns)
@@ -197,7 +197,7 @@ def sample_count_syn_to_full(
         last_adjustment = True
 
     if len(missing_records) > 0:
-        process_df = simple_zero_cells_handle(process_df, missing_records, processed_pool, last_adjustment, include_value=True)
+        process_df = simple_zero_cells_handle(process_df, missing_records, processed_pool, last_adjustment, include_value=include_value)
 
         if len(process_df) == 0: #This means did not update the process_df
             # Random sample from pool
@@ -226,6 +226,7 @@ def ILP_zone_adjustment(
     diff_zone_census: Dict[str, int],
     count_pool: pl.DataFrame,
     adjusted_atts: List[str],
+    include_value: bool = False,
 ) -> Tuple[pl.DataFrame, int]:
     """Solved using ILP to output the adjusted syn_pop"""
     assert len(curr_count_syn[zone_field].unique()) == 1
@@ -260,6 +261,6 @@ def ILP_zone_adjustment(
     updated_syn_count = convert_back_to_syn_count(updated_syn, att, adjusted_atts)
     assert updated_syn_count[count_field].sum() == curr_count_syn[count_field].sum()
     updated_syn_count = updated_syn_count.filter(pl.col(count_field) > 0)
-    resulted_syn = sample_count_syn_to_full(updated_syn_count, count_pool)
+    resulted_syn = sample_count_syn_to_full(updated_syn_count, count_pool, include_value)
     resulted_syn = resulted_syn.with_columns(pl.lit(zone).alias(zone_field))
     return resulted_syn, err_score
