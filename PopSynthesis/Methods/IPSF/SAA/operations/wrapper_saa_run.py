@@ -15,7 +15,7 @@ from PopSynthesis.Methods.IPSF.utils.synthetic_checked_census import (
 )
 from PopSynthesis.Methods.IPSF.SAA.SAA import SAA
 import polars as pl
-from typing import Tuple, List, Union, Literal
+from typing import Tuple, List
 import random
 
 
@@ -65,23 +65,34 @@ def err_check_against_marg(
 
 
 def process_shuffle_order(
-    orginal_order: List[str], shuffle_order: List[str], idx_atts_states: pd.MultiIndex, check_run_time: Literal["first", "mid", "last"]
+    orginal_order: List[str], shuffle_order: List[str], idx_atts_states: pd.MultiIndex, check_run_time: str, randomly_add_last: List[str] = []
 ) -> List[str]:
     if check_run_time == "first":
         # First run, change the order from most states to least states
         flatten_idx = idx_atts_states.to_frame(index=False, name=["att", "state"])
         count_state = flatten_idx.groupby("att").count().sort_values("state", ascending=False)
         return count_state.index.tolist()
-    elif check_run_time == "mid":
-        random.shuffle(orginal_order)
-        return orginal_order
     elif check_run_time == "last":
         assert set(shuffle_order) <= set(orginal_order)
         not_in_shuffle = [x for x in orginal_order if x not in shuffle_order]
         random.shuffle(not_in_shuffle)
         return shuffle_order + not_in_shuffle
     else:
-        raise ValueError("Check run time should be first, mid or last")
+        # mid case, this will be a number
+        n_run_time = int(check_run_time)
+        # want each value got to be the first once at least
+        first_att = orginal_order[n_run_time % len(orginal_order)]
+        random_boolean = random.choices([True, False], weights=[1, 3])[0]
+        
+        random.shuffle(orginal_order)
+        orginal_order.remove(first_att)
+        orginal_order.insert(0, first_att)
+        if random_boolean and len(randomly_add_last) > 0:
+            for att in randomly_add_last:
+                orginal_order.remove(att)
+                orginal_order.append(att)
+
+        return orginal_order
 
 
 def saa_run(
@@ -89,12 +100,13 @@ def saa_run(
     count_pool: pl.DataFrame,
     considered_atts=List[str],
     ordered_to_adjust_atts=List[str],
-    shuffle_order: List[str] = [],
+    last_adjustment_order: List[str] = [],
     max_run_time: int = 30,
     extra_rm_frac: float = 0,
     output_each_step: bool = False,
     add_name_for_step_output: str = "",
     include_zero_cell_values: bool = False,
+    randomly_add_last: List[str] = [],
 ) -> Tuple[pd.DataFrame, List[int]]:
     assert set(ordered_to_adjust_atts) <= set(considered_atts)
     atts_in_marg = set(targeted_marg.columns.get_level_values(0)) - {zone_field}
@@ -107,16 +119,15 @@ def saa_run(
     chosen_syn = []
     err_rm = []
     while n_run_time < max_run_time and n_removed_err > 0:
-        check_run_time = "mid"
+        check_run_time = str(n_run_time)
         if n_run_time == 0:
             check_run_time = "first"
-        elif n_run_time == max_run_time - 1:
-            check_run_time = "last"
+        if n_run_time == max_run_time - 1:
+            check_run_time = "last" # priortise last so the wanted order would be performed
         # to randomly shuffle for each adjustment or not
         ordered_to_adjust_atts = process_shuffle_order(
-            ordered_to_adjust_atts, shuffle_order, targeted_marg.columns, check_run_time=check_run_time
+            ordered_to_adjust_atts, last_adjustment_order, targeted_marg.columns, check_run_time=check_run_time, randomly_add_last=randomly_add_last
         )
-        ordered_to_adjust_atts = ["hhsize", "totalvehs", "hhinc", "dwelltype", "owndwell"]
         err_rm.append(n_removed_err)
         print(
             f"For run {n_run_time}, order is: {ordered_to_adjust_atts}, aim for {n_removed_err} HHs"
