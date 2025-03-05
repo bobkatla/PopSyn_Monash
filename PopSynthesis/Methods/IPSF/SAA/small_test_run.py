@@ -7,23 +7,28 @@ from PopSynthesis.Methods.IPSF.SAA.operations.wrapper_saa_run import (
 )
 from PopSynthesis.Methods.IPSF.utils.condensed import condense_df
 import time
+import pandas as pd
+from pathlib import Path
 
 
 def run_main() -> None:
-    for i in range(10):
-        hh_marg, hh_pool = get_test_hh()
-        condensed_hh_pool = condense_df(hh_pool)
+    hh_zero_cells = pd.read_csv(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\IPSF\data\small_test\HH_pool_small_test_zerocell.csv")
+    hh_zero_cells = hh_zero_cells.drop(columns=["serialno", "sample_geog"])
+    hh_marg, hh_pool = get_test_hh()
+    condensed_hh_pool = condense_df(hh_zero_cells)
+    extra_rm_frac = 0
+    for i in range(1):
         start_time = time.time()
-        extra_rm_frac = 0
         # saa run
         final_syn_hh, err_rm = saa_run(
             hh_marg,
             condensed_hh_pool,
             considered_atts=CONSIDERED_ATTS_HH,
             ordered_to_adjust_atts=SAA_ODERED_ATTS_HH,
-            max_run_time=5,
+            max_run_time=10,
             extra_rm_frac=extra_rm_frac,
-            shuffle_order=[],
+            last_adjustment_order=["hhsize"],
+            randomly_add_last=["hhinc"],
         )
 
         # record time
@@ -33,8 +38,15 @@ def run_main() -> None:
         minutes, seconds = divmod(rem, 60)  # 60 seconds in a minute
         print(f"Processing took {int(hours)}h-{int(minutes)}m-{seconds:.2f}s")
         print(f"Number of aimed to synthesis hh: {err_rm}")
+        print(final_syn_hh)
         # output
-        final_syn_hh.write_csv(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\IPSF\data\small_test_output_check\penalty" + "\\" + f"smallpenal_{extra_rm_frac}_{minutes*60 + seconds:.2f}_{i}.csv")
+        # output, hhsize should be perfect??
+        output_dir = Path(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\IPSF\data\small_test_output_check")
+        output_file_name = "test.csv"
+        print(f"outputting to this file: {output_dir / output_file_name}")
+        final_syn_hh.write_csv(output_dir / output_file_name)
+        # final_syn_hh.write_csv(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\IPSF\data\small_test_output_check" + "\\" + f"smallpenal_{extra_rm_frac}_{minutes*60 + seconds:.2f}_{i}.csv")
+        # final_syn_hh.write_csv(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\IPSF\data\small_test_output_check" + "\\" + f"oriseed_check.csv")
 
 
 if __name__ == "__main__":

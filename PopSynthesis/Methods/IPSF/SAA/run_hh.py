@@ -11,10 +11,13 @@ from PopSynthesis.Methods.IPSF.SAA.operations.wrapper_saa_run import (
 )
 from PopSynthesis.Methods.IPSF.utils.condensed import condense_df
 import time
+import pandas as pd
 
 
 def run_main() -> None:
     hh_marg, hh_pool = get_hh_data()
+    seed_data = pd.read_csv(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\IPSF\data\raw\hh_sample_ipu.csv")
+    seed_data = seed_data.drop(columns=["serialno", "sample_geog"])
     condensed_hh_pool = condense_df(hh_pool)
 
     start_time = time.time()
@@ -25,7 +28,12 @@ def run_main() -> None:
         considered_atts=CONSIDERED_ATTS_HH,
         ordered_to_adjust_atts=SAA_ODERED_ATTS_HH,
         max_run_time=15,
-        shuffle_order=True,
+        extra_rm_frac=0.3,
+        last_adjustment_order=["hhsize", "totalvehs", "hhinc", "dwelltype", "owndwell"],
+        output_each_step=True,
+        add_name_for_step_output="BN_new2",
+        include_zero_cell_values=False,
+        # randomly_add_last=["hhinc"],
     )
 
     # record time
@@ -35,8 +43,10 @@ def run_main() -> None:
     minutes, seconds = divmod(rem, 60)  # 60 seconds in a minute
     print(f"Processing took {int(hours)}h-{int(minutes)}m-{seconds:.2f}s")
     print(f"Error hh rm are: {err_rm}")
-    # output
-    final_syn_hh.write_csv(output_dir / "SAA_HH_IPL_abs_no_order_no_penal.csv")
+
+    output_file_name = "SAA_HH_paper_BN_IPL_ordered_rm30_2.csv"
+    print(f"outputting to this file: {output_dir / output_file_name}")
+    final_syn_hh.write_csv(output_dir / output_file_name)
 
 
 if __name__ == "__main__":
