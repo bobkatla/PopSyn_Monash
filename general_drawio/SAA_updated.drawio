@@ -77,7 +77,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="W3UaNGZ9oJ_ixkk4l5LS-16" value="Attribute adjustment" style="swimlane;whiteSpace=wrap;html=1;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="630" y="120" width="620" height="382" as="geometry" />
+          <mxGeometry x="630" y="120" width="560" height="382" as="geometry" />
         </mxCell>
         <mxCell id="W3UaNGZ9oJ_ixkk4l5LS-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=16;" edge="1" parent="W3UaNGZ9oJ_ixkk4l5LS-16" source="W3UaNGZ9oJ_ixkk4l5LS-2" target="W3UaNGZ9oJ_ixkk4l5LS-18">
           <mxGeometry relative="1" as="geometry" />
