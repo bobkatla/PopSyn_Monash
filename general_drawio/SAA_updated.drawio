@@ -46,7 +46,7 @@
         <mxCell id="Iaub3CAc_w1qITWn0uHp-9" value="Temporary synthetic population" style="shape=card;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
           <mxGeometry x="670" y="318.25" width="80" height="90" as="geometry" />
         </mxCell>
-        <mxCell id="Iaub3CAc_w1qITWn0uHp-11" value="Removing&lt;br&gt;synthetic population" style="rhombus;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+        <mxCell id="Iaub3CAc_w1qITWn0uHp-11" value="Removing partly" style="rhombus;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
           <mxGeometry x="437.5" y="625" width="165" height="80" as="geometry" />
         </mxCell>
         <mxCell id="Iaub3CAc_w1qITWn0uHp-27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="Iaub3CAc_w1qITWn0uHp-12" target="Iaub3CAc_w1qITWn0uHp-6" edge="1">
