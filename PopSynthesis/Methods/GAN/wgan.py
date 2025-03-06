@@ -502,32 +502,23 @@ if __name__ == "__main__":
     seed_data = pd.read_csv(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\GAN\data\hh_sample_ipu.csv")
     seed_data = seed_data.drop(columns=["serialno", "sample_geog"])
 
-    marginals = pd.read_csv(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\GAN\data\hh_marginals_ipu.csv", header=[0,1])
-    marginals = marginals.set_index(marginals.columns[0])
-    marginals = marginals.drop(columns=marginals.columns[0])
-    totals = marginals.sum(axis=1)/5 #n_atts = 5
+    # marginals = pd.read_csv(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\GAN\data\hh_marginals_ipu.csv", header=[0,1])
+    # marginals = marginals.set_index(marginals.columns[0])
+    # marginals = marginals.drop(columns=marginals.columns[0])
+    # totals = marginals.sum(axis=1)/5 #n_atts = 5
     
     # Generate synthetic population
-    wgan, encoders, categorical_columns = train_popsyn(seed_data, epochs=50)
+    wgan, encoders, categorical_columns = train_popsyn(seed_data, epochs=100)
+    synthetic_population = generate_population(wgan, encoders, categorical_columns, 5000000)
 
-    store_pop = []
-    for zone, tot in zip(totals.index, totals):
-        syn_pop = generate_population(wgan, encoders, categorical_columns, int(tot))
-        syn_pop["zone_id"] = zone
-        store_pop.append(syn_pop)
-    synthetic_population = pd.concat(store_pop)
-    
-    # Display first few rows of synthetic data
-    print("\nSample of generated synthetic agents:")
-    print(synthetic_population.head())
-    
-    # Check distribution of categories in synthetic population
-    print("\nDistribution of categories in synthetic population:")
-    for col in synthetic_population.columns:
-        print(f"\n{col}:")
-        print(synthetic_population[col].value_counts(normalize=True) * 100)
+    # store_pop = []
+    # for zone, tot in zip(totals.index, totals):
+    #     syn_pop = generate_population(wgan, encoders, categorical_columns, int(tot))
+    #     syn_pop["zone_id"] = zone
+    #     store_pop.append(syn_pop)
+    # synthetic_population = pd.concat(store_pop)
 
-    synthetic_population.to_csv(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\GAN\output\wgan_synthetic_population.csv")
+    synthetic_population.to_csv(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\GAN\output\wgan_pool.csv", index=False)
 
     # Plot training losses
     wgan.plot_losses()
