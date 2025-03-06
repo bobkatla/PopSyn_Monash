@@ -76,7 +76,7 @@
         <mxCell id="W3UaNGZ9oJ_ixkk4l5LS-11" value="Adjustment for attribute 2" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="780" y="250" width="170" height="20" as="geometry" />
         </mxCell>
-        <mxCell id="W3UaNGZ9oJ_ixkk4l5LS-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="W3UaNGZ9oJ_ixkk4l5LS-16" target="Iaub3CAc_w1qITWn0uHp-13">
+        <mxCell id="W3UaNGZ9oJ_ixkk4l5LS-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="W3UaNGZ9oJ_ixkk4l5LS-16" target="Iaub3CAc_w1qITWn0uHp-13">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="W3UaNGZ9oJ_ixkk4l5LS-16" value="Attribute adjustment" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
