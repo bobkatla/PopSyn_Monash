@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from sklearn.preprocessing import OneHotEncoder
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import pickle
 
 # Set random seeds for reproducibility
 torch.manual_seed(42)
@@ -496,6 +497,39 @@ def generate_population(wgan, encoders, categorical_columns, n_agents):
     return synthetic_population
 
 
+def save_wgan(wgan, encoders, categorical_columns, filepath="wgan_model.pkl"):
+    """
+    Save the trained WGAN model along with encoders and metadata.
+    
+    Args:
+        wgan: Trained CategoricalWGAN model
+        encoders: Dictionary of fitted OneHotEncoders
+        categorical_columns: List of categorical column names
+        filepath: Filepath for saving the model
+    """
+    save_dict = {
+        "model": wgan,
+        "categorical_columns": categorical_columns,
+        "encoders": encoders
+    }
+
+    with open(filepath, "wb") as f:
+        pickle.dump(save_dict, f)
+
+    print(f"Model saved to {filepath}")
+
+
+def load_wgan_simple(filepath="wgan_model.pkl"):
+    """
+    Load the entire CategoricalWGAN object.
+    """
+    with open(filepath, "rb") as f:
+        wgan_dict = pickle.load(f)
+    print(f"Model loaded from {filepath}")
+    return wgan_dict["model"], wgan_dict["encoders"], wgan_dict["categorical_columns"]
+
+
+
 # Example usage
 if __name__ == "__main__":
 
@@ -508,8 +542,18 @@ if __name__ == "__main__":
     # totals = marginals.sum(axis=1)/5 #n_atts = 5
     
     # Generate synthetic population
-    wgan, encoders, categorical_columns = train_popsyn(seed_data, epochs=100)
-    synthetic_population = generate_population(wgan, encoders, categorical_columns, 5000000)
+    # wgan, encoders, categorical_columns = train_popsyn(seed_data, epochs=50)
+    wgan, encoders, categorical_columns = load_wgan_simple()
+    # Preprocess seed data
+    # synthetic_population = generate_population(wgan, encoders, categorical_columns, 10000000)
+    have_negative_income = False
+    while not have_negative_income:
+        synthetic_population = generate_population(wgan, encoders, categorical_columns, 10000)
+        if "Negative income" in synthetic_population["hhinc"].values:
+            have_negative_income = True
+            print("Negative income present in synthetic population")
+            print(synthetic_population[synthetic_population["hhinc"]=="Negative income"])
+    # save_wgan(wgan, encoders, categorical_columns)
 
     # store_pop = []
     # for zone, tot in zip(totals.index, totals):
@@ -518,7 +562,7 @@ if __name__ == "__main__":
     #     store_pop.append(syn_pop)
     # synthetic_population = pd.concat(store_pop)
 
-    synthetic_population.to_csv(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\GAN\output\wgan_pool.csv", index=False)
+    # synthetic_population.to_csv(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\GAN\output\wgan_pool.csv", index=False)
 
     # Plot training losses
-    wgan.plot_losses()
+    # wgan.plot_losses()
