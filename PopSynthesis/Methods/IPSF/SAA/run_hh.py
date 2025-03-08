@@ -18,7 +18,7 @@ def run_main() -> None:
     hh_marg, hh_pool = get_hh_data()
     seed_data = pd.read_csv(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\IPSF\data\raw\hh_sample_ipu.csv")
     seed_data = seed_data.drop(columns=["serialno", "sample_geog"])
-    condensed_hh_pool = condense_df(hh_pool)
+    condensed_hh_pool = condense_df(hh_pool.astype(str))
 
     start_time = time.time()
     # saa run
