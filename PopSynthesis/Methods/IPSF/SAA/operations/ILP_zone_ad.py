@@ -18,11 +18,14 @@ def convert_to_ILP_inputs(
     att: str,
     adjusted_atts: List[str],
     pool_count: pl.DataFrame,
+    check_cross_pool: bool = True,
 ) -> pl.DataFrame:
     """Convert the syn and pool to the required format for ILP"""
     # group by and pivot the syn to have adjusted_atts as index and states in att as columns
     assert count_field in syn_count.columns
     converted_syn = convert_to_required_ILP_format(syn_count, att, adjusted_atts)
+    if not check_cross_pool:
+        return converted_syn
     converted_syn = converted_syn.fill_null(-1)
 
     # repeat the same for pool, maybe there can be faster as we want to check only whether it is feasible or not

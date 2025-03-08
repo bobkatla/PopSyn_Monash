@@ -39,7 +39,7 @@ class SAA:
         # Output the synthetic population, the main point
         curr_syn_pop = None
         adjusted_atts = []
-        for att in self.ordered_atts_to_adjust:
+        for i, att in enumerate(self.ordered_atts_to_adjust):
             sub_census = self.segmented_marg[att].reset_index()
             sub_census = pl.from_pandas(sub_census)
             curr_syn_pop = adjust_atts_state_match_census(
@@ -48,6 +48,6 @@ class SAA:
             adjusted_atts.append(att)
             if output_each_step:
                 curr_syn_pop.write_csv(
-                    output_dir / f"syn_pop_adjusted_{att}{extra_name}.csv"
+                    output_dir / f"step_adjusted_{i}_{att}{extra_name}.csv"
                 )
         return curr_syn_pop

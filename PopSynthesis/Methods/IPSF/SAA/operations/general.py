@@ -93,6 +93,7 @@ def adjust_atts_state_match_census(
     include_value: bool = False,
 ) -> pd.DataFrame:
     print(f"ADJUSTING FOR {att}")
+    updated_syn_pop = None
     if curr_syn_pop is None:
         updated_syn_pop = init_syn_pop_saa(att, census_data_by_att, pool_count)
     else:
