@@ -14,7 +14,30 @@ test_df = pl.DataFrame(
         "s6": [0, 0, 0, 0, 0, 0, 0],
     }
 )
+test_df = pl.DataFrame(
+    {
+        "row_id": ["a", "b", "c", "d", "e", "f"],
+        "s1": [None, 25, 20, 15, 10, 0],
+        "s2": [50, 55, 70, 80, 40, 45],
+        "s3": [40, 0, 60, 55, 50, 45],
+        "s4": [20, 15, 30, 25, 35, 32],
+    }
+)
 test_diff = dict(zip(test_df.select(pl.exclude("row_id")).columns, [-3, -8, 0, 5, 3, 3]))
+test_diff = dict(zip(test_df.select(pl.exclude("row_id")).columns, [35, -10, -25, 0]))
+
+test_df = pl.DataFrame(
+    {
+        "row_id": ["a", "b", "c", "d", "e", "f"],
+        "s1": [None, 10, 20, 15, 0, 5],  # '0' in row 'e' will be increased
+        "s2": [30, 55, 60, 75, 40, 50],
+        "s3": [50, 0, 70, 65, 45, 60],  # '0' in row 'b' will be increased
+        "s4": [20, 15, 25, 30, 35, 40],
+    }
+)
+
+test_diff = dict(zip(test_df.select(pl.exclude("row_id")).columns, [4, 1, -15, 10]))  # Sum = 0
+
 
 # Case of no absolute solution with polars, including row labels as a new column 'row_id'
 noabs_test_df = pl.DataFrame(
