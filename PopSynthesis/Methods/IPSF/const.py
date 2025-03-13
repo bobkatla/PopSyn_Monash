@@ -95,3 +95,20 @@ CONSIDERED_ATTS_HH = [
     "dwelltype",
     "owndwell",
 ]  # exist in final syn
+
+
+SAA_ODERED_ATTS_PP = [
+    "age",
+    "sex",
+    "persinc",
+    "anywork",
+]  # these must exist in both marg and syn, it is in order of adjustment
+
+CONSIDERED_ATTS_PP = [
+    "age",
+    "sex",
+    "persinc",
+    "anywork",
+    "nolicence",
+    "relationship",
+]  # exist in final syn

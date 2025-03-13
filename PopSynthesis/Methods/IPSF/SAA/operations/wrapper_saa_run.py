@@ -37,6 +37,14 @@ def get_hh_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
     return hh_marg, pool
 
 
+def get_pp_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
+    pp_marg = pd.read_csv(data_dir / "person_marginals_ipu.csv", header=[0, 1])
+    pp_marg = pp_marg.set_index(pp_marg.columns[pp_marg.columns.get_level_values(0) == zone_field][0])
+    pool = pd.read_csv(processed_dir / "PP_pool.csv")
+    return pp_marg, pool
+
+
+
 def err_check_against_marg(
     syn_pop: pd.DataFrame, marg: pd.DataFrame, extra_rm_frac: float = 0
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
