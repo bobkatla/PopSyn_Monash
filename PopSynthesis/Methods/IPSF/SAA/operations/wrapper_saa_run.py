@@ -19,6 +19,16 @@ from typing import Tuple, List
 import random
 
 
+def get_test_pp() -> Tuple[pd.DataFrame, pd.DataFrame]:
+    pp_marg = pd.read_csv(small_test_dir / "pp_small_marginals.csv", header=[0, 1])
+    pp_marg = pp_marg.set_index(
+        pp_marg.columns[pp_marg.columns.get_level_values(0) == zone_field][0]
+    )
+    pool = pd.read_csv(data_dir / "pp_sample_ipu.csv")
+    pool = pool.drop(columns=["serialno", "sample_geog"])
+    return pp_marg, pool
+
+
 def get_test_hh() -> Tuple[pd.DataFrame, pd.DataFrame]:
     hh_marg = pd.read_csv(small_test_dir / "hh_marginals_small.csv", header=[0, 1])
     hh_marg = hh_marg.set_index(
@@ -46,22 +56,26 @@ def get_pp_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
 
 
 def err_check_against_marg(
-    syn_pop: pd.DataFrame, marg: pd.DataFrame, extra_rm_frac: float = 0
+    syn_pop: pd.DataFrame, marg: pd.DataFrame, extra_rm_frac: float = 0, exclude_atts: List[str] = []
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     # rm extra first
     assert extra_rm_frac <= 1 and extra_rm_frac >= 0
     remain_syn = syn_pop.copy()
     remain_syn = remain_syn.sample(frac=1-extra_rm_frac)
-    print(f"removed first {len(syn_pop) - len(remain_syn)} hh")
+    print(f"removed first {len(syn_pop) - len(remain_syn)} agents")
 
     marg_from_created = convert_full_to_marg_count(remain_syn, [zone_field])
     converted_marg = marg
+    converted_marg = converted_marg.drop(converted_marg.columns[converted_marg.columns.get_level_values(0).isin(exclude_atts)], axis=1)
+    marg_from_created = marg_from_created.drop(marg_from_created.columns[marg_from_created.columns.get_level_values(0).isin(exclude_atts)], axis=1)
+
     diff_marg = get_diff_marg(converted_marg, marg_from_created)
 
     kept_syn = adjust_kept_rec_match_census(remain_syn, diff_marg)
 
     # checking
     kept_marg = convert_full_to_marg_count(kept_syn, [zone_field])
+    kept_marg = kept_marg.drop(kept_marg.columns[kept_marg.columns.get_level_values(0).isin(exclude_atts)], axis=1)
     new_diff_marg = get_diff_marg(converted_marg, kept_marg)
     # check it is no neg indeed
     checking_not_neg = new_diff_marg < 0
@@ -121,6 +135,9 @@ def saa_run(
     assert set(ordered_to_adjust_atts) <= atts_in_marg
     assert zone_field in targeted_marg.index.name
 
+    excluded_atts = list(set(considered_atts) - set(ordered_to_adjust_atts))
+    print(f"These atts are synthesized but not adjusted: {excluded_atts}")
+
     n_run_time = 0
     # init with the total HH we want
     n_removed_err = targeted_marg.sum().sum() / len(atts_in_marg)
@@ -138,7 +155,7 @@ def saa_run(
         )
         err_rm.append(n_removed_err)
         print(
-            f"For run {n_run_time}, order is: {ordered_to_adjust_atts}, aim for {n_removed_err} HHs"
+            f"For run {n_run_time}, order is: {ordered_to_adjust_atts}, aim for {n_removed_err} agents"
         )
         saa = SAA(targeted_marg, considered_atts, ordered_to_adjust_atts, count_pool)
         ### Actual running to get the synthetic pop
@@ -154,7 +171,7 @@ def saa_run(
             chosen_syn.append(final_syn_pop)
         else:
             to_check_syn = final_syn_pop.to_pandas()
-            kept_syn, new_marg = err_check_against_marg(to_check_syn, targeted_marg, extra_rm_frac)
+            kept_syn, new_marg = err_check_against_marg(to_check_syn, targeted_marg, extra_rm_frac, excluded_atts)
             if len(kept_syn) > 0:
                 # continue with adjusting for missing
                 chosen = pl.from_pandas(kept_syn)
