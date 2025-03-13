@@ -77,7 +77,6 @@ def add_0_to_missing(
 def get_diff_marg(
     converted_census_marg: pd.DataFrame, converted_new_hh_marg: pd.DataFrame
 ) -> pd.DataFrame:
-    print("getting the diff marg df")
     converted_census_marg.index = converted_census_marg.index.astype(str)
     converted_new_hh_marg.index = converted_new_hh_marg.index.astype(str)
     # make sure they both have the same rows and cols, if not it means 0
