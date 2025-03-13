@@ -26,7 +26,7 @@ def visualize_pyg_graph_with_zones(data, sample_people_df, sample_households_df,
     # Create mappings from index to actual node names
     person_id_map = {i: p_id for i, p_id in enumerate(sample_people_df["person_id"])}
     household_id_map = {i: h_id for i, h_id in enumerate(sample_households_df["household_id"])}
-    purpose_id_map = {i: f"{row['purpose_type']}_Z{row['zone_id']}" for i, row in purposes_df.iterrows()}
+    purpose_id_map = {i: purpose_id for i, purpose_id in enumerate(purposes_df["purpose_id"])}
     zone_id_map = {i: row["zone_id"] for i, row in zones_df.iterrows()}  # Fixing Zone Names
 
     def get_node_name(node_type, index):
@@ -180,7 +180,7 @@ def construct_starting_graph_pyg(zones_df, purposes_df, sample_households_df, sa
     src, dst, durations, rankings, joint_activities = [], [], [], [], []
     for _, row in sample_people_df.iterrows():
         household_zone = sample_households_df[sample_households_df["household_id"] == row["household_id"]]["zone_id"].values[0]
-        home_purpose = f"{household_zone}_Residential"
+        home_purpose = f"P_{household_zone}_Residential"
         if home_purpose in purpose_id_map:
             src.append(person_id_map[row["person_id"]])
             dst.append(purpose_id_map[home_purpose])
@@ -207,32 +207,58 @@ def add_travel_diaries_to_graph(data, travel_diaries_df, person_id_map, purpose_
         person_id = row["person_id"]
         zone_id = row["zone_id"]
         purpose_name = row["purpose"]
-        duration = row["duration"]
-        ranking = row["ranking_in_day"]
-        joint_activity = row["joint_activity"] if pd.notna(row["joint_activity"]) else 0  # Default to 0
 
-        # Convert person_id and purpose_id to indices
-        if person_id in person_id_map and f"{purpose_name}_Z{zone_id}" in purpose_id_map:
-            person_idx = person_id_map[person_id]
-            purpose_idx = purpose_id_map[f"{purpose_name}_Z{zone_id}"]
+        # Debug: Check if person exists in mapping
+        if person_id not in person_id_map:
+            print(f"🚨 Person ID {person_id} not found in person_id_map!")
+            continue
 
-            # Append new edge with attributes
-            src.append(person_idx)
-            dst.append(purpose_idx)
-            durations.append(float(duration))
-            rankings.append(int(ranking))
-            joint_activities.append(int(joint_activity))  # Convert bool to int
+        # Debug: Check if purpose exists in mapping
+        purpose_key = f"P_{zone_id}_{purpose_name}"
+        if purpose_key not in purpose_id_map:
+            print(f"🚨 Purpose {purpose_key} not found in purpose_id_map!")
+            continue
+
+        # Convert IDs to graph indices
+        person_idx = person_id_map[person_id]
+        purpose_idx = purpose_id_map[purpose_key]
+
+        # Append new edge with attributes
+        src.append(person_idx)
+        dst.append(purpose_idx)
+        durations.append(float(row["duration"]))  # Ensure float dtype
+        rankings.append(int(row["ranking_in_day"]))
+        joint_activities.append(int(row["joint_activity"]) if pd.notna(row["joint_activity"]) else 0)  # Convert to float
+
+    # **Debug: Check if any edges were added**
+    if len(src) == 0:
+        print("🚨 No person → purpose edges were successfully added!")
 
     # Convert lists to PyTorch tensors
     edge_index_new = torch.tensor([src, dst], dtype=torch.long)
-    durations_new = torch.tensor(durations, dtype=torch.float)
+    durations_new = torch.tensor(durations, dtype=torch.float32)
     rankings_new = torch.tensor(rankings, dtype=torch.long)
     joint_activities_new = torch.tensor(joint_activities, dtype=torch.long)
 
+    # Ensure edge attributes exist
+    # if ("person", "performs", "purpose") not in data.edge_types:
+    #     data["person", "performs", "purpose"].edge_index = torch.zeros((2, 0), dtype=torch.long)
+    #     data["person", "performs", "purpose"].duration = torch.zeros((0,), dtype=torch.float32)
+    #     data["person", "performs", "purpose"].ranking = torch.zeros((0,), dtype=torch.float32)
+    #     data["person", "performs", "purpose"].joint_activity = torch.zeros((0,), dtype=torch.float32)
+
     # Concatenate new data with existing attributes
-    data["person", "performs", "purpose"].edge_index = torch.cat([data["person", "performs", "purpose"].edge_index, edge_index_new], dim=1)
-    data["person", "performs", "purpose"].duration = torch.cat([data["person", "performs", "purpose"].duration, durations_new])
-    data["person", "performs", "purpose"].ranking = torch.cat([data["person", "performs", "purpose"].ranking, rankings_new])
-    data["person", "performs", "purpose"].joint_activity = torch.cat([data["person", "performs", "purpose"].joint_activity, joint_activities_new])
+    data["person", "performs", "purpose"].edge_index = torch.cat(
+        [data["person", "performs", "purpose"].edge_index, edge_index_new], dim=1
+    )
+    data["person", "performs", "purpose"].duration = torch.cat(
+        [data["person", "performs", "purpose"].duration, durations_new]
+    )
+    data["person", "performs", "purpose"].ranking = torch.cat(
+        [data["person", "performs", "purpose"].ranking, rankings_new]
+    )
+    data["person", "performs", "purpose"].joint_activity = torch.cat(
+        [data["person", "performs", "purpose"].joint_activity, joint_activities_new]
+    )
 
     return data
