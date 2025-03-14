@@ -4,7 +4,7 @@ from torch_geometric.data import HeteroData
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-def construct_starting_graph_pyg(zones_df, purposes_df, sample_households_df, sample_people_df, od_matrix_df):
+def construct_starting_graph_pyg(zones_df, purposes_df, sample_households_df, sample_people_df, od_matrix_df, relationship_mapping):
     data = HeteroData()
 
     # ID Mapping
@@ -33,7 +33,9 @@ def construct_starting_graph_pyg(zones_df, purposes_df, sample_households_df, sa
     # Zone-Zone (OD) Edges
     src_zone = [zone_id_map[row["origin"]] for _, row in od_matrix_df.iterrows()]
     dst_zone = [zone_id_map[row["destination"]] for _, row in od_matrix_df.iterrows()]
-    data["zone", "connects", "zone"].edge_index = torch.tensor([src_zone + dst_zone, dst_zone + src_zone], dtype=torch.long)
+    data["zone", "connects", "zone"].edge_index = torch.tensor([src_zone, dst_zone], dtype=torch.long)
+    data["zone", "connects", "zone"].distance_km = torch.tensor(od_matrix_df["distance_km"].values, dtype=torch.float)
+    data["zone", "connects", "zone"].travel_time_min = torch.tensor(od_matrix_df["travel_time_min"].values, dtype=torch.float)
 
     # Zone -> Household
     data["zone", "has_household", "household"].edge_index = torch.tensor([
@@ -64,13 +66,16 @@ def construct_starting_graph_pyg(zones_df, purposes_df, sample_households_df, sa
             dst_person.append(person_id_map[person["person_id"]])
 
     data["purpose", "attracts", "person"].edge_index = torch.tensor([src_purpose, dst_person], dtype=torch.long)
+    data["purpose", "attracts", "person"].duration = torch.zeros((len(src_purpose),), dtype=torch.float32)
+    data["purpose", "attracts", "person"].ranking = torch.zeros((len(src_purpose),), dtype=torch.long)
+    data["purpose", "attracts", "person"].joint_activity = torch.zeros((len(src_purpose),), dtype=torch.long)
 
     # Person-Person Relationships
     relationships = sample_people_df.set_index('person_id')['role_in_household'].to_dict()
     household_groups = sample_people_df.groupby("household_id")["person_id"].apply(list).to_dict()
 
-    rel_src, rel_dst = {rel: [] for rel in ["Parent", "Child", "Spouse", "Housemate", "Sibling"]}, \
-                       {rel: [] for rel in ["Parent", "Child", "Spouse", "Housemate", "Sibling"]}
+    rel_src, rel_dst = {rel: [] for rel in relationship_mapping.keys()}, \
+                       {rel: [] for rel in relationship_mapping.keys()}
 
     for members in household_groups.values():
         for src_person in members:
@@ -127,10 +132,20 @@ def construct_starting_graph_pyg(zones_df, purposes_df, sample_households_df, sa
                     rel_src["Spouse"].append(person_id_map[src_person])
                     rel_dst["Spouse"].append(person_id_map[dst_person])
 
+    first_run = True
     for rel, src_nodes in rel_src.items():
         if src_nodes:  # If there are any edges of this type
-            data["person", rel.lower(), "person"].edge_index = torch.tensor(
-                [src_nodes, rel_dst[rel]], dtype=torch.long)
+            target_edges = torch.tensor([src_nodes, rel_dst[rel]], dtype=torch.long)
+            target_rela = torch.tensor([relationship_mapping[rel]] * len(src_nodes), dtype=torch.long)
+            if first_run:
+                data["person", "relate", "person"].edge_index = target_edges
+                data["person", "relate", "person"].relationship = target_rela
+                first_run = False
+            else:
+                data["person", "relate", "person"].edge_index = torch.cat(
+                    [data["person", "relate", "person"].edge_index, target_edges], dim=1)
+                data["person", "relate", "person"].relationship = torch.cat(
+                    [data["person", "relate", "person"].relationship, target_rela], dim=0)
 
     return data
 
