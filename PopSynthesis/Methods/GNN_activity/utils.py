@@ -253,22 +253,27 @@ def add_travel_diaries_to_graph(data, travel_diaries_df, person_id_map, purpose_
     """
     src, dst, durations, rankings, joint_activities = [], [], [], [], []
 
-    for _, row in travel_diaries_df.iterrows():
-        person = person_id_map[row["person_id"]]
-        zone = row["zone_id"]
-        purpose = row["purpose"]
-        purpose_id = f"P_{zone}_{purpose}"
-        purpose = purpose_id_map.get(purpose_id)
+    for person_id, person_activities in travel_diaries_df.groupby("person_id"):
+        person = person_id_map[person_id]
 
-        if purpose is None:
-            print(f"🚨 Purpose {purpose_id} not found in purpose_id_map!")
-            continue
+        # Sort each person's activities by ranking
+        person_activities_sorted = person_activities.sort_values("ranking_in_day")
 
-        src.append(person)
-        dst.append(purpose)
-        durations.append(row["duration"])
-        rankings.append(row["ranking_in_day"])
-        joint_activities.append(1 if row["joint_activity"] else 0)
+        for _, row in person_activities_sorted.iterrows():
+            zone = row["zone_id"]
+            purpose = row["purpose"]
+            purpose_id = f"P_{zone}_{purpose}"
+            purpose_idx = purpose_id_map.get(purpose_id)
+
+            if purpose_idx is None:
+                print(f"🚨 Purpose {purpose_id} not found in purpose_id_map!")
+                continue
+
+            src.append(person)
+            dst.append(purpose_idx)
+            durations.append(row["duration"])
+            rankings.append(row["ranking_in_day"])
+            joint_activities.append(1 if row["joint_activity"] else 0)
 
     if len(src) == 0:
         print("🚨 No person → purpose edges found in travel diaries!")
@@ -277,14 +282,6 @@ def add_travel_diaries_to_graph(data, travel_diaries_df, person_id_map, purpose_
         data["person", "performs", "purpose"].ranking = torch.zeros((0,), dtype=torch.long)
         data["person", "performs", "purpose"].joint_activity = torch.zeros((0,), dtype=torch.long)
         return data
-
-    # Sort by rankings
-    sorted_indices = sorted(range(len(rankings)), key=lambda i: rankings[i])
-    src = [src[i] for i in sorted_indices]
-    dst = [dst[i] for i in sorted_indices]
-    durations = [durations[i] for i in sorted_indices]
-    rankings = [rankings[i] for i in sorted_indices]
-    joint_activities = [joint_activities[i] for i in sorted_indices]
 
     data["person", "performs", "purpose"].edge_index = torch.tensor([src, dst], dtype=torch.long)
     data["person", "performs", "purpose"].duration = torch.tensor(durations, dtype=torch.float32)
