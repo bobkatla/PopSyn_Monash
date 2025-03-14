@@ -112,13 +112,9 @@ def save_graphs(graph, output_dir="./", output_name="graph", output_type="torch"
         save_edges_to_csv(graph, f"{output_dir}/{output_name}.csv")
 
 def construct_starting_graph_pyg(zones_df, purposes_df, sample_households_df, sample_people_df, od_matrix_df):
-    """
-    Constructs the initial PyTorch Geometric HeteroData graph with nodes and static edges.
-    All persons start at home (connected to their home-purpose with duration=None).
-    """
     data = HeteroData()
 
-    # Map real-world IDs to graph indices
+    # ID Mapping
     zone_id_map = {zone_id: i for i, zone_id in enumerate(zones_df["zone_id"])}
     purpose_id_map = {p_id: i for i, p_id in enumerate(purposes_df["purpose_id"])}
     household_id_map = {hh_id: i for i, hh_id in enumerate(sample_households_df["household_id"])}
@@ -126,139 +122,173 @@ def construct_starting_graph_pyg(zones_df, purposes_df, sample_households_df, sa
 
     # Add Zone Nodes
     data["zone"].x = torch.arange(len(zones_df), dtype=torch.float).view(-1, 1)
-
-    # Add Purpose Nodes (with attractiveness score)
+    # Add Purpose Nodes
     data["purpose"].x = torch.tensor(purposes_df["attractiveness_score"].values, dtype=torch.float).view(-1, 1)
-
     # Add Household Nodes
     data["household"].x = torch.tensor(sample_households_df[["household_income", "household_size"]].values, dtype=torch.float)
 
-    # Add Person Nodes
-    data["person"].x = torch.tensor(sample_people_df[["age"]].values, dtype=torch.float).view(-1, 1)
+    # Define employment status encoding (only 'Employed' and 'Student')
+    employment_status_mapping = {'Employed': 0, 'Student': 1}
+    # Encode employment status as numeric
+    sample_people_df['employment_status_encoded'] = sample_people_df['employment_status'].map(employment_status_mapping)
+    # Add Person Nodes (features: age and employment_status)
+    data["person"].x = torch.tensor(
+        sample_people_df[["age", "employment_status_encoded"]].values,
+        dtype=torch.float
+    )
 
-    # Define Zone-Zone Edges (OD Matrix)
-    src, dst = [], []
-    for _, row in od_matrix_df.iterrows():
-        src.append(zone_id_map[row["origin"]])
-        dst.append(zone_id_map[row["destination"]])
-    data["zone", "travel", "zone"].edge_index = torch.tensor([src, dst], dtype=torch.long)
+    # Zone-Zone (OD) Edges
+    data["zone", "travel", "zone"].edge_index = torch.tensor([
+        [zone_id_map[row["origin"]] for _, row in od_matrix_df.iterrows()],
+        [zone_id_map[row["destination"]] for _, row in od_matrix_df.iterrows()]
+    ], dtype=torch.long)
 
-    # Define Zone-Purpose Edges
-    src, dst = [], []
-    for _, row in purposes_df.iterrows():
-        src.append(zone_id_map[row["zone_id"]])
-        dst.append(purpose_id_map[row["purpose_id"]])
-    data["zone", "has_purpose", "purpose"].edge_index = torch.tensor([src, dst], dtype=torch.long)
+    # Zone-Purpose Edges
+    data["zone", "has_purpose", "purpose"].edge_index = torch.tensor([
+        [zone_id_map[row["zone_id"]] for _, row in purposes_df.iterrows()],
+        [purpose_id_map[row["purpose_id"]] for _, row in purposes_df.iterrows()]
+    ], dtype=torch.long)
 
-    # Define Household-Zone Edges
-    src, dst = [], []
-    for _, row in sample_households_df.iterrows():
-        src.append(household_id_map[row["household_id"]])
-        dst.append(zone_id_map[row["zone_id"]])
-    data["household", "located_in", "zone"].edge_index = torch.tensor([src, dst], dtype=torch.long)
+    # Household-Zone Edges
+    data["household", "located_in", "zone"].edge_index = torch.tensor([
+        [household_id_map[row["household_id"]] for _, row in sample_households_df.iterrows()],
+        [zone_id_map[row["zone_id"]] for _, row in sample_households_df.iterrows()]
+    ], dtype=torch.long)
 
-    # Define Person-Household Edges
-    src, dst = [], []
-    for _, row in sample_people_df.iterrows():
-        src.append(person_id_map[row["person_id"]])
-        dst.append(household_id_map[row["household_id"]])
-    data["person", "belongs_to", "household"].edge_index = torch.tensor([src, dst], dtype=torch.long)
+    # Person-Household Edges
+    data["person", "belongs_to", "household"].edge_index = torch.tensor([
+        [person_id_map[row["person_id"]] for _, row in sample_people_df.iterrows()],
+        [household_id_map[row["household_id"]] for _, row in sample_people_df.iterrows()]
+    ], dtype=torch.long)
 
-    # Define Person-Person Edges (Household relationships)
-    src, dst = [], []
-    household_members = sample_people_df.groupby("household_id")["person_id"].apply(list).to_dict()
-    for members in household_members.values():
-        for i in range(len(members)):
-            for j in range(i + 1, len(members)):
-                src.append(person_id_map[members[i]])
-                dst.append(person_id_map[members[j]])
-                src.append(person_id_map[members[j]])
-                dst.append(person_id_map[members[i]])  # Bidirectional
-    data["person", "related_to", "person"].edge_index = torch.tensor([src, dst], dtype=torch.long)
+    # Person-Person Relationship Edges
+    relationships = sample_people_df.set_index('person_id')['role_in_household'].to_dict()
+    household_groups = sample_people_df.groupby("household_id")["person_id"].apply(list).to_dict()
 
-    # Define Person-Purpose Initial Edges (All Persons Start at Home)
-    src, dst, durations, rankings, joint_activities = [], [], [], [], []
-    for _, row in sample_people_df.iterrows():
-        household_zone = sample_households_df[sample_households_df["household_id"] == row["household_id"]]["zone_id"].values[0]
-        home_purpose = f"P_{household_zone}_Residential"
-        if home_purpose in purpose_id_map:
-            src.append(person_id_map[row["person_id"]])
-            dst.append(purpose_id_map[home_purpose])
-            durations.append(0)  # Start duration as 0 (to be updated later)
-            rankings.append(1)  # First activity of the day
-            joint_activities.append(0)  # Home activities are solo
+    rel_src, rel_dst = {rel: [] for rel in ["Main", "Spouse", "Child", "Parent", "Housemate", "Sibling"]}, \
+                       {rel: [] for rel in ["Main", "Spouse", "Child", "Parent", "Housemate", "Sibling"]}
 
-    # Store edge attributes properly initialized as PyTorch tensors
+    for members in household_groups.values():
+        for src_person in members:
+            for dst_person in members:
+                if src_person == dst_person:
+                    continue
+                src_rel = relationships[src_person]
+                dst_rel = relationships[dst_person]
+
+                # Define edge directions and labels
+                if src_rel == "Main" and dst_rel == "Spouse":
+                    rel_src["Spouse"].append(person_id_map[src_person])
+                    rel_dst["Spouse"].append(person_id_map[dst_person])
+                elif src_rel == "Spouse" and dst_rel == "Main":
+                    rel_src["Spouse"].append(person_id_map[src_person])
+                    rel_dst["Spouse"].append(person_id_map[dst_person])
+                elif src_rel == "Main" and dst_rel == "Child":
+                    rel_src["Parent"].append(person_id_map[src_person])
+                    rel_dst["Parent"].append(person_id_map[dst_person])
+                elif src_rel == "Spouse" and dst_rel == "Child":
+                    rel_src["Parent"].append(person_id_map[src_person])
+                    rel_dst["Parent"].append(person_id_map[dst_person])
+                elif src_rel == "Child" and dst_rel == "Main":
+                    rel_src["Child"].append(person_id_map[src_person])
+                    rel_dst["Child"].append(person_id_map[dst_person])
+                elif src_rel == "Child" and dst_rel == "Spouse":
+                    rel_src["Child"].append(person_id_map[src_person])
+                    rel_dst["Child"].append(person_id_map[dst_person])
+                elif src_rel == "Housemate" and dst_rel == "Housemate":
+                    rel_src["Housemate"].append(person_id_map[src_person])
+                    rel_dst["Housemate"].append(person_id_map[dst_person])
+                elif src_rel == "Main" and dst_rel == "Housemate":
+                    rel_src["Housemate"].append(person_id_map[src_person])
+                    rel_dst["Housemate"].append(person_id_map[dst_person])
+                elif src_rel == "Housemate" and dst_rel == "Main":
+                    rel_src["Housemate"].append(person_id_map[src_person])
+                    rel_dst["Housemate"].append(person_id_map[dst_person])
+                elif src_rel == "Spouse" and dst_rel == "Housemate":
+                    rel_src["Housemate"].append(person_id_map[src_person])
+                    rel_dst["Housemate"].append(person_id_map[dst_person])
+                elif src_rel == "Housemate" and dst_rel == "Spouse":
+                    rel_src["Housemate"].append(person_id_map[src_person])
+                    rel_dst["Housemate"].append(person_id_map[dst_person])
+                elif src_rel == "Child" and dst_rel == "Housemate":
+                    rel_src["Housemate"].append(person_id_map[src_person])
+                    rel_dst["Housemate"].append(person_id_map[dst_person])
+                elif src_rel == "Housemate" and dst_rel == "Child":
+                    rel_src["Housemate"].append(person_id_map[src_person])
+                    rel_dst["Housemate"].append(person_id_map[dst_person])
+                elif src_rel == "Child" and dst_rel == "Child":
+                    rel_src["Sibling"].append(person_id_map[src_person])
+                    rel_dst["Sibling"].append(person_id_map[dst_person])
+                elif src_rel == "Spouse" and dst_rel == "Spouse":
+                    rel_src["Spouse"].append(person_id_map[src_person])
+                    rel_dst["Spouse"].append(person_id_map[dst_person])
+
+    for rel, src_nodes in rel_src.items():
+        if src_nodes:  # If there are any edges of this type
+            data["person", rel.lower(), "person"].edge_index = torch.tensor(
+                [src_nodes, rel_dst[rel]], dtype=torch.long)
+
+    # Initial Person-Purpose Edges (Starting at Home)
+    src, dst, duration, joint_activity = [], [], [], []
+    for _, person in sample_people_df.iterrows():
+        hh_zone = sample_households_df.loc[sample_households_df["household_id"] == person["household_id"], "zone_id"].values[0]
+        home_purpose_id = f"P_{hh_zone}_Residential"
+
+        if home_purpose_id in purpose_id_map:
+            src.append(person_id_map[person["person_id"]])
+            dst.append(purpose_id_map[home_purpose_id])
+            duration.append(0.0)
+            joint_activity.append(0)
+
     data["person", "performs", "purpose"].edge_index = torch.tensor([src, dst], dtype=torch.long)
-    data["person", "performs", "purpose"].duration = torch.tensor(durations, dtype=torch.float)
-    data["person", "performs", "purpose"].ranking = torch.tensor(rankings, dtype=torch.long)
-    data["person", "performs", "purpose"].joint_activity = torch.tensor(joint_activities, dtype=torch.long)
+    data["person", "performs", "purpose"].duration = torch.tensor(duration, dtype=torch.float)
+    data["person", "performs", "purpose"].joint_activity = torch.tensor(joint_activity, dtype=torch.long)
 
     return data
 
 def add_travel_diaries_to_graph(data, travel_diaries_df, person_id_map, purpose_id_map):
     """
-    Adds travel diaries as edges to the graph, filling in duration, ranking, and joint activity.
-    Ensures all attributes are correctly formatted as PyTorch tensors.
+    Adds person → purpose edges based on travel diaries, with attributes for duration, ranking, and joint activity.
+    All activities start from midnight and duration is given in minutes.
     """
     src, dst, durations, rankings, joint_activities = [], [], [], [], []
 
     for _, row in travel_diaries_df.iterrows():
-        person_id = row["person_id"]
-        zone_id = row["zone_id"]
-        purpose_name = row["purpose"]
+        person = person_id_map[row["person_id"]]
+        zone = row["zone_id"]
+        purpose = row["purpose"]
+        purpose_id = f"P_{zone}_{purpose}"
+        purpose = purpose_id_map.get(purpose_id)
 
-        # Debug: Check if person exists in mapping
-        if person_id not in person_id_map:
-            print(f"🚨 Person ID {person_id} not found in person_id_map!")
+        if purpose is None:
+            print(f"🚨 Purpose {purpose_id} not found in purpose_id_map!")
             continue
 
-        # Debug: Check if purpose exists in mapping
-        purpose_key = f"P_{zone_id}_{purpose_name}"
-        if purpose_key not in purpose_id_map:
-            print(f"🚨 Purpose {purpose_key} not found in purpose_id_map!")
-            continue
+        src.append(person)
+        dst.append(purpose)
+        durations.append(row["duration"])
+        rankings.append(row["ranking_in_day"])
+        joint_activities.append(1 if row["joint_activity"] else 0)
 
-        # Convert IDs to graph indices
-        person_idx = person_id_map[person_id]
-        purpose_idx = purpose_id_map[purpose_key]
-
-        # Append new edge with attributes
-        src.append(person_idx)
-        dst.append(purpose_idx)
-        durations.append(float(row["duration"]))  # Ensure float dtype
-        rankings.append(int(row["ranking_in_day"]))
-        joint_activities.append(int(row["joint_activity"]) if pd.notna(row["joint_activity"]) else 0)  # Convert to float
-
-    # **Debug: Check if any edges were added**
     if len(src) == 0:
-        print("🚨 No person → purpose edges were successfully added!")
+        print("🚨 No person → purpose edges found in travel diaries!")
+        data["person", "performs", "purpose"].edge_index = torch.zeros((2, 0), dtype=torch.long)
+        data["person", "performs", "purpose"].duration = torch.zeros((0,), dtype=torch.float32)
+        data["person", "performs", "purpose"].ranking = torch.zeros((0,), dtype=torch.long)
+        data["person", "performs", "purpose"].joint_activity = torch.zeros((0,), dtype=torch.long)
+        return data
 
-    # Convert lists to PyTorch tensors
-    edge_index_new = torch.tensor([src, dst], dtype=torch.long)
-    durations_new = torch.tensor(durations, dtype=torch.float32)
-    rankings_new = torch.tensor(rankings, dtype=torch.long)
-    joint_activities_new = torch.tensor(joint_activities, dtype=torch.long)
+    # Sort by rankings
+    sorted_indices = sorted(range(len(rankings)), key=lambda i: rankings[i])
+    src = [src[i] for i in sorted_indices]
+    dst = [dst[i] for i in sorted_indices]
+    durations = [durations[i] for i in sorted_indices]
+    rankings = [rankings[i] for i in sorted_indices]
+    joint_activities = [joint_activities[i] for i in sorted_indices]
 
-    # Ensure edge attributes exist
-    # if ("person", "performs", "purpose") not in data.edge_types:
-    #     data["person", "performs", "purpose"].edge_index = torch.zeros((2, 0), dtype=torch.long)
-    #     data["person", "performs", "purpose"].duration = torch.zeros((0,), dtype=torch.float32)
-    #     data["person", "performs", "purpose"].ranking = torch.zeros((0,), dtype=torch.float32)
-    #     data["person", "performs", "purpose"].joint_activity = torch.zeros((0,), dtype=torch.float32)
-
-    # Concatenate new data with existing attributes
-    data["person", "performs", "purpose"].edge_index = torch.cat(
-        [data["person", "performs", "purpose"].edge_index, edge_index_new], dim=1
-    )
-    data["person", "performs", "purpose"].duration = torch.cat(
-        [data["person", "performs", "purpose"].duration, durations_new]
-    )
-    data["person", "performs", "purpose"].ranking = torch.cat(
-        [data["person", "performs", "purpose"].ranking, rankings_new]
-    )
-    data["person", "performs", "purpose"].joint_activity = torch.cat(
-        [data["person", "performs", "purpose"].joint_activity, joint_activities_new]
-    )
+    data["person", "performs", "purpose"].edge_index = torch.tensor([src, dst], dtype=torch.long)
+    data["person", "performs", "purpose"].duration = torch.tensor(durations, dtype=torch.float32)
+    data["person", "performs", "purpose"].ranking = torch.tensor(rankings, dtype=torch.long)
+    data["person", "performs", "purpose"].joint_activity = torch.tensor(joint_activities, dtype=torch.long)
 
     return data
