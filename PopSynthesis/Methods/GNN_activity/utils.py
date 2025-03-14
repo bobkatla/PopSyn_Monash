@@ -9,6 +9,7 @@ def visualize_pyg_graph_with_zones(data, sample_people_df, sample_households_df,
     """
     Creates an interactive PyVis visualization from a PyG HeteroData graph.
     It maps PyG node indices to real-world names (P1, H2, Work_Z3, Z1) for better readability.
+    Displays additional edge attributes clearly.
     """
     net = Network(notebook=True, height="800px", width="100%", directed=True)
     
@@ -24,10 +25,10 @@ def visualize_pyg_graph_with_zones(data, sample_people_df, sample_households_df,
     person_id_map = {i: p_id for i, p_id in enumerate(sample_people_df["person_id"])}
     household_id_map = {i: h_id for i, h_id in enumerate(sample_households_df["household_id"])}
     purpose_id_map = {i: purpose_id for i, purpose_id in enumerate(purposes_df["purpose_id"])}
-    zone_id_map = {i: row["zone_id"] for i, row in zones_df.iterrows()}  # Fixing Zone Names
+    zone_id_map = {i: row["zone_id"] for i, row in zones_df.iterrows()}  # Zone mapping
 
     def get_node_name(node_type, index):
-        """ Maps a PyG node index to its real-world ID for visualization. """
+        """Maps a PyG node index to its real-world ID for visualization."""
         if node_type == "person":
             return person_id_map.get(index, f"Person_{index}")
         elif node_type == "household":
@@ -35,7 +36,7 @@ def visualize_pyg_graph_with_zones(data, sample_people_df, sample_households_df,
         elif node_type == "purpose":
             return purpose_id_map.get(index, f"Purpose_{index}")
         elif node_type == "zone":
-            return zone_id_map.get(index, f"Zone_{index}")  # Ensure correct zone names
+            return zone_id_map.get(index, f"Zone_{index}")
         return f"{node_type}_{index}"
 
     # Store added nodes to avoid duplicates
@@ -49,20 +50,33 @@ def visualize_pyg_graph_with_zones(data, sample_people_df, sample_households_df,
             net.add_node(node_id, label=node_id, color=color_map.get(node_type, "gray"), title=node_type)
             added_nodes.add(node_id)
 
-    # Add edges with readable node names
+    # Add edges with readable node names and attributes clearly displayed
     for edge_type in data.edge_types:
         src_type, relation, dst_type = edge_type
         edge_index = data[edge_type].edge_index.numpy()
 
-        for src, dst in zip(edge_index[0], edge_index[1]):
+        # Fetch additional edge attributes if available
+        duration = data[edge_type].get("duration")
+        ranking = data[edge_type].get("ranking")
+        joint_activity = data[edge_type].get("joint_activity")
+
+        for idx, (src, dst) in enumerate(zip(edge_index[0], edge_index[1])):
             src_id = get_node_name(src_type, src)
             dst_id = get_node_name(dst_type, dst)
 
-            if src_id in added_nodes and dst_id in added_nodes:
-                net.add_edge(src_id, dst_id, title=relation, width=1)
+            title_parts = [relation]
 
-    # Enable physics for better layout
-    net.toggle_physics(True)
+            # Add extra details specifically for purpose → person edges
+            if edge_type == ("purpose", "attracts", "person"):
+                if duration is not None and ranking is not None and joint_activity is not None:
+                    title_parts.append(f"Duration: {duration[idx]:.1f} mins")
+                    title_parts.append(f"Ranking: {ranking[idx]}")
+                    title_parts.append(f"Joint Activity: {bool(joint_activity[idx])}")
+
+            edge_title = "<br>".join(title_parts)
+
+            if src_id in added_nodes and dst_id in added_nodes:
+                net.add_edge(src_id, dst_id, title=edge_title)
 
     return net
 
