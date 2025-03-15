@@ -83,7 +83,7 @@
           <mxGeometry y="80" width="620" height="30" as="geometry" />
         </mxCell>
         <mxCell id="qMUVeWqfAemtNZWCeS_H-2" value="Synthetic population" style="shape=card;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
-          <mxGeometry x="90" y="1120" width="80" height="100" as="geometry" />
+          <mxGeometry x="130" y="1120" width="80" height="100" as="geometry" />
         </mxCell>
         <mxCell id="qMUVeWqfAemtNZWCeS_H-41" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.875;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="qMUVeWqfAemtNZWCeS_H-3" target="qMUVeWqfAemtNZWCeS_H-38">
           <mxGeometry relative="1" as="geometry" />
@@ -110,13 +110,13 @@
           <mxGeometry x="838" y="1190" width="82" height="30" as="geometry" />
         </mxCell>
         <mxCell id="qMUVeWqfAemtNZWCeS_H-35" value="Final synthetic travel diaries" style="shape=card;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
-          <mxGeometry x="828" y="1300" width="80" height="100" as="geometry" />
+          <mxGeometry x="822.5" y="1280" width="80" height="100" as="geometry" />
         </mxCell>
         <mxCell id="qMUVeWqfAemtNZWCeS_H-39" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="qMUVeWqfAemtNZWCeS_H-36" target="qMUVeWqfAemtNZWCeS_H-38">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="qMUVeWqfAemtNZWCeS_H-36" value="Sampled travel diaries" style="shape=card;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
-          <mxGeometry x="180" y="940" width="80" height="100" as="geometry" />
+          <mxGeometry x="130" y="980" width="80" height="100" as="geometry" />
         </mxCell>
         <mxCell id="qMUVeWqfAemtNZWCeS_H-38" value="Trained TGNN" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="560" y="1130" width="120" height="80" as="geometry" />
