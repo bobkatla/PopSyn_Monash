@@ -1,99 +1,87 @@
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
-from torch_geometric.nn import HeteroConv, GATConv, Linear
+from torch.nn import Linear
+from torch_geometric.nn import TGNMemory, TransformerConv
+from torch_geometric.data import TemporalData
+from torch_geometric.loader import TemporalDataLoader
 
-class TravelGNN(torch.nn.Module):
-    def __init__(self, hidden_channels):
+def convert_to_temporal_data(data):
+    """
+    Converts PyG HeteroData to TemporalData for TGN training.
+    Includes all timestamped edges instead of only 'purpose -> person'.
+    """
+    src_list, dst_list, t_list, msg_list = [], [], [], []
+
+    # Purpose -> Person (Activity Data)
+    src_list.append(data["purpose", "attracts", "person"].edge_index[0])
+    dst_list.append(data["purpose", "attracts", "person"].edge_index[1])
+    t_list.append(data["purpose", "attracts", "person"].t)  # Fixed
+    msg_list.append(torch.cat([
+        data["purpose", "attracts", "person"].joint_activity.view(-1, 1),
+    ], dim=1))
+
+    # Person -> Person (Social Connections)
+    src_list.append(data["person", "relate", "person"].edge_index[0])
+    dst_list.append(data["person", "relate", "person"].edge_index[1])
+    t_list.append(data["person", "relate", "person"].t)  # Fixed
+    msg_list.append(data["person", "relate", "person"].relationship.view(-1, 1))
+
+    # Household -> Person (Household Structure)
+    src_list.append(data["household", "has_person", "person"].edge_index[0])
+    dst_list.append(data["household", "has_person", "person"].edge_index[1])
+    t_list.append(data["household", "has_person", "person"].t)  # Fixed
+    msg_list.append(torch.zeros((len(src_list[-1]), 1)))  # No extra feature, just connection
+
+    # Zone -> Household (Location Context)
+    src_list.append(data["zone", "has_household", "household"].edge_index[0])
+    dst_list.append(data["zone", "has_household", "household"].edge_index[1])
+    t_list.append(data["zone", "has_household", "household"].t)  # Fixed
+    msg_list.append(torch.zeros((len(src_list[-1]), 1)))  # No extra feature, just connection
+
+    # Zone -> Zone (Travel Paths)
+    src_list.append(data["zone", "connects", "zone"].edge_index[0])
+    dst_list.append(data["zone", "connects", "zone"].edge_index[1])
+    t_list.append(data["zone", "connects", "zone"].t)  # Fixed
+    msg_list.append(data["zone", "connects", "zone"].edge_attr[:, 0].view(-1, 1))  # Pick only `distance_km`
+
+    # Stack everything into TemporalData
+    src = torch.cat(src_list)
+    dst = torch.cat(dst_list)
+    t = torch.cat(t_list)
+    msg = torch.cat(msg_list)
+
+    return TemporalData(src=src, dst=dst, t=t, msg=msg)
+
+# === Graph Attention Embedding ===
+class GraphAttentionEmbedding(torch.nn.Module):
+    def __init__(self, in_channels, out_channels, msg_dim, time_enc):
         super().__init__()
-        self.conv1 = HeteroConv({
-            ('person', 'belongs_to', 'household'): GATConv((-1, -1), hidden_channels, add_self_loops=False),
-            ('household', 'located_in', 'zone'): GATConv((-1, -1), hidden_channels, add_self_loops=False),
-            ('zone', 'has_purpose', 'purpose'): GATConv((-1, -1), hidden_channels, add_self_loops=False),
-            ('person', 'performs', 'purpose'): GATConv((-1, -1), hidden_channels, add_self_loops=False),
-            ('person', 'parent', 'person'): GATConv((-1, -1), hidden_channels, add_self_loops=False),
-            ('person', 'child', 'person'): GATConv((-1, -1), hidden_channels, add_self_loops=False),
-            ('person', 'spouse', 'person'): GATConv((-1, -1), hidden_channels, add_self_loops=False),
-            ('person', 'housemate', 'person'): GATConv((-1, -1), hidden_channels, add_self_loops=False),
-            ('person', 'sibling', 'person'): GATConv((-1, -1), hidden_channels, add_self_loops=False),
-        }, aggr='sum')
+        self.time_enc = time_enc
+        edge_dim = msg_dim + time_enc.out_channels
+        self.conv = TransformerConv(in_channels, out_channels // 2, heads=2,
+                                    dropout=0.1, edge_dim=edge_dim)
 
-        # Output heads
-        self.edge_classifier = Linear(hidden_channels, 1)
-        self.duration_regressor = Linear(hidden_channels, 1)
-        self.joint_classifier = Linear(hidden_channels, 1)
-
-    def forward(self, x_dict, edge_index_dict):
-        embeddings = self.conv1(x_dict, edge_index_dict)
-        embeddings = {k: F.relu(v) for k, v in embeddings.items()}
-        return embeddings
-
-    def predict_edges(self, person_emb, purpose_emb):
-        combined = person_emb * purpose_emb
-        return self.edge_classifier(combined).view(-1)
-
-    def predict_duration(self, person_emb, purpose_emb):
-        combined = person_emb * purpose_emb
-        return self.duration_regressor(combined).view(-1)
-
-    def predict_joint(self, person_emb, purpose_emb):
-        combined = person_emb * purpose_emb
-        return self.joint_classifier(combined).view(-1)
+    def forward(self, x, last_update, edge_index, t, msg):
+        rel_t = last_update[edge_index[0]] - t  # Relative time encoding
+        rel_t_enc = self.time_enc(rel_t.to(x.dtype))
+        edge_attr = torch.cat([rel_t_enc, msg], dim=-1)
+        return self.conv(x, edge_index, edge_attr)
 
 
-def train_model(model, data, epochs=50, lr=0.005, max_duration=1440):
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+# === Link Predictor (Activity Prediction) ===
+class LinkPredictor(torch.nn.Module):
+    def __init__(self, in_channels):
+        super().__init__()
+        self.lin_src = Linear(in_channels, in_channels)
+        self.lin_dst = Linear(in_channels, in_channels)
+        self.lin_final = Linear(in_channels, 1)  # Binary classification for edge existence
+        self.lin_joint = Linear(in_channels, 1)  # Binary classification for joint activity
 
-    criterion_edge = torch.nn.BCEWithLogitsLoss()
-    criterion_duration = torch.nn.MSELoss()
-    criterion_joint = torch.nn.BCEWithLogitsLoss()
+    def forward(self, z_src, z_dst):
+        h = self.lin_src(z_src) + self.lin_dst(z_dst)
+        h = h.relu()
+        edge_pred = self.lin_final(h)  # Edge presence probability
+        joint_pred = self.lin_joint(h)  # Joint activity probability
+        return edge_pred, joint_pred
 
-    data = data.to('cpu')
-
-    for epoch in range(epochs):
-        model.train()
-        optimizer.zero_grad()
-
-        embeddings = model(data.x_dict, data.edge_index_dict)
-        person_emb = embeddings["person"]
-        purpose_emb = embeddings["purpose"]
-
-        # Positive edges
-        edge_index = data["person", "performs", "purpose"].edge_index
-        pos_person_emb = person_emb[edge_index[0]]
-        pos_purpose_emb = purpose_emb[edge_index[1]]
-
-        # Negative Sampling
-        num_neg = edge_index.size(1)
-        neg_person_idx = torch.randint(0, person_emb.size(0), (num_neg,))
-        neg_purpose_idx = torch.randint(0, purpose_emb.size(0), (num_neg,))
-        neg_person_emb = person_emb[neg_person_idx]
-        neg_purpose_emb = purpose_emb[neg_purpose_idx]
-
-        # Predictions
-        pos_edge_preds = model.predict_edges(pos_person_emb, pos_purpose_emb)
-        neg_edge_preds = model.predict_edges(neg_person_emb, neg_purpose_emb)
-
-        duration_preds = model.predict_duration(pos_person_emb, pos_purpose_emb)
-        joint_preds = model.predict_joint(pos_person_emb, pos_purpose_emb)
-
-        # Labels (normalized)
-        duration_labels = data["person", "performs", "purpose"].duration / max_duration
-        edge_labels = torch.cat([torch.ones_like(pos_edge_preds), torch.zeros_like(neg_edge_preds)])
-        edge_preds = torch.cat([pos_edge_preds, neg_edge_preds])
-
-        joint_labels = data["person", "performs", "purpose"].joint_activity.float()
-
-        # Losses
-        loss_edge = criterion_edge(edge_preds, edge_labels)
-        loss_duration = criterion_duration(duration_preds, duration_labels)
-        loss_joint = criterion_joint(joint_preds, joint_labels)
-
-        loss = loss_edge + loss_duration + loss_joint
-        loss.backward()
-        optimizer.step()
-
-        if epoch % 5 == 0 or epoch == epochs - 1:
-            print(f"Epoch {epoch}: Total Loss={loss.item():.4f}, "
-                  f"Edge={loss_edge.item():.4f}, Duration={loss_duration.item():.4f}, Joint={loss_joint.item():.4f}")
-
-    return model
