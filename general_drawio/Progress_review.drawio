@@ -42,13 +42,13 @@
           <mxGeometry width="620" height="27" as="geometry" />
         </mxCell>
         <mxCell id="DFPLayo4z6RkdoQgYkVW-64" value="90%" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;strokeColor=#10739e;overflow=hidden;fillColor=#b1ddf0;top=0;left=0;bottom=0;right=0;pointerEvents=1;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-63" vertex="1">
-          <mxGeometry width="600" height="27" as="geometry">
-            <mxRectangle width="600" height="27" as="alternateBounds" />
+          <mxGeometry width="580" height="27" as="geometry">
+            <mxRectangle width="580" height="27" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
         <mxCell id="DFPLayo4z6RkdoQgYkVW-65" value="" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;strokeColor=#36393d;overflow=hidden;fillColor=#eeeeee;top=0;left=0;bottom=0;right=0;pointerEvents=1;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-63" vertex="1">
-          <mxGeometry x="600" width="20" height="27" as="geometry">
-            <mxRectangle width="20" height="27" as="alternateBounds" />
+          <mxGeometry x="580" width="40" height="27" as="geometry">
+            <mxRectangle width="40" height="27" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
         <mxCell id="DFPLayo4z6RkdoQgYkVW-7" value="&lt;span style=&quot;background-color: rgb(185, 224, 165);&quot;&gt;Generated a connected population&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;whiteSpace=wrap;html=1;labelBackgroundColor=#FFE599;" parent="DFPLayo4z6RkdoQgYkVW-6" vertex="1">
