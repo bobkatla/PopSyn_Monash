@@ -192,32 +192,38 @@
         <mxCell id="f1CKNcfr52MyuDMSnoib-23" value="&lt;b&gt;&lt;i&gt;Research aim:&lt;/i&gt;&lt;/b&gt;&lt;div&gt;&lt;div style=&quot;font-size: 16px;&quot;&gt;&lt;i&gt;To develop a new approach to Population Synthesis and study the impact on activity generation&lt;/i&gt;&lt;/div&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;fontSize=16;fillColor=#b1ddf0;strokeColor=#10739e;" parent="1" vertex="1">
           <mxGeometry x="1455" y="60" width="370" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="f1CKNcfr52MyuDMSnoib-24" value="Task 1&lt;div&gt;Generating the synthetic population for 1 level&lt;/div&gt;" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="f1CKNcfr52MyuDMSnoib-24" value="Task 1&lt;div&gt;Generating the synthetic population for 1 level&lt;/div&gt;" style="whiteSpace=wrap;html=1;strokeColor=#FFB570;" parent="1" vertex="1">
           <mxGeometry x="1290" y="170" width="200" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="f1CKNcfr52MyuDMSnoib-25" value="Task 2&lt;div&gt;Connecting the synthetic households and persons&lt;/div&gt;" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="f1CKNcfr52MyuDMSnoib-25" value="Task 2&lt;div&gt;Connecting the synthetic households and persons&lt;/div&gt;" style="whiteSpace=wrap;html=1;strokeColor=#FFB570;" parent="1" vertex="1">
           <mxGeometry x="1540" y="170" width="200" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="f1CKNcfr52MyuDMSnoib-26" value="Task 3&lt;div&gt;Generating the household activities&lt;/div&gt;" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="f1CKNcfr52MyuDMSnoib-26" value="Task 3&lt;div&gt;Generating the household activities&lt;/div&gt;" style="whiteSpace=wrap;html=1;strokeColor=#FFB570;dashed=1;dashPattern=8 8;" parent="1" vertex="1">
           <mxGeometry x="1780" y="170" width="200" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="f1CKNcfr52MyuDMSnoib-28" value="Objective&lt;div&gt;Creating the synthetic agents for 1 level, addressing the existing issues in Population Synthesis such as zero-cells, scalability and emerging issues like explainability&lt;/div&gt;" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="f1CKNcfr52MyuDMSnoib-28" value="Objective&lt;div&gt;Creating the synthetic agents for 1 level, addressing the existing issues in Population Synthesis such as zero-cells, scalability and emerging issues like explainability&lt;/div&gt;" style="whiteSpace=wrap;html=1;strokeColor=#FFB570;" parent="1" vertex="1">
           <mxGeometry x="1290" y="230" width="200" height="96" as="geometry" />
         </mxCell>
-        <mxCell id="f1CKNcfr52MyuDMSnoib-29" value="Objective&lt;div&gt;Creating a fully connected population with both households and persons, focusing on the intra-household relationships&lt;/div&gt;" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="f1CKNcfr52MyuDMSnoib-29" value="Objective&lt;div&gt;Creating a fully connected population with both households and persons, focusing on the intra-household relationships&lt;/div&gt;" style="whiteSpace=wrap;html=1;strokeColor=#FFB570;" parent="1" vertex="1">
           <mxGeometry x="1540" y="230" width="200" height="96" as="geometry" />
         </mxCell>
-        <mxCell id="f1CKNcfr52MyuDMSnoib-30" value="Objective&lt;div&gt;From the synthetic population, creating the activities for a typical day, considering the household relationships and how it can impact joint activities&lt;/div&gt;" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="f1CKNcfr52MyuDMSnoib-30" value="Objective&lt;div&gt;From the synthetic population, creating the activities for a typical day, considering the household relationships and how it can impact joint activities&lt;/div&gt;" style="whiteSpace=wrap;html=1;strokeColor=#FFB570;dashed=1;dashPattern=8 8;" parent="1" vertex="1">
           <mxGeometry x="1780" y="230" width="200" height="96" as="geometry" />
         </mxCell>
-        <mxCell id="f1CKNcfr52MyuDMSnoib-31" value="Method&lt;div&gt;Integer Linear Programming with Machine Learning&lt;/div&gt;" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="f1CKNcfr52MyuDMSnoib-31" value="Method&lt;div&gt;Integer Linear Programming with Machine Learning&lt;/div&gt;" style="whiteSpace=wrap;html=1;strokeColor=#FFB570;" parent="1" vertex="1">
           <mxGeometry x="1290" y="326" width="200" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="f1CKNcfr52MyuDMSnoib-32" value="Method&lt;div&gt;Optimisation with Machine Learning&lt;/div&gt;" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="f1CKNcfr52MyuDMSnoib-32" value="Method&lt;div&gt;Optimisation with Machine Learning&lt;/div&gt;" style="whiteSpace=wrap;html=1;strokeColor=#FFB570;" parent="1" vertex="1">
           <mxGeometry x="1540" y="326" width="200" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="f1CKNcfr52MyuDMSnoib-33" value="Method&lt;div&gt;Spatial-temporal Graph Neural &amp;nbsp;Network&amp;nbsp;&lt;/div&gt;" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="f1CKNcfr52MyuDMSnoib-33" value="Method&lt;div&gt;Spatial-temporal Graph Neural &amp;nbsp;Network&amp;nbsp;&lt;/div&gt;" style="whiteSpace=wrap;html=1;strokeColor=#FFB570;dashed=1;dashPattern=8 8;" parent="1" vertex="1">
           <mxGeometry x="1780" y="326" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="K3fAHh4nDUrQpHDgAhwH-11" value="Finish before the progress review" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FFB570;" vertex="1" parent="1">
+          <mxGeometry x="1880" y="50" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="K3fAHh4nDUrQpHDgAhwH-12" value="Finish after the progress review" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FFB570;dashed=1;dashPattern=8 8;" vertex="1" parent="1">
+          <mxGeometry x="1880" y="100" width="100" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
