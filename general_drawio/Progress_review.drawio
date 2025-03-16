@@ -162,8 +162,17 @@
         <mxCell id="f1CKNcfr52MyuDMSnoib-11" value="Chapter 6. Discussion and conclusion" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="1700" y="1290" width="440" height="50" as="geometry" />
         </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-34" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=12;startSize=8;endSize=8;" edge="1" parent="1" source="f1CKNcfr52MyuDMSnoib-23" target="f1CKNcfr52MyuDMSnoib-24">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-36" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=12;startSize=8;endSize=8;" edge="1" parent="1" source="f1CKNcfr52MyuDMSnoib-23" target="f1CKNcfr52MyuDMSnoib-25">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-37" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=12;startSize=8;endSize=8;" edge="1" parent="1" source="f1CKNcfr52MyuDMSnoib-23" target="f1CKNcfr52MyuDMSnoib-26">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="f1CKNcfr52MyuDMSnoib-23" value="&lt;b&gt;&lt;i&gt;Research aim:&lt;/i&gt;&lt;/b&gt;&lt;div&gt;&lt;div style=&quot;font-size: 16px;&quot;&gt;&lt;i&gt;To develop a new approach to Population Synthesis and study the impact on activity generation&lt;/i&gt;&lt;/div&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;fontSize=16;fillColor=#b1ddf0;strokeColor=#10739e;" vertex="1" parent="1">
-          <mxGeometry x="1290" y="90" width="690" height="60" as="geometry" />
+          <mxGeometry x="1455" y="60" width="370" height="60" as="geometry" />
         </mxCell>
         <mxCell id="f1CKNcfr52MyuDMSnoib-24" value="Task 1&lt;div&gt;Generating the synthetic population for 1 level&lt;/div&gt;" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="1290" y="170" width="200" height="60" as="geometry" />
