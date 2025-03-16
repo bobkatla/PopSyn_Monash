@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (iPhone; CPU iPhone OS 18_3_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.3 Mobile/15E148 Safari/604.1" version="26.1.1">
   <diagram name="Page-1" id="GcLynW6Bm_qK1KajZ2lx">
-    <mxGraphModel dx="890" dy="1350" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+    <mxGraphModel dx="1280" dy="2160" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -58,13 +58,29 @@
           <mxGeometry y="83" width="620" height="30" as="geometry" />
         </mxCell>
         <mxCell id="DFPLayo4z6RkdoQgYkVW-10" value="Task 3: Generating the household activities" style="swimlane;fontStyle=3;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;align=center;fontSize=16;" parent="1" vertex="1">
-          <mxGeometry x="160" y="560" width="620" height="86" as="geometry" />
+          <mxGeometry x="160" y="560" width="620" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-44" value="" style="shape=table;startSize=0;container=1;collapsible=0;childLayout=tableLayout;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-10" vertex="1">
+          <mxGeometry y="26" width="620" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-45" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;strokeColor=inherit;top=0;left=0;bottom=0;right=0;collapsible=0;dropTarget=0;fillColor=none;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-44" vertex="1">
+          <mxGeometry width="620" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-46" value="&lt;font style=&quot;font-size: 16px;&quot; face=&quot;Helvetica&quot;&gt;50%&lt;/font&gt;" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;strokeColor=#10739e;overflow=hidden;fillColor=#b1ddf0;top=0;left=0;bottom=0;right=0;pointerEvents=1;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-45" vertex="1">
+          <mxGeometry width="310" height="24" as="geometry">
+            <mxRectangle width="310" height="24" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-47" value="" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;strokeColor=#36393d;overflow=hidden;fillColor=#eeeeee;top=0;left=0;bottom=0;right=0;pointerEvents=1;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-45" vertex="1">
+          <mxGeometry x="310" width="310" height="24" as="geometry">
+            <mxRectangle width="310" height="24" as="alternateBounds" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="DFPLayo4z6RkdoQgYkVW-11" value="&lt;span style=&quot;background-color: rgb(185, 224, 165);&quot;&gt;Introducing a new methodology considering household activities - proof of concepts&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;whiteSpace=wrap;html=1;labelBackgroundColor=#FFE599;" parent="DFPLayo4z6RkdoQgYkVW-10" vertex="1">
-          <mxGeometry y="26" width="620" height="30" as="geometry" />
+          <mxGeometry y="50" width="620" height="30" as="geometry" />
         </mxCell>
         <mxCell id="DFPLayo4z6RkdoQgYkVW-12" value="&lt;span style=&quot;background-color: rgb(255, 229, 153);&quot;&gt;Applying the method to real-life case study&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;whiteSpace=wrap;html=1;labelBackgroundColor=#FF6666;" parent="DFPLayo4z6RkdoQgYkVW-10" vertex="1">
-          <mxGeometry y="56" width="620" height="30" as="geometry" />
+          <mxGeometry y="80" width="620" height="30" as="geometry" />
         </mxCell>
         <mxCell id="qMUVeWqfAemtNZWCeS_H-2" value="Synthetic population" style="shape=card;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
           <mxGeometry x="130" y="1120" width="80" height="100" as="geometry" />
@@ -110,22 +126,6 @@
         </mxCell>
         <mxCell id="qMUVeWqfAemtNZWCeS_H-42" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.16;entryY=0.55;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="qMUVeWqfAemtNZWCeS_H-38" target="qMUVeWqfAemtNZWCeS_H-32" edge="1">
           <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="DFPLayo4z6RkdoQgYkVW-44" value="" style="shape=table;startSize=0;container=1;collapsible=0;childLayout=tableLayout;fontSize=16;" parent="1" vertex="1">
-          <mxGeometry x="190" y="536" width="620" height="24" as="geometry" />
-        </mxCell>
-        <mxCell id="DFPLayo4z6RkdoQgYkVW-45" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;strokeColor=inherit;top=0;left=0;bottom=0;right=0;collapsible=0;dropTarget=0;fillColor=none;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-44" vertex="1">
-          <mxGeometry width="620" height="24" as="geometry" />
-        </mxCell>
-        <mxCell id="DFPLayo4z6RkdoQgYkVW-46" value="&lt;font style=&quot;font-size: 16px;&quot; face=&quot;Helvetica&quot;&gt;50%&lt;/font&gt;" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;strokeColor=#10739e;overflow=hidden;fillColor=#b1ddf0;top=0;left=0;bottom=0;right=0;pointerEvents=1;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-45" vertex="1">
-          <mxGeometry width="310" height="24" as="geometry">
-            <mxRectangle width="310" height="24" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="DFPLayo4z6RkdoQgYkVW-47" value="" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;strokeColor=#36393d;overflow=hidden;fillColor=#eeeeee;top=0;left=0;bottom=0;right=0;pointerEvents=1;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-45" vertex="1">
-          <mxGeometry x="310" width="310" height="24" as="geometry">
-            <mxRectangle width="310" height="24" as="alternateBounds" />
-          </mxGeometry>
         </mxCell>
         <mxCell id="f1CKNcfr52MyuDMSnoib-13" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8;" edge="1" parent="1" source="f1CKNcfr52MyuDMSnoib-2" target="f1CKNcfr52MyuDMSnoib-8">
           <mxGeometry relative="1" as="geometry" />
