@@ -16,9 +16,9 @@ import pandas as pd
 
 def run_main() -> None:
     pp_marg, pp_pool = get_pp_data()
-    # seed_data = pd.read_csv(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\IPSF\data\raw\hh_sample_ipu.csv")
-    # seed_data = seed_data.drop(columns=["serialno", "sample_geog"])
-    condensed_hh_pool = condense_df(pp_pool.astype(str))
+    seed_data = pd.read_csv(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\IPSF\data\raw\pp_sample_ipu.csv")
+    seed_data = seed_data.drop(columns=["serialno", "sample_geog"])
+    condensed_hh_pool = condense_df(seed_data.astype(str))
 
     start_time = time.time()
     # saa run
@@ -44,7 +44,7 @@ def run_main() -> None:
     print(f"Processing took {int(hours)}h-{int(minutes)}m-{seconds:.2f}s")
     print(f"Error pp rm are: {err_rm}")
 
-    output_file_name = "SAA_PP_test_simple.csv"
+    output_file_name = "SAA_PP_seed_test.csv"
     print(f"outputting to this file: {output_dir / output_file_name}")
     final_syn_hh.write_csv(output_dir / output_file_name)
 
