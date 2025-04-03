@@ -1,13 +1,31 @@
-<mxfile host="app.diagrams.net" modified="2024-04-13T08:47:46.953Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36" etag="Z7LBSZXjWOqwbEMUDq11" version="24.2.3" type="github">
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36" version="26.1.1">
   <diagram name="Page-1" id="GcLynW6Bm_qK1KajZ2lx">
-    <mxGraphModel dx="1134" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+    <mxGraphModel dx="1509" dy="785" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="DFPLayo4z6RkdoQgYkVW-1" value="&lt;b&gt;&lt;i&gt;Research aim:&lt;/i&gt;&lt;/b&gt;&lt;div&gt;&lt;br&gt;&lt;div style=&quot;font-size: 16px;&quot;&gt;&lt;i&gt;To develop a new approach to Population Synthesis and study the impact of emerging technology&lt;/i&gt;&lt;/div&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;fontSize=16;fillColor=#b1ddf0;strokeColor=#10739e;" parent="1" vertex="1">
+        <mxCell id="K3fAHh4nDUrQpHDgAhwH-10" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="1290" width="90" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="K3fAHh4nDUrQpHDgAhwH-9" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="990" width="430" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="K3fAHh4nDUrQpHDgAhwH-8" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="890" width="280" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="K3fAHh4nDUrQpHDgAhwH-5" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="2050" y="1160" width="160" height="81" as="geometry" />
+        </mxCell>
+        <mxCell id="K3fAHh4nDUrQpHDgAhwH-4" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="1110" width="160" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="K3fAHh4nDUrQpHDgAhwH-2" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="1630" y="1100" width="160" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-1" value="&lt;b&gt;&lt;i&gt;Research aim:&lt;/i&gt;&lt;/b&gt;&lt;div&gt;&lt;br&gt;&lt;div style=&quot;font-size: 16px;&quot;&gt;&lt;i&gt;To develop a new approach to Population Synthesis and study the impact on activity generation&lt;/i&gt;&lt;/div&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;fontSize=16;fillColor=#b1ddf0;strokeColor=#10739e;" parent="1" vertex="1">
           <mxGeometry x="10" y="300" width="130" height="370" as="geometry" />
         </mxCell>
-        <mxCell id="DFPLayo4z6RkdoQgYkVW-2" value="Task 1: Generating the population considering all 3 diversities" style="swimlane;fontStyle=3;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;align=center;fontSize=16;" parent="1" vertex="1">
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-2" value="Task 1: Generating the synthetic population for 1 level" style="swimlane;fontStyle=3;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;align=center;fontSize=16;" parent="1" vertex="1">
           <mxGeometry x="160" y="298" width="620" height="112" as="geometry" />
         </mxCell>
         <mxCell id="DFPLayo4z6RkdoQgYkVW-66" value="" style="shape=table;startSize=0;container=1;collapsible=0;childLayout=tableLayout;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-2" vertex="1">
@@ -16,23 +34,23 @@
         <mxCell id="DFPLayo4z6RkdoQgYkVW-67" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;strokeColor=inherit;top=0;left=0;bottom=0;right=0;collapsible=0;dropTarget=0;fillColor=none;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-66" vertex="1">
           <mxGeometry width="620" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="DFPLayo4z6RkdoQgYkVW-68" value="90%" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;strokeColor=#10739e;overflow=hidden;fillColor=#b1ddf0;top=0;left=0;bottom=0;right=0;pointerEvents=1;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-67" vertex="1">
-          <mxGeometry width="565" height="26" as="geometry">
-            <mxRectangle width="565" height="26" as="alternateBounds" />
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-68" value="95%" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;strokeColor=#10739e;overflow=hidden;fillColor=#b1ddf0;top=0;left=0;bottom=0;right=0;pointerEvents=1;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-67" vertex="1">
+          <mxGeometry width="600" height="26" as="geometry">
+            <mxRectangle width="600" height="26" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
         <mxCell id="DFPLayo4z6RkdoQgYkVW-69" value="" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;overflow=hidden;fillColor=#eeeeee;top=0;left=0;bottom=0;right=0;pointerEvents=1;fontSize=16;strokeColor=#36393d;" parent="DFPLayo4z6RkdoQgYkVW-67" vertex="1">
-          <mxGeometry x="565" width="55" height="26" as="geometry">
-            <mxRectangle width="55" height="26" as="alternateBounds" />
+          <mxGeometry x="600" width="20" height="26" as="geometry">
+            <mxRectangle width="20" height="26" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
         <mxCell id="DFPLayo4z6RkdoQgYkVW-3" value="Reviewing Population Synthesis from a new perspective: issue-based" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;whiteSpace=wrap;html=1;labelBackgroundColor=#B9E0A5;textShadow=0;labelBorderColor=none;" parent="DFPLayo4z6RkdoQgYkVW-2" vertex="1">
           <mxGeometry y="52" width="620" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="DFPLayo4z6RkdoQgYkVW-4" value="Introducing new methodologies to tackle diversity and customizability problems&amp;nbsp;" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;whiteSpace=wrap;html=1;labelBackgroundColor=#B9E0A5;textShadow=0;labelBorderColor=none;" parent="DFPLayo4z6RkdoQgYkVW-2" vertex="1">
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-4" value="Introducing new methodologies to tackle existing issues as well as explainability" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;whiteSpace=wrap;html=1;labelBackgroundColor=#B9E0A5;textShadow=0;labelBorderColor=none;" parent="DFPLayo4z6RkdoQgYkVW-2" vertex="1">
           <mxGeometry y="82" width="620" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="DFPLayo4z6RkdoQgYkVW-6" value="Task 2: Improving the activity generation together with a population synthesis" style="swimlane;fontStyle=3;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;align=center;fontSize=16;" parent="1" vertex="1">
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-6" value="Task 2: Connect the synthetic households and persons " style="swimlane;fontStyle=3;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;align=center;fontSize=16;" parent="1" vertex="1">
           <mxGeometry x="160" y="430" width="620" height="113" as="geometry" />
         </mxCell>
         <mxCell id="DFPLayo4z6RkdoQgYkVW-62" value="" style="shape=table;startSize=0;container=1;collapsible=0;childLayout=tableLayout;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-6" vertex="1">
@@ -41,23 +59,23 @@
         <mxCell id="DFPLayo4z6RkdoQgYkVW-63" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;strokeColor=inherit;top=0;left=0;bottom=0;right=0;collapsible=0;dropTarget=0;fillColor=none;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-62" vertex="1">
           <mxGeometry width="620" height="27" as="geometry" />
         </mxCell>
-        <mxCell id="DFPLayo4z6RkdoQgYkVW-64" value="10%" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;strokeColor=#10739e;overflow=hidden;fillColor=#b1ddf0;top=0;left=0;bottom=0;right=0;pointerEvents=1;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-63" vertex="1">
-          <mxGeometry width="44" height="27" as="geometry">
-            <mxRectangle width="44" height="27" as="alternateBounds" />
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-64" value="90%" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;strokeColor=#10739e;overflow=hidden;fillColor=#b1ddf0;top=0;left=0;bottom=0;right=0;pointerEvents=1;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-63" vertex="1">
+          <mxGeometry width="580" height="27" as="geometry">
+            <mxRectangle width="580" height="27" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
         <mxCell id="DFPLayo4z6RkdoQgYkVW-65" value="" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;strokeColor=#36393d;overflow=hidden;fillColor=#eeeeee;top=0;left=0;bottom=0;right=0;pointerEvents=1;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-63" vertex="1">
-          <mxGeometry x="44" width="576" height="27" as="geometry">
-            <mxRectangle width="576" height="27" as="alternateBounds" />
+          <mxGeometry x="580" width="40" height="27" as="geometry">
+            <mxRectangle width="40" height="27" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="DFPLayo4z6RkdoQgYkVW-7" value="&lt;font face=&quot;Helvetica&quot; style=&quot;font-size: 16px;&quot;&gt;Generating joint activities from a household&#39;s perspective&lt;/font&gt;" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;whiteSpace=wrap;html=1;labelBackgroundColor=#FFE599;" parent="DFPLayo4z6RkdoQgYkVW-6" vertex="1">
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-7" value="&lt;span style=&quot;background-color: rgb(185, 224, 165);&quot;&gt;Generated a connected population&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;whiteSpace=wrap;html=1;labelBackgroundColor=#FFE599;" parent="DFPLayo4z6RkdoQgYkVW-6" vertex="1">
           <mxGeometry y="53" width="620" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="DFPLayo4z6RkdoQgYkVW-8" value="Assessing the impact of household relationship on household activities" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;whiteSpace=wrap;html=1;labelBackgroundColor=#FF6666;" parent="DFPLayo4z6RkdoQgYkVW-6" vertex="1">
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-8" value="&lt;span style=&quot;background-color: rgb(185, 224, 165);&quot;&gt;Introducing a new methodology to incorporate the household relationships&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;whiteSpace=wrap;html=1;labelBackgroundColor=#FF6666;" parent="DFPLayo4z6RkdoQgYkVW-6" vertex="1">
           <mxGeometry y="83" width="620" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="DFPLayo4z6RkdoQgYkVW-10" value="Task 3: Evaluating the impact of emerging technologies" style="swimlane;fontStyle=3;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;align=center;fontSize=16;" parent="1" vertex="1">
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-10" value="Task 3: Generating the household activities" style="swimlane;fontStyle=3;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;align=center;fontSize=16;" parent="1" vertex="1">
           <mxGeometry x="160" y="560" width="620" height="110" as="geometry" />
         </mxCell>
         <mxCell id="DFPLayo4z6RkdoQgYkVW-44" value="" style="shape=table;startSize=0;container=1;collapsible=0;childLayout=tableLayout;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-10" vertex="1">
@@ -66,21 +84,146 @@
         <mxCell id="DFPLayo4z6RkdoQgYkVW-45" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;strokeColor=inherit;top=0;left=0;bottom=0;right=0;collapsible=0;dropTarget=0;fillColor=none;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-44" vertex="1">
           <mxGeometry width="620" height="24" as="geometry" />
         </mxCell>
-        <mxCell id="DFPLayo4z6RkdoQgYkVW-46" value="&lt;font style=&quot;font-size: 16px;&quot; face=&quot;Helvetica&quot;&gt;30%&lt;/font&gt;" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;strokeColor=#10739e;overflow=hidden;fillColor=#b1ddf0;top=0;left=0;bottom=0;right=0;pointerEvents=1;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-45" vertex="1">
-          <mxGeometry width="144" height="24" as="geometry">
-            <mxRectangle width="144" height="24" as="alternateBounds" />
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-46" value="&lt;font style=&quot;font-size: 16px;&quot; face=&quot;Helvetica&quot;&gt;50%&lt;/font&gt;" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;strokeColor=#10739e;overflow=hidden;fillColor=#b1ddf0;top=0;left=0;bottom=0;right=0;pointerEvents=1;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-45" vertex="1">
+          <mxGeometry width="310" height="24" as="geometry">
+            <mxRectangle width="310" height="24" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
         <mxCell id="DFPLayo4z6RkdoQgYkVW-47" value="" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;strokeColor=#36393d;overflow=hidden;fillColor=#eeeeee;top=0;left=0;bottom=0;right=0;pointerEvents=1;fontSize=16;" parent="DFPLayo4z6RkdoQgYkVW-45" vertex="1">
-          <mxGeometry x="144" width="476" height="24" as="geometry">
-            <mxRectangle width="476" height="24" as="alternateBounds" />
+          <mxGeometry x="310" width="310" height="24" as="geometry">
+            <mxRectangle width="310" height="24" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="DFPLayo4z6RkdoQgYkVW-11" value="Studying EV ownership based on the synthetic population" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;whiteSpace=wrap;html=1;labelBackgroundColor=#FFE599;" parent="DFPLayo4z6RkdoQgYkVW-10" vertex="1">
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-11" value="&lt;span style=&quot;background-color: rgb(185, 224, 165);&quot;&gt;Introducing a new methodology considering household activities - proof of concepts&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;whiteSpace=wrap;html=1;labelBackgroundColor=#FFE599;" parent="DFPLayo4z6RkdoQgYkVW-10" vertex="1">
           <mxGeometry y="50" width="620" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="DFPLayo4z6RkdoQgYkVW-12" value="Evaluating the impact of EV using the full framework" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;whiteSpace=wrap;html=1;labelBackgroundColor=#FF6666;" parent="DFPLayo4z6RkdoQgYkVW-10" vertex="1">
+        <mxCell id="DFPLayo4z6RkdoQgYkVW-12" value="&lt;span style=&quot;background-color: rgb(255, 229, 153);&quot;&gt;Applying the method to real-life case study&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;whiteSpace=wrap;html=1;labelBackgroundColor=#FF6666;" parent="DFPLayo4z6RkdoQgYkVW-10" vertex="1">
           <mxGeometry y="80" width="620" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="qMUVeWqfAemtNZWCeS_H-2" value="Synthetic population" style="shape=card;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="130" y="1120" width="80" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="qMUVeWqfAemtNZWCeS_H-41" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.875;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="qMUVeWqfAemtNZWCeS_H-3" target="qMUVeWqfAemtNZWCeS_H-38" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qMUVeWqfAemtNZWCeS_H-3" value="" style="ellipse;shape=cloud;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="252" y="1095" width="245" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="qMUVeWqfAemtNZWCeS_H-4" value="" style="image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/mscae/Resource_Graph_Explorer.svg;" parent="1" vertex="1">
+          <mxGeometry x="350" y="1140" width="49" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="qMUVeWqfAemtNZWCeS_H-5" value="Input graph" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="350" y="1190" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="qMUVeWqfAemtNZWCeS_H-32" value="" style="ellipse;shape=cloud;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+          <mxGeometry x="740" y="1095" width="245" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="qMUVeWqfAemtNZWCeS_H-33" value="" style="image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/mscae/Resource_Graph_Explorer.svg;" parent="1" vertex="1">
+          <mxGeometry x="838" y="1140" width="49" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="qMUVeWqfAemtNZWCeS_H-43" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="qMUVeWqfAemtNZWCeS_H-34" target="qMUVeWqfAemtNZWCeS_H-35" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qMUVeWqfAemtNZWCeS_H-34" value="Output graph" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="838" y="1190" width="82" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="qMUVeWqfAemtNZWCeS_H-35" value="Final synthetic travel diaries" style="shape=card;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+          <mxGeometry x="822.5" y="1280" width="80" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="qMUVeWqfAemtNZWCeS_H-39" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="qMUVeWqfAemtNZWCeS_H-36" target="qMUVeWqfAemtNZWCeS_H-38" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qMUVeWqfAemtNZWCeS_H-36" value="Sampled travel diaries" style="shape=card;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="130" y="980" width="80" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="qMUVeWqfAemtNZWCeS_H-38" value="Trained TGNN" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+          <mxGeometry x="560" y="1130" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="qMUVeWqfAemtNZWCeS_H-40" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.11;entryY=0.529;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="qMUVeWqfAemtNZWCeS_H-2" target="qMUVeWqfAemtNZWCeS_H-3" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qMUVeWqfAemtNZWCeS_H-42" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.16;entryY=0.55;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="qMUVeWqfAemtNZWCeS_H-38" target="qMUVeWqfAemtNZWCeS_H-32" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-13" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8;" parent="1" source="f1CKNcfr52MyuDMSnoib-2" target="f1CKNcfr52MyuDMSnoib-8" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-2" value="Chapter 1. Introduction" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="1700" y="890" width="440" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-16" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=12;startSize=8;endSize=8;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="f1CKNcfr52MyuDMSnoib-8" target="f1CKNcfr52MyuDMSnoib-6" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1920" y="1050" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-8" value="Chapter 2. Population synthesis: a problem-based review" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="1700" y="990" width="440" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-17" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8;" parent="1" source="f1CKNcfr52MyuDMSnoib-6" target="f1CKNcfr52MyuDMSnoib-9" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-6" value="Chapter 3. An Integer Linear Programming solution to explainability and flexibility in Population Synthesis&amp;nbsp;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="1630" y="1095" width="160" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-18" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=12;startSize=8;endSize=8;" parent="1" source="f1CKNcfr52MyuDMSnoib-9" target="f1CKNcfr52MyuDMSnoib-10" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-9" value="Chapter 4. Novel framework to generate a synthetic population with diversities in transport modelling" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="1840" y="1090" width="160" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-19" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=12;startSize=8;endSize=8;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="f1CKNcfr52MyuDMSnoib-10" target="f1CKNcfr52MyuDMSnoib-11" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-10" value="Chapter 5. Applying TGNN to solver household activity prediction" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="2050" y="1090" width="160" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-11" value="Chapter 6. Discussion and conclusion" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="1700" y="1290" width="440" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-34" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=12;startSize=8;endSize=8;" parent="1" source="f1CKNcfr52MyuDMSnoib-23" target="f1CKNcfr52MyuDMSnoib-24" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-36" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=12;startSize=8;endSize=8;" parent="1" source="f1CKNcfr52MyuDMSnoib-23" target="f1CKNcfr52MyuDMSnoib-25" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-37" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=12;startSize=8;endSize=8;" parent="1" source="f1CKNcfr52MyuDMSnoib-23" target="f1CKNcfr52MyuDMSnoib-26" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-23" value="&lt;b&gt;&lt;i&gt;Research aim:&lt;/i&gt;&lt;/b&gt;&lt;div&gt;&lt;div style=&quot;font-size: 16px;&quot;&gt;&lt;i&gt;To develop a new approach to Population Synthesis and study the impact on activity generation&lt;/i&gt;&lt;/div&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;fontSize=16;fillColor=#b1ddf0;strokeColor=#10739e;" parent="1" vertex="1">
+          <mxGeometry x="1455" y="60" width="370" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-24" value="&lt;b&gt;&lt;i&gt;Task 1&lt;/i&gt;&lt;/b&gt;&lt;div&gt;Generating the synthetic population for 1 level&lt;/div&gt;" style="whiteSpace=wrap;html=1;strokeColor=#FFB570;" parent="1" vertex="1">
+          <mxGeometry x="1290" y="170" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-25" value="&lt;b&gt;&lt;i&gt;Task 2&lt;/i&gt;&lt;/b&gt;&lt;div&gt;Connecting the synthetic households and persons&lt;/div&gt;" style="whiteSpace=wrap;html=1;strokeColor=#FFB570;" parent="1" vertex="1">
+          <mxGeometry x="1540" y="170" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-26" value="&lt;b&gt;&lt;i&gt;Task 3&lt;/i&gt;&lt;/b&gt;&lt;div&gt;Generating the household activities&lt;/div&gt;" style="whiteSpace=wrap;html=1;strokeColor=#FFB570;dashed=1;dashPattern=8 8;" parent="1" vertex="1">
+          <mxGeometry x="1780" y="170" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-28" value="&lt;b&gt;&lt;i&gt;Objective&lt;/i&gt;&lt;/b&gt;&lt;div&gt;Creating the synthetic agents for 1 level, addressing the existing issues in Population Synthesis such as zero-cells, scalability and emerging issues like explainability&lt;/div&gt;" style="whiteSpace=wrap;html=1;strokeColor=#FFB570;" parent="1" vertex="1">
+          <mxGeometry x="1290" y="230" width="200" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-29" value="&lt;b&gt;&lt;i&gt;Objective&lt;/i&gt;&lt;/b&gt;&lt;div&gt;Creating a fully connected population with both households and persons, focusing on the intra-household relationships&lt;/div&gt;" style="whiteSpace=wrap;html=1;strokeColor=#FFB570;" parent="1" vertex="1">
+          <mxGeometry x="1540" y="230" width="200" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-30" value="&lt;b&gt;&lt;i&gt;Objective&lt;/i&gt;&lt;/b&gt;&lt;div&gt;From the synthetic population, creating the activities for a typical day, considering the household relationships and how it can impact joint activities&lt;/div&gt;" style="whiteSpace=wrap;html=1;strokeColor=#FFB570;dashed=1;dashPattern=8 8;" parent="1" vertex="1">
+          <mxGeometry x="1780" y="230" width="200" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-31" value="&lt;b&gt;&lt;i&gt;Method&lt;/i&gt;&lt;/b&gt;&lt;div&gt;Integer Linear Programming with Machine Learning&lt;/div&gt;" style="whiteSpace=wrap;html=1;strokeColor=#FFB570;" parent="1" vertex="1">
+          <mxGeometry x="1290" y="326" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-32" value="&lt;b&gt;&lt;i&gt;Method&lt;/i&gt;&lt;/b&gt;&lt;div&gt;Optimisation with Machine Learning&lt;/div&gt;" style="whiteSpace=wrap;html=1;strokeColor=#FFB570;" parent="1" vertex="1">
+          <mxGeometry x="1540" y="326" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="f1CKNcfr52MyuDMSnoib-33" value="&lt;b&gt;&lt;i style=&quot;&quot;&gt;Method&lt;/i&gt;&lt;/b&gt;&lt;div&gt;Spatial-temporal Graph Neural &amp;nbsp;Network&amp;nbsp;&lt;/div&gt;" style="whiteSpace=wrap;html=1;strokeColor=#FFB570;dashed=1;dashPattern=8 8;" parent="1" vertex="1">
+          <mxGeometry x="1780" y="326" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="K3fAHh4nDUrQpHDgAhwH-11" value="Finish before the progress review" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FFB570;" vertex="1" parent="1">
+          <mxGeometry x="1880" y="50" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="K3fAHh4nDUrQpHDgAhwH-12" value="Finish after the progress review" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FFB570;dashed=1;dashPattern=8 8;" vertex="1" parent="1">
+          <mxGeometry x="1880" y="100" width="100" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
