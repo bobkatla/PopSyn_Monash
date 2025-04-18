@@ -32,6 +32,12 @@ def compute_conditional_prob_license_given_age(seed_indiv_df):
     return ctab
 
 
+def compute_conditional_prob_ncars_given_license_and_hsize(seed_hh_df):
+    ctab = pd.crosstab(index=[seed_hh_df["n_license"], seed_hh_df["hsize"]],
+                       columns=seed_hh_df["n_cars"], normalize="index")
+    return ctab
+
+
 def main():
     curr_folder = Path(__file__).parent
     data_folder = curr_folder / "data"
@@ -44,18 +50,15 @@ def main():
     p_marital_given_age = compute_conditional_prob_marital_given_age(seed_individuals)
     p_employment_given_age = compute_conditional_prob_employment_given_age(seed_individuals)
     p_license_given_age = compute_conditional_prob_license_given_age(seed_individuals)
+    p_ncars_given_nlicense_hsize = compute_conditional_prob_ncars_given_license_and_hsize(seed_households)
 
-    print("\nP(gender | hh_type):\n", p_gender_given_hhtype)
-    print("\nP(marital | age):\n", p_marital_given_age)
-    print("\nP(employment | age):\n", p_employment_given_age)
-    print("\nP(license | age):\n", p_license_given_age)
-
-    # Optionally, save conditionals
+    print("\nSaving conditional probability tables...")
     p_gender_given_hhtype.to_csv(data_folder / "cond_gender_given_hhtype.csv")
     p_marital_given_age.to_csv(data_folder / "cond_marital_given_age.csv")
     p_employment_given_age.to_csv(data_folder / "cond_employment_given_age.csv")
     p_license_given_age.to_csv(data_folder / "cond_license_given_age.csv")
-    print("\n[STEP 2] Conditional tables saved to /data folder.")
+    p_ncars_given_nlicense_hsize.to_csv(data_folder / "cond_ncars_given_nlicense_hsize.csv")
+    print("\n[STEP 2] All conditionals saved to /data folder.")
 
 
 if __name__ == "__main__":
