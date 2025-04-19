@@ -6,8 +6,8 @@ OUTPUT_FOLDER = Path(__file__).parent / "output"
 
 HHID = "hhid"
 ZONE_ID = "zone_id"
+HH_SZ = "hhsize" # we constrainted by this
 HH_ATTS = [
-    "hhsize",
     "dwelltype",
     "hhinc",
     "totalvehs",
