@@ -4,7 +4,7 @@
 import pandas as pd
 from typing import List, Tuple, Dict
 
-
+COUNT_COL = "count"
 MAIN_PERSON = "Main"
 HH_TAG = "HH"
 EXPECTED_RELATIONSHIPS = [
@@ -63,6 +63,13 @@ def segment_by_col(df: pd.DataFrame, segment_col: str, rename: bool=True) -> Dic
     return result_seg_pp
 
 
+def create_count_for_pool(pools: Dict[str, pd.DataFrame]) -> Dict[str, pd.DataFrame]:
+    result = {}
+    for connection, df in pools.items():
+        result[connection] = df.value_counts().reset_index(name=COUNT_COL)
+    return result
+
+
 def create_pool_pairs(hh: pd.DataFrame, pp: pd.DataFrame, hhid: str, relationship: str) -> Dict[str, pd.DataFrame]:
     assert set(pp[relationship]) == set(EXPECTED_RELATIONSHIPS), "Invalid relationship in pp"
     segmented_pp_by_rela = segment_by_col(pp, relationship)
@@ -83,5 +90,7 @@ def create_pool_pairs(hh: pd.DataFrame, pp: pd.DataFrame, hhid: str, relationshi
         rel_counts_each_hhid, left_on=f"{HH_TAG}_{hhid}", right_on=hhid, how="inner"
     ).drop(columns=[f"{HH_TAG}_{hhid}", hhid])
 
-    return paired_connections
+    final_paired_connections = create_count_for_pool(paired_connections)
+
+    return final_paired_connections
     
