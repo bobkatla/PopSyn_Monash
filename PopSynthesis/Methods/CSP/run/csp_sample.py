@@ -49,7 +49,10 @@ def direct_sample_from_conditional(conditionals: pd.DataFrame, evidences: pd.Dat
         return np.random.choice(ids, size=n, p=probs, replace=True)
     
     to_sample_df[TEMP_ID] = to_sample_df.apply(sample_by_row, axis=1)
-    print(to_sample_df)
+    to_sample_df = to_sample_df.explode(TEMP_ID).drop(columns=[MAP_IDS_COL, MAP_COUNTS_COL, SYN_COUNT_COL])
+    final_sampled_df = to_sample_df.merge(sample_cond, on=TEMP_ID, how="inner").drop(columns=[TEMP_ID])
+    assert len(final_sampled_df) == len(evidences), "Sampled df must be same length as original df"
+    return final_sampled_df
 
 
 def determine_n_rela_for_each_hh(hh_df: pd.DataFrame, hhsz: str, n_rela_conditional: pd.DataFrame) -> Dict[str, int]:
