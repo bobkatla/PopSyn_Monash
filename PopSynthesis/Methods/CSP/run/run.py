@@ -7,12 +7,12 @@ from PopSynthesis.Methods.CSP.run.process_pools_by_needs import process_original
 def run_csp(hh_df, configs):
     """Run CSP with the given hh df and configs"""
     # From config we can have the seed hh, seed pp, we constraint by hh_size
-    sub_hh_seed = None
-    sub_pp_seed = None
-    hhid = None
-    relationship = None
-    hhsz = None
-    ori_pools = create_pool_pairs(sub_hh_seed, sub_pp_seed, hhid, relationship)
+    hh_seed = configs["hh_seed"]
+    pp_seed = configs["pp_seed"]
+    hhid = configs["hhid"]
+    relationship = configs["relationship"]
+    hhsz = configs["hh_size"]
+    ori_pools = create_pool_pairs(hh_seed, pp_seed, hhid, relationship)
     # If we use IPF we can just use the original pool pairs (as all samples exist)
     final_conditonals = process_original_pools(ori_pools, method="original")
     syn_pp = csp_sample_by_hh(hh_df, final_conditonals, hhsz, relationship)
