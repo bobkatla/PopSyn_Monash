@@ -2,6 +2,7 @@
 from PopSynthesis.Methods.CSP.run.csp_sample import csp_sample_by_hh
 from PopSynthesis.Methods.CSP.run.create_pool_pairs import create_pool_pairs
 from PopSynthesis.Methods.CSP.run.process_pools_by_needs import process_original_pools
+from PopSynthesis.Methods.CSP.const import ZONE_ID
 import pandas as pd
 from typing import Dict,Union
 
@@ -16,6 +17,11 @@ def run_csp(hh_df: pd.DataFrame, configs: Dict[str, Union[str, pd.DataFrame]]) -
     ori_pools = create_pool_pairs(hh_seed, pp_seed, hhid, relationship)
     # If we use IPF we can just use the original pool pairs (as all samples exist)
     final_conditonals = process_original_pools(ori_pools, method="original")
-    syn_pp = csp_sample_by_hh(hh_df, final_conditonals, hhsz, relationship)
-    return syn_pp
+    final_syn_pp = []
+    for zid in hh_df[ZONE_ID].unique():
+        syn_pp = csp_sample_by_hh(hh_df[hh_df[ZONE_ID]==zid].drop(columns=[ZONE_ID]), final_conditonals, hhsz, relationship)
+        syn_pp[ZONE_ID] = zid
+        final_syn_pp.append(syn_pp)
+        break
+    return pd.concat(final_syn_pp, ignore_index=True)
 
