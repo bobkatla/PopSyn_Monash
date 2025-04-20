@@ -3,9 +3,9 @@ from PopSynthesis.Methods.CSP.run.csp_sample import csp_sample_by_hh
 from PopSynthesis.Methods.CSP.run.create_pool_pairs import create_pool_pairs
 from PopSynthesis.Methods.CSP.run.process_pools_by_needs import process_original_pools
 import pandas as pd
-from typing import Dict
+from typing import Dict,Union
 
-def run_csp(hh_df: pd.DataFrame, configs: Dict[str, str | pd.DataFrame]) -> pd.DataFrame:
+def run_csp(hh_df: pd.DataFrame, configs: Dict[str, Union[str, pd.DataFrame]]) -> pd.DataFrame:
     """Run CSP with the given hh df and configs"""
     # From config we can have the seed hh, seed pp, we constraint by hh_size
     hh_seed = configs["hh_seed"]

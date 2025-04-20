@@ -30,6 +30,18 @@ EPXECTED_CONNECTIONS = [
 ]
 
 
+def count_n_states_for_each_hh(pp_df: pd.DataFrame, rel_col: str, id_col: str) -> pd.DataFrame:
+    """Count the number of states for each hh in the pp_df"""
+    # Count the number of states for each hh in the pp_df
+    # pp_count = pp_df.groupby(id_col)[col].apply(lambda x: [x.value_counts().get(rela, 0) for rela in EXPECTED_RELATIONSHIPS])
+    pp_gb = pp_df.groupby(id_col)[rel_col].apply(lambda x: list(x))
+    pp_gb_df = pp_gb.apply(lambda x: [x.count(rela) for rela in EXPECTED_RELATIONSHIPS]).reset_index()
+    expanded_relationships = pd.DataFrame(pp_gb_df[rel_col].tolist(), columns=EXPECTED_RELATIONSHIPS)
+    expanded_relationships = expanded_relationships.rename(
+        columns={rela: f"n_{rela}" for rela in EXPECTED_RELATIONSHIPS})
+    return pp_gb_df.drop(columns=rel_col).join(expanded_relationships)
+
+
 def pair_by_id(
     df1: pd.DataFrame, df2: pd.DataFrame, id1: str, id2: str
 ) -> pd.DataFrame:
@@ -64,6 +76,12 @@ def create_pool_pairs(hh: pd.DataFrame, pp: pd.DataFrame, hhid: str, relationshi
         paired_connections[f"{src_rela}-{dst_rela}"] = pair_by_id(
             src_df, dst_df, f"{src_rela}_{hhid}", f"{dst_rela}_{hhid}"
         ).drop(columns=[f"{src_rela}_{hhid}", f"{dst_rela}_{hhid}"])
+
+    # special case for counting rela
+    rel_counts_each_hhid = count_n_states_for_each_hh(pp, relationship, hhid)
+    paired_connections[f"{HH_TAG}-counts"] = hh.merge(
+        rel_counts_each_hhid, left_on=f"{HH_TAG}_{hhid}", right_on=hhid, how="inner"
+    ).drop(columns=[f"{HH_TAG}_{hhid}", hhid])
 
     return paired_connections
     
