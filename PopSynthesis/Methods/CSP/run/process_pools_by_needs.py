@@ -5,4 +5,11 @@
 
 
 def process_original_pools(ori_pools, method="original"):
-    NotImplemented
+    if method == "original":
+        return ori_pools
+    if method == "BN":
+        # basically inflate to get results
+        NotImplemented
+    if method == "WGAN":
+        NotImplemented
+        
