@@ -6,9 +6,21 @@ from PopSynthesis.Methods.CSP.const import ZONE_ID
 import pandas as pd
 from typing import Dict,Union
 
+
+def inflate_based_on_total(df, target_col: str) -> pd.DataFrame:
+    assert target_col in df.columns, "The dataframe must contain the target column"
+    # Repeat rows based on column values
+    df_repeated = df.loc[df.index.repeat(df[target_col])].reset_index(drop=True)
+
+    # Drop the column
+    df_repeated = df_repeated.drop(columns=target_col)
+    return df_repeated
+
+
 def run_csp(hh_df: pd.DataFrame, configs: Dict[str, Union[str, pd.DataFrame]]) -> pd.DataFrame:
     """Run CSP with the given hh df and configs"""
     # From config we can have the seed hh, seed pp, we constraint by hh_size
+    hh_df = inflate_based_on_total(hh_df, "total")
     hh_seed = configs["hh_seed"]
     pp_seed = configs["pp_seed"]
     hhid = configs["hhid"]

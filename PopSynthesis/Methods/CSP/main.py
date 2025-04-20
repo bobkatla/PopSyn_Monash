@@ -32,7 +32,7 @@ def load_configurations():
 
 
 def main():
-    hh_df = pd.read_csv(DATA_FOLDER / "IPF_HH.csv")
+    hh_df = pd.read_csv(DATA_FOLDER / "new_IPF_results_wo_zerocell.csv")
     configs = load_configurations()
     # Run CSP with the given hh_df and configs
     resulted_pp = run_csp(hh_df, configs) # We must not change the hh
