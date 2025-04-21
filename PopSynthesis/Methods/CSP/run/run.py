@@ -2,7 +2,7 @@
 from PopSynthesis.Methods.CSP.run.csp_sample import csp_sample_by_hh
 from PopSynthesis.Methods.CSP.run.create_pool_pairs import create_pool_pairs
 from PopSynthesis.Methods.CSP.run.process_pools_by_needs import process_original_pools
-from PopSynthesis.Methods.CSP.const import ZONE_ID
+from PopSynthesis.Methods.CSP.const import ZONE_ID, HHID
 import pandas as pd
 from typing import Dict,Union
 
@@ -21,6 +21,8 @@ def run_csp(hh_df: pd.DataFrame, configs: Dict[str, Union[str, pd.DataFrame]]) -
     """Run CSP with the given hh df and configs"""
     # From config we can have the seed hh, seed pp, we constraint by hh_size
     hh_df = inflate_based_on_total(hh_df, "total")
+    # add hhid
+    hh_df[HHID] = hh_df.reset_index(drop=True).index + 1
     hh_seed = configs["hh_seed"]
     pp_seed = configs["pp_seed"]
     hhid = configs["hhid"]
