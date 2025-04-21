@@ -109,7 +109,6 @@ def merge_chosen_target_ids_with_known_cond(to_sample_df: pd.DataFrame, target_m
         # the case of HHID are just 1 value
         n_before_explode = len(to_sample_df)
         to_sample_df = to_sample_df.explode(TARGET_ID)
-        assert len(to_sample_df) == n_before_explode, "The explode is expected to be same length"
 
     to_sample_df = to_sample_df.drop(columns=[MAP_IDS_COL, MAP_COUNTS_COL, SYN_COUNT_COL, 'zip_cols'], errors='ignore')
     # merge with known conds to get the final sampled df
@@ -237,6 +236,7 @@ def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFr
                 conditional = final_conditonals[f"{prev_src}-{rela}"]
                 evidences = evidences_store[prev_src].drop(columns=[TARGET_ID], errors='ignore')
                 evidences[SYN_COUNT_COL] = evidences[HHID].map(processed_hh_df.set_index(HHID)[f"n_{rela}"])
+                evidences = evidences[evidences[SYN_COUNT_COL] > 0].copy() # only care where we need to sample
                 final_sampled_df, possible_to_sample, impossible_to_sample, target_mapping = direct_sample_from_conditional(conditional, evidences, can_sample_all=False)
                 rela_results.append(final_sampled_df)
                 break
