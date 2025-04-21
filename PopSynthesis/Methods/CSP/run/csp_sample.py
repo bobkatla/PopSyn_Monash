@@ -3,7 +3,15 @@
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Tuple
-from PopSynthesis.Methods.CSP.run.create_pool_pairs import HH_TAG, MAIN_PERSON, COUNT_COL, EXPECTED_RELATIONSHIPS, EPXECTED_CONNECTIONS
+from PopSynthesis.Methods.CSP.run.create_pool_pairs import (
+    HH_TAG,
+    MAIN_PERSON,
+    COUNT_COL,
+    EXPECTED_RELATIONSHIPS,
+    EPXECTED_CONNECTIONS,
+    BACK_CONNECTIONS,
+    RELA_BY_LEVELS
+)
 from PopSynthesis.Methods.CSP.const import HHID
 
 TEMP_ID = "temp_id"
@@ -100,6 +108,5 @@ def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFr
         hh_df[HHID] = hh_df.reset_index(drop=True).index + 1
     processed_hh_df = determine_n_rela_for_each_hh(hh_df, hhsz, final_conditonals[f"{HH_TAG}-counts"])
     assert processed_hh_df[HHID].nunique() == len(hh_df), "Processed hh df must have same hhid as original hh df"
-    print(processed_hh_df)
 
     return None
