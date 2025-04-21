@@ -3,7 +3,7 @@
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Tuple
-from PopSynthesis.Methods.CSP.run.create_pool_pairs import (
+from PopSynthesis.Methods.CSP.run.rela_const import (
     HH_TAG,
     MAIN_PERSON,
     COUNT_COL,
@@ -67,11 +67,7 @@ def get_potentials_to_sample(conditionals: pd.DataFrame, evidences: pd.DataFrame
     return possible_to_sample_df, impossible_to_sample_df, sample_cond
 
 
-
-def direct_sample_from_conditional(conditionals: pd.DataFrame, evidences: pd.DataFrame, can_sample_all: bool) -> pd.DataFrame:
-    """Process conditionals by having it evidence as index and process the remainings"""
-    possible_to_sample_df, impossible_to_sample_df, sample_cond = get_potentials_to_sample(conditionals, evidences, can_sample_all)
-    
+def sample_from_given_possible_df(possible_to_sample_df: pd.DataFrame, sample_cond: pd.DataFrame) -> pd.DataFrame:
     def sample_by_row(row):
         ids = row[MAP_IDS_COL]
         counts = row[MAP_COUNTS_COL]
@@ -91,15 +87,25 @@ def direct_sample_from_conditional(conditionals: pd.DataFrame, evidences: pd.Dat
 
     # merge with known conds to get the final sampled df
     final_sampled_df = to_sample_df.merge(sample_cond, on=TEMP_ID, how="inner").drop(columns=[TEMP_ID])
-    assert len(final_sampled_df) == len(evidences), "Sampled df must be same length as original df"
-
+    assert len(final_sampled_df) == possible_to_sample_df[SYN_COUNT_COL].sum(), "Sampled df must be same length as original df"
     return final_sampled_df
+
+
+def direct_sample_from_conditional(conditionals: pd.DataFrame, evidences: pd.DataFrame, can_sample_all: bool) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Process conditionals by having it evidence as index and process the remainings"""
+    possible_to_sample_df, impossible_to_sample_df, sample_cond = get_potentials_to_sample(conditionals, evidences, can_sample_all)
+
+    final_sampled_df = sample_from_given_possible_df(possible_to_sample_df, sample_cond)
+    
+    assert len(final_sampled_df) == len(evidences), "Sampled df must be same length as original df"
+    return final_sampled_df, possible_to_sample_df, impossible_to_sample_df
 
 
 def determine_n_rela_for_each_hh(hh_df: pd.DataFrame, hhsz: str, n_rela_conditional: pd.DataFrame) -> Dict[str, int]:
     # we can just build a BN or a direct sample from the hh_df
     hh_df_rename = hh_df.rename(columns={col: f"{HH_TAG}_{col}" for col in hh_df.columns if col != HHID})
-    return direct_sample_from_conditional(n_rela_conditional, hh_df_rename, can_sample_all=True)
+    final_sampled_df, possible_to_sample_df, impossible_to_sample_df = direct_sample_from_conditional(n_rela_conditional, hh_df_rename, can_sample_all=True)
+    return final_sampled_df
 
 
 def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFrame], hhsz:str, relationship:str) -> pd.DataFrame:
@@ -108,5 +114,13 @@ def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFr
         hh_df[HHID] = hh_df.reset_index(drop=True).index + 1
     processed_hh_df = determine_n_rela_for_each_hh(hh_df, hhsz, final_conditonals[f"{HH_TAG}-counts"])
     assert processed_hh_df[HHID].nunique() == len(hh_df), "Processed hh df must have same hhid as original hh df"
+
+    # Start the sampling process
+    # for relationships in RELA_BY_LEVELS:
+    #     # Doing the relationship in this level
+    #     for rela in relationships:
+    #         # handle all or handle at each?  maybe at each, then we should return at each step
+    #         direct_sample_from_conditional
+
 
     return None
