@@ -2,33 +2,14 @@
 
 
 import pandas as pd
-from typing import List, Tuple, Dict
-
-COUNT_COL = "count"
-MAIN_PERSON = "Main"
-HH_TAG = "HH"
-EXPECTED_RELATIONSHIPS = [
-    "Spouse",
-    "Child",
-    "Parent",
-    "Grandparent",
-    "Grandchild",
-    "Sibling",
-    "Others",
-] + [MAIN_PERSON]
-EPXECTED_CONNECTIONS = [
-    (HH_TAG, MAIN_PERSON),
-    (MAIN_PERSON, "Spouse"),
-    (MAIN_PERSON, "Child"),
-    (MAIN_PERSON, "Parent"),
-    (MAIN_PERSON, "Grandparent"),
-    (MAIN_PERSON, "Grandchild"),
-    (MAIN_PERSON, "Sibling"),
-    (MAIN_PERSON, "Others"),
-    ("Child", "Grandchild"),
-    ("Parent", "Grandparent"),
-]
-
+from typing import Dict
+from PopSynthesis.Methods.CSP.run.rela_const import (
+    HH_TAG,
+    COUNT_COL,
+    EXPECTED_RELATIONSHIPS,
+    EPXECTED_CONNECTIONS,
+    MAIN_PERSON,
+)
 
 def count_n_states_for_each_hh(pp_df: pd.DataFrame, rel_col: str, id_col: str) -> pd.DataFrame:
     """Count the number of states for each hh in the pp_df"""
