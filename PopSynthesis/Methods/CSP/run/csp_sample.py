@@ -14,45 +14,56 @@ from PopSynthesis.Methods.CSP.run.rela_const import (
 )
 from PopSynthesis.Methods.CSP.const import HHID
 
-TEMP_ID = "temp_id"
+TARGET_ID = "target_id"
 SYN_COUNT_COL = "syn_count"
-MAP_IDS_COL = "potential_temp_ids"
+MAP_IDS_COL = "potential_target_ids"
 MAP_COUNTS_COL = "asscociated_counts"
+EVIDENCE_ID = "evidence_id"
 
 
-def split_and_process_by_temp_id(df: pd.DataFrame, evidence_cols: List[str], temp_id: str) -> Tuple[pd.Series, pd.Series, pd.DataFrame]:
-    """Split the df by temp_id and return the evidence and sample df"""
-    assert temp_id in df.columns, f"{temp_id} must be in df columns"
-    evidences_cond = df[evidence_cols + [temp_id, COUNT_COL]].copy()
+def split_and_process_by_target_id(df: pd.DataFrame, evidence_cols: List[str], target_id: str) -> Tuple[pd.Series, pd.Series, pd.DataFrame]:
+    """Split the df by target_id and return the evidence and sample df"""
+    assert target_id in df.columns, f"{target_id} must be in df columns"
+    evidences_cond = df[evidence_cols + [target_id, COUNT_COL]].copy()
     sample_cond = df[[x for x in df.columns if x not in (evidence_cols + [COUNT_COL])]].copy()
-    evidences_to_ids = evidences_cond.groupby(evidence_cols)[temp_id].apply(list)
+    evidences_to_ids = evidences_cond.groupby(evidence_cols)[target_id].apply(list)
     evidences_to_counts = evidences_cond.groupby(evidence_cols)[COUNT_COL].apply(list)
     return evidences_to_ids, evidences_to_counts, sample_cond
 
 
-def get_potentials_to_sample(conditionals: pd.DataFrame, evidences: pd.DataFrame, can_sample_all: bool) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def init_potentials_to_sample(conditionals: pd.DataFrame, evidences: pd.DataFrame, can_sample_all: bool) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Process conditionals by having it evidence as index and process the remainings"""
     assert COUNT_COL in conditionals.columns, "Count column must be in conditionals"
 
-    evidence_cols = [x for x in evidences.columns if x != HHID]
+    evidence_cols = [x for x in evidences.columns if x not in (HHID, SYN_COUNT_COL)]
 
     assert set(evidence_cols).issubset(set(conditionals.columns)), "Evidences must be subset of conditionals"
 
-    evidences_to_ids, evidences_to_counts, sample_cond = split_and_process_by_temp_id(conditionals, evidence_cols, TEMP_ID)
+    evidences_to_ids, evidences_to_counts, sample_cond = split_and_process_by_target_id(conditionals, evidence_cols, TARGET_ID)
     assert len(evidences_to_ids) == len(evidences_to_counts), "Evidences to ids and counts must be same length"
     assert set(evidences_to_ids.index) == set(evidences_to_counts.index), "Evidences to ids and counts must be same things"
+    
+    # handle multiple hhid
+    evidences[MAP_IDS_COL] = evidences.set_index(evidence_cols).index.map(evidences_to_ids)
+    evidences[MAP_COUNTS_COL] = evidences.set_index(evidence_cols).index.map(evidences_to_counts)
+    hh_potential_id_and_counts = evidences.groupby(HHID)[[MAP_IDS_COL, MAP_COUNTS_COL]].agg(list).reset_index()
+    
+    def process_combined_to_combine_ids_counts(row):
+        ids = row[MAP_IDS_COL]
+        counts = row[MAP_COUNTS_COL]
+        results = {}
+        for target_ids, counts in zip(ids, counts):
+            for id, count in zip(target_ids, counts):
+                if id not in results:
+                    results[id] = count
+                results[id] += count
+        return list(results.keys()), list(results.values())
+    hh_potential_id_and_counts[[MAP_IDS_COL, MAP_COUNTS_COL]] = hh_potential_id_and_counts.apply(process_combined_to_combine_ids_counts, axis=1, result_type="expand")
+    hh_potential_id_and_counts[SYN_COUNT_COL] = hh_potential_id_and_counts.set_index(HHID).index.map(evidences.groupby(HHID)[SYN_COUNT_COL].sum())
+    to_sample_df = hh_potential_id_and_counts
 
-    # count the evidences occurences
-    evidences_hhid = evidences.groupby(evidence_cols)[HHID].apply(list)
-    evidences_counts = evidences[evidence_cols].value_counts()
-    if can_sample_all:
-        assert set(evidences_counts.index) <= set(evidences_to_ids.index), "Given evidences must be subset of condtionals ids" 
-        assert set(evidences_counts.index) <= set(evidences_to_counts.index), "Counts must be subset of condtionals counts"
-
-    to_sample_df = evidences_hhid.reset_index(name=HHID)
-    to_sample_df[SYN_COUNT_COL] = evidences_hhid.index.map(evidences_counts)
-    to_sample_df[MAP_IDS_COL] = evidences_hhid.index.map(evidences_to_ids)
-    to_sample_df[MAP_COUNTS_COL] = evidences_hhid.index.map(evidences_to_counts)
+    # TODO: reduce runtime by grouping cases of similar potential ids
+    # to_sample_df = hh_potential_id_and_counts.groupby([MAP_IDS_COL, MAP_COUNTS_COL])[HHID].apply(list)
 
     # split to_sample_df by NA vals
     possible_to_sample_df = to_sample_df[to_sample_df[MAP_IDS_COL].notna()]
@@ -60,12 +71,12 @@ def get_potentials_to_sample(conditionals: pd.DataFrame, evidences: pd.DataFrame
 
     if can_sample_all:
         assert len(impossible_to_sample_df) == 0, "Impossible to sample df must be empty"
-    assert len(possible_to_sample_df) + len(impossible_to_sample_df) == len(evidences_counts), "Results must be same length as original evidences"
+    assert len(possible_to_sample_df) + len(impossible_to_sample_df) == len(evidences), "Results must be same length as original evidences"
 
     return possible_to_sample_df, impossible_to_sample_df, sample_cond
 
 
-def sample_and_choose_temp_ids(possible_to_sample: pd.DataFrame) -> pd.DataFrame:
+def sample_and_choose_target_ids(possible_to_sample: pd.DataFrame) -> pd.DataFrame:
     def sample_by_row(row):
         ids = row[MAP_IDS_COL]
         counts = row[MAP_COUNTS_COL]
@@ -75,38 +86,39 @@ def sample_and_choose_temp_ids(possible_to_sample: pd.DataFrame) -> pd.DataFrame
     
     # Apply to get the sampled ids
     to_sample_df = possible_to_sample.copy()
-    to_sample_df[TEMP_ID] = to_sample_df.apply(sample_by_row, axis=1)
+    to_sample_df[TARGET_ID] = to_sample_df.apply(sample_by_row, axis=1)
 
     return to_sample_df
 
 
-def merge_chosen_temp_ids_with_known_cond(to_sample_df: pd.DataFrame, sample_cond: pd.DataFrame, agg_ids: bool) -> pd.DataFrame:
+def merge_chosen_target_ids_with_known_cond(to_sample_df: pd.DataFrame, sample_cond: pd.DataFrame, agg_ids: bool) -> pd.DataFrame:
     # merge with known conds to get the final sampled df
     if agg_ids:
         # the case of HHID are list
-        to_sample_df['zip_cols'] = to_sample_df.apply(lambda row: list(zip(row[HHID], row[TEMP_ID])), axis=1)
+        to_sample_df['zip_cols'] = to_sample_df.apply(lambda row: list(zip(row[HHID], row[TARGET_ID])), axis=1)
         to_sample_df = to_sample_df.explode('zip_cols')
-        to_sample_df[[HHID, TEMP_ID]] = pd.DataFrame(to_sample_df['zip_cols'].tolist(), index=to_sample_df.index)
+        to_sample_df[[HHID, TARGET_ID]] = pd.DataFrame(to_sample_df['zip_cols'].tolist(), index=to_sample_df.index)
 
     else:
         # the case of HHID are just 1 value
         n_before_explode = len(to_sample_df)
-        to_sample_df = to_sample_df.explode(TEMP_ID)
+        to_sample_df = to_sample_df.explode(TARGET_ID)
         assert len(to_sample_df) == n_before_explode, "The explode is expected to be same length"
 
     to_sample_df = to_sample_df.drop(columns=[MAP_IDS_COL, MAP_COUNTS_COL, SYN_COUNT_COL, 'zip_cols'], errors='ignore')
     # merge with known conds to get the final sampled df
-    final_sampled_df = to_sample_df.merge(sample_cond, on=TEMP_ID, how="inner")
+    final_sampled_df = to_sample_df.merge(sample_cond, on=TARGET_ID, how="inner")
     assert len(final_sampled_df) == len(to_sample_df), "Sampled df must be same length as original df"
     return final_sampled_df
 
 
 def direct_sample_from_conditional(conditionals: pd.DataFrame, evidences: pd.DataFrame, can_sample_all: bool) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Process conditionals by having it evidence as index and process the remainings"""
-    possible_to_sample, impossible_to_sample, sample_cond = get_potentials_to_sample(conditionals, evidences, can_sample_all)
+    # TODO: we need to handle case of same hhid and sample multiple times (not just one)
+    possible_to_sample, impossible_to_sample, sample_cond = init_potentials_to_sample(conditionals, evidences.copy(), can_sample_all)
 
-    to_sample_df = sample_and_choose_temp_ids(possible_to_sample)
-    final_sampled = merge_chosen_temp_ids_with_known_cond(to_sample_df, sample_cond, agg_ids=True)
+    to_sample_df = sample_and_choose_target_ids(possible_to_sample)
+    final_sampled = merge_chosen_target_ids_with_known_cond(to_sample_df, sample_cond, agg_ids=False)
     
     assert len(final_sampled) == len(evidences), "Sampled df must be same length as original df"
     return final_sampled, possible_to_sample, impossible_to_sample, sample_cond
@@ -114,19 +126,19 @@ def direct_sample_from_conditional(conditionals: pd.DataFrame, evidences: pd.Dat
 
 def handle_wrong_results_and_update_possible_df(wrong_results: pd.DataFrame, possible_to_sample_df: pd.DataFrame, sample_cond: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Resample based on the wrong results and remove the just sampled one as well"""
-    evidence_cols = [x for x in possible_to_sample_df.columns if x not in (HHID, TEMP_ID, SYN_COUNT_COL, MAP_IDS_COL, MAP_COUNTS_COL)]
+    evidence_cols = [x for x in possible_to_sample_df.columns if x not in (HHID, TARGET_ID, SYN_COUNT_COL, MAP_IDS_COL, MAP_COUNTS_COL)]
     # by the evidence cols we can get new hhid, counts
     wrong_combs_w_ids = wrong_results.groupby(evidence_cols)[HHID].apply(list)
     sub_possibles = possible_to_sample_df.set_index(evidence_cols).loc[wrong_combs_w_ids.index]
     sub_possibles[HHID] = sub_possibles.index.map(wrong_combs_w_ids) # update to smaller hh to hanldle
     sub_possibles = sub_possibles.drop(columns=[SYN_COUNT_COL]) # just not important yet, drop to avoid confusion
-    map_hhid_wrong_temp_id = wrong_results.set_index(HHID)[TEMP_ID]
+    map_hhid_wrong_target_id = wrong_results.set_index(HHID)[TARGET_ID]
     
     # map to get rm ids
-    sub_possibles = sub_possibles.explode(HHID) # explode to get the temp id for each hhid
-    sub_possibles["to_rm_ids"] = sub_possibles[HHID].map(map_hhid_wrong_temp_id) # map the temp id to remove
+    sub_possibles = sub_possibles.explode(HHID) # explode to get the target id for each hhid
+    sub_possibles["to_rm_ids"] = sub_possibles[HHID].map(map_hhid_wrong_target_id) # map the target id to remove
     def process_get_new_sampling(row):
-        # get the temp id to remove
+        # get the target id to remove
         to_rm_id = row["to_rm_ids"] # 1 value
         # get the possible ids to sample from
         possible_ids = row[MAP_IDS_COL]
@@ -148,16 +160,19 @@ def handle_wrong_results_and_update_possible_df(wrong_results: pd.DataFrame, pos
     sub_possibles = sub_possibles[sub_possibles[MAP_IDS_COL].notna()]
     sub_possibles[SYN_COUNT_COL] = 1
     # now we can sample from the new possible df
-    updated_chosen_temp_ids = sample_and_choose_temp_ids(sub_possibles)
+    updated_chosen_target_ids = sample_and_choose_target_ids(sub_possibles)
 
-    return updated_chosen_temp_ids.reset_index(), cannot_sample_anymore
+    return updated_chosen_target_ids.reset_index(), cannot_sample_anymore
 
 
 def determine_n_rela_for_each_hh(hh_df: pd.DataFrame, hhsz: str, n_rela_conditional: pd.DataFrame) -> Dict[str, int]:
     # we can just build a BN or a direct sample from the hh_df
     hh_df_rename = hh_df.rename(columns={col: f"{HH_TAG}_{col}" for col in hh_df.columns if col != HHID})
+    hh_df_rename[SYN_COUNT_COL] = 1 # just to have a count for each hh
     final_sampled_df, possible_to_sample, impossible_to_sample, sample_cond = direct_sample_from_conditional(n_rela_conditional, hh_df_rename, can_sample_all=True)
     assert len(impossible_to_sample) == 0, "Impossible to sample df must be empty"
+    final_sampled_df = final_sampled_df.merge(hh_df_rename.drop(columns=SYN_COUNT_COL), on=HHID, how="inner")
+    assert len(final_sampled_df) == len(hh_df_rename), "Final sampled df must be same length as original hh df"
 
     # check with hhsz
     n_rela_cols = [f"n_{rela}" for rela in EXPECTED_RELATIONSHIPS]
@@ -179,7 +194,7 @@ def determine_n_rela_for_each_hh(hh_df: pd.DataFrame, hhsz: str, n_rela_conditio
         if n_wrong > 0:
             updated_possible_samples, cannot_sample_cases = handle_wrong_results_and_update_possible_df(wrong_results, possible_to_sample, sample_cond)
             assert len(cannot_sample_cases) == 0, "Cannot sample cases must be empty" # this is the current case for hhsz confirmation
-            new_sampled = merge_chosen_temp_ids_with_known_cond(updated_possible_samples, sample_cond, agg_ids=False)
+            new_sampled = merge_chosen_target_ids_with_known_cond(updated_possible_samples, sample_cond, agg_ids=False)
             final_sampled_df = new_sampled
             possible_to_sample = updated_possible_samples
         else:
@@ -189,22 +204,29 @@ def determine_n_rela_for_each_hh(hh_df: pd.DataFrame, hhsz: str, n_rela_conditio
 
 
 def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFrame], hhsz:str, relationship:str) -> pd.DataFrame:
-    # process each conditionals to have temp id
+    # process each conditionals to have target id
     for key in final_conditonals.keys():
         final_conditonals[key] = final_conditonals[key].reset_index(drop=True) # ensure we have a clean index
-        final_conditonals[key][TEMP_ID] = final_conditonals[key].index + 1
-    # add hhid
-    if HHID not in hh_df.columns:
-        hh_df[HHID] = hh_df.reset_index(drop=True).index + 1
+        final_conditonals[key][TARGET_ID] = final_conditonals[key].index + 1
     processed_hh_df = determine_n_rela_for_each_hh(hh_df, hhsz, final_conditonals[f"{HH_TAG}-counts"])
     assert processed_hh_df[HHID].nunique() == len(hh_df), "Processed hh df must have same hhid as original hh df"
 
+    # easiest would be looping through each hh and sample the relationships based on the tree (i will do that if i give up)
     # Start the sampling process
-    # for relationships in RELA_BY_LEVELS:
-    #     # Doing the relationship in this level
-    #     for rela in relationships:
-    #         # handle all or handle at each?  maybe at each, then we should return at each step
-    #         direct_sample_from_conditional
+    for relationships in RELA_BY_LEVELS:
+        # Doing the relationship in this level
+        for rela in relationships:
+            # handle all or handle at each?  maybe at each, then we should return at each step
+            # just try each test first
+            # first need to get the number of samples
+
+            for prev_src in BACK_CONNECTIONS[rela]:
+                conditional = final_conditonals[f"{prev_src}-{rela}"]
+                # print(conditional)
+            
+            # direct_sample_from_conditional
+            break
+        break
 
 
     return None
