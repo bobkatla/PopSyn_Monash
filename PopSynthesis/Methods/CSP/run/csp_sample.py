@@ -123,8 +123,8 @@ def direct_sample_from_conditional(conditionals: pd.DataFrame, evidences: pd.Dat
 
     to_sample_df = sample_and_choose_target_ids(possible_to_sample)
     final_sampled = merge_chosen_target_ids_with_known_cond(to_sample_df, target_mapping, agg_ids=False)
-    
-    assert len(final_sampled) == len(evidences), "Sampled df must be same length as original df"
+
+    assert len(final_sampled) + impossible_to_sample[SYN_COUNT_COL].sum() == evidences[SYN_COUNT_COL].sum(), "Sampled df must be same length as original df"
     return final_sampled, possible_to_sample, impossible_to_sample, target_mapping
 
 
