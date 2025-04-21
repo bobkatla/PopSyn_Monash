@@ -34,3 +34,8 @@ BACK_CONNECTIONS = {
     "Sibling": [MAIN_PERSON],
     "Others": [MAIN_PERSON],
 }
+RELA_BY_RELA = [
+    [MAIN_PERSON],
+    ["Spouse", "Child", "Parent", "Sibling", "Others"],
+    ["Grandparent", "Grandchild"]
+]
