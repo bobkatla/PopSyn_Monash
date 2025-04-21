@@ -23,3 +23,14 @@ EPXECTED_CONNECTIONS = [
     (MAIN_PERSON, "Sibling"),
     (MAIN_PERSON, "Others"),
 ]
+BACK_CONNECTIONS = {
+    HH_TAG: None, # top
+    MAIN_PERSON: [HH_TAG],
+    "Spouse": [MAIN_PERSON],
+    "Child": [MAIN_PERSON],
+    "Parent": [MAIN_PERSON],
+    "Grandparent": ["Parent", MAIN_PERSON],
+    "Grandchild": ["Child", MAIN_PERSON],
+    "Sibling": [MAIN_PERSON],
+    "Others": [MAIN_PERSON],
+}
