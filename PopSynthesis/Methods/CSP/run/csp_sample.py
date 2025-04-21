@@ -114,7 +114,6 @@ def merge_chosen_target_ids_with_known_cond(to_sample_df: pd.DataFrame, sample_c
 
 def direct_sample_from_conditional(conditionals: pd.DataFrame, evidences: pd.DataFrame, can_sample_all: bool) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Process conditionals by having it evidence as index and process the remainings"""
-    # TODO: we need to handle case of same hhid and sample multiple times (not just one)
     possible_to_sample, impossible_to_sample, sample_cond = init_potentials_to_sample(conditionals, evidences.copy(), can_sample_all)
 
     to_sample_df = sample_and_choose_target_ids(possible_to_sample)
@@ -167,12 +166,11 @@ def handle_wrong_results_and_update_possible_df(wrong_results: pd.DataFrame, pos
 
 def determine_n_rela_for_each_hh(hh_df: pd.DataFrame, hhsz: str, n_rela_conditional: pd.DataFrame) -> Dict[str, int]:
     # we can just build a BN or a direct sample from the hh_df
-    hh_df_rename = hh_df.rename(columns={col: f"{HH_TAG}_{col}" for col in hh_df.columns if col != HHID})
-    hh_df_rename[SYN_COUNT_COL] = 1 # just to have a count for each hh
-    final_sampled_df, possible_to_sample, impossible_to_sample, sample_cond = direct_sample_from_conditional(n_rela_conditional, hh_df_rename, can_sample_all=True)
+    hh_df[SYN_COUNT_COL] = 1 # just to have a count for each hh
+    final_sampled_df, possible_to_sample, impossible_to_sample, sample_cond = direct_sample_from_conditional(n_rela_conditional, hh_df, can_sample_all=True)
     assert len(impossible_to_sample) == 0, "Impossible to sample df must be empty"
-    final_sampled_df = final_sampled_df.merge(hh_df_rename.drop(columns=SYN_COUNT_COL), on=HHID, how="inner")
-    assert len(final_sampled_df) == len(hh_df_rename), "Final sampled df must be same length as original hh df"
+    final_sampled_df = final_sampled_df.merge(hh_df.drop(columns=SYN_COUNT_COL), on=HHID, how="inner")
+    assert len(final_sampled_df) == len(hh_df), "Final sampled df must be same length as original hh df"
 
     # check with hhsz
     n_rela_cols = [f"n_{rela}" for rela in EXPECTED_RELATIONSHIPS]
@@ -205,14 +203,16 @@ def determine_n_rela_for_each_hh(hh_df: pd.DataFrame, hhsz: str, n_rela_conditio
 
 def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFrame], hhsz:str, relationship:str) -> pd.DataFrame:
     # process each conditionals to have target id
+    hh_df = hh_df.rename(columns={col: f"{HH_TAG}_{col}" for col in hh_df.columns if col != HHID})
     for key in final_conditonals.keys():
         final_conditonals[key] = final_conditonals[key].reset_index(drop=True) # ensure we have a clean index
         final_conditonals[key][TARGET_ID] = final_conditonals[key].index + 1
-    processed_hh_df = determine_n_rela_for_each_hh(hh_df, hhsz, final_conditonals[f"{HH_TAG}-counts"])
+    processed_hh_df = determine_n_rela_for_each_hh(hh_df.copy(), hhsz, final_conditonals[f"{HH_TAG}-counts"])
     assert processed_hh_df[HHID].nunique() == len(hh_df), "Processed hh df must have same hhid as original hh df"
 
     # easiest would be looping through each hh and sample the relationships based on the tree (i will do that if i give up)
     # Start the sampling process
+    evidences = {HH_TAG: hh_df}
     for relationships in RELA_BY_LEVELS:
         # Doing the relationship in this level
         for rela in relationships:
@@ -222,9 +222,11 @@ def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFr
 
             for prev_src in BACK_CONNECTIONS[rela]:
                 conditional = final_conditonals[f"{prev_src}-{rela}"]
-                # print(conditional)
-            
-            # direct_sample_from_conditional
+                evidences = evidences[prev_src]
+                evidences[SYN_COUNT_COL] = evidences[HHID].map(processed_hh_df.set_index(HHID)[f"n_{rela}"])
+                final_sampled_df, possible_to_sample, impossible_to_sample, sample_cond = direct_sample_from_conditional(conditional, evidences, can_sample_all=False)
+                print(final_sampled_df)
+                break
             break
         break
 
