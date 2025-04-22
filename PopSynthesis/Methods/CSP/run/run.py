@@ -31,12 +31,12 @@ def run_csp(hh_df: pd.DataFrame, configs: Dict[str, Union[str, pd.DataFrame]]) -
     ori_pools = create_pool_pairs(hh_seed, pp_seed, hhid, relationship)
     # If we use IPF we can just use the original pool pairs (as all samples exist)
     final_conditonals = process_original_pools(ori_pools, method="original")
-    # csp_sample_by_hh(hh_df.drop(columns=[ZONE_ID]), final_conditonals, hhsz, relationship)
-    final_syn_pp = []
-    for zid in hh_df[ZONE_ID].unique():
-        print(f"Processing zone {zid}")
-        syn_pp = csp_sample_by_hh(hh_df[hh_df[ZONE_ID]==zid].drop(columns=[ZONE_ID]), final_conditonals, hhsz, relationship)
-        syn_pp[ZONE_ID] = zid
-        final_syn_pp.append(syn_pp)
-    return pd.concat(final_syn_pp, ignore_index=True)
+    return csp_sample_by_hh(hh_df.drop(columns=[ZONE_ID]), final_conditonals, hhsz, relationship)
+    # final_syn_pp = []
+    # for zid in hh_df[ZONE_ID].unique():
+    #     print(f"Processing zone {zid}")
+    #     syn_pp = csp_sample_by_hh(hh_df[hh_df[ZONE_ID]==zid].drop(columns=[ZONE_ID]), final_conditonals, hhsz, relationship)
+    #     syn_pp[ZONE_ID] = zid
+    #     final_syn_pp.append(syn_pp)
+    # return pd.concat(final_syn_pp, ignore_index=True)
 
