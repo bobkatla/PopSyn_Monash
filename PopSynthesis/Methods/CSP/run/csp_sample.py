@@ -167,9 +167,12 @@ def handle_resample_and_update_possible_df(resample_evidences: pd.DataFrame, pos
 
     sub_possibles = sub_possibles[sub_possibles[MAP_IDS_COL].notna()]
     # now we can sample from the new possible df
-    updated_chosen_target_ids = sample_and_choose_target_ids(sub_possibles)
+    new_sampled = pd.DataFrame()
+    if len(sub_possibles) > 0:
+        updated_chosen_target_ids = sample_and_choose_target_ids(sub_possibles)
+        new_sampled = updated_chosen_target_ids.reset_index()
 
-    return updated_chosen_target_ids.reset_index(), cannot_sample_anymore
+    return new_sampled, cannot_sample_anymore
 
 
 def determine_n_rela_for_each_hh(hh_df: pd.DataFrame, hhsz: str, n_rela_conditional: pd.DataFrame) -> Dict[str, int]:
@@ -199,7 +202,7 @@ def determine_n_rela_for_each_hh(hh_df: pd.DataFrame, hhsz: str, n_rela_conditio
         n_wrong = len(wrong_results)
         if n_wrong > 0:
             updated_possible_samples, cannot_sample_cases = handle_resample_and_update_possible_df(wrong_results, possible_to_sample)
-            assert len(cannot_sample_cases) == 0, "Cannot sample cases must be empty" # this is the current case for hhsz confirmation
+            assert len(cannot_sample_cases) == 0, "Cannot sample cases must be 0" # this is the current case for hhsz confirmation
             new_sampled = merge_chosen_target_ids_with_known_cond(updated_possible_samples, target_mapping, agg_ids=False)
             final_sampled_df = new_sampled
             possible_to_sample = updated_possible_samples
@@ -310,11 +313,11 @@ def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFr
 
                 # cannot_sample_cases[f"{prev_src}-{rela}"] = cannot_sample
 
-                assert len(final_sampled_df) > 0, "Final sampled df must be not empty"
-                final_syn_rela = pd.concat(fin_sampled_results, ignore_index=True)
-                final_syn_rela["src_sample"] = prev_src
-                rela_results.append(final_syn_rela)
-                sampled_ids += final_syn_rela[HHID].tolist() # updated to avoid duplicates
+                if len(final_sampled_df) > 0:
+                    final_syn_rela = pd.concat(fin_sampled_results, ignore_index=True)
+                    final_syn_rela["src_sample"] = prev_src
+                    rela_results.append(final_syn_rela)
+                    sampled_ids += final_syn_rela[HHID].tolist() # updated to avoid duplicates
 
                 possibles_cond[f"{prev_src}-{rela}"] = pd.concat(hold_possible_to_sample, ignore_index=True)
                 store_target_mapping[f"{prev_src}-{rela}"] = target_mapping
