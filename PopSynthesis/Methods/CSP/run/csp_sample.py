@@ -132,31 +132,30 @@ def handle_resample_and_update_possible_df(resample_evidences: pd.DataFrame, pos
     """Resample based on the wrong results and remove the just sampled one as well"""
     assert HHID in resample_evidences.columns, f"{HHID} must be in resample evidences"
     assert TARGET_ID in resample_evidences.columns, f"{TARGET_ID} must be in resample evidences"
-    evidence_cols = [x for x in possible_to_sample_df.columns if x not in (HHID, TARGET_ID, SYN_COUNT_COL, MAP_IDS_COL, MAP_COUNTS_COL)]
-    # by the evidence cols we can get new hhid, counts
-    wrong_combs_w_ids = resample_evidences.groupby(evidence_cols)[HHID].apply(list)
-    sub_possibles = possible_to_sample_df.set_index(evidence_cols).loc[wrong_combs_w_ids.index]
-    sub_possibles[HHID] = sub_possibles.index.map(wrong_combs_w_ids) # update to smaller hh to hanldle
-    sub_possibles = sub_possibles.drop(columns=[SYN_COUNT_COL]) # just not important yet, drop to avoid confusion
-    map_hhid_wrong_target_id = resample_evidences.set_index(HHID)[TARGET_ID]
+    assert possible_to_sample_df[HHID].nunique() == len(possible_to_sample_df), "HHID must be unique in possible to sample df"
+
+    wrong_chosen_target_ids = resample_evidences.groupby(HHID)[TARGET_ID].apply(list)
+    sub_possibles = possible_to_sample_df.set_index(HHID).loc[wrong_chosen_target_ids.index]
     
     # map to get rm ids
-    sub_possibles = sub_possibles.explode(HHID) # explode to get the target id for each hhid
-    sub_possibles["to_rm_ids"] = sub_possibles[HHID].map(map_hhid_wrong_target_id) # map the target id to remove
+    sub_possibles["to_rm_ids"] = sub_possibles.index.map(wrong_chosen_target_ids) # map the target id to remove
     def process_get_new_sampling(row):
         # get the target id to remove
-        to_rm_id = row["to_rm_ids"] # 1 value
+        to_rm_id = row["to_rm_ids"] # list
         # get the possible ids to sample from
         possible_ids = row[MAP_IDS_COL]
         associated_counts = row[MAP_COUNTS_COL]
-        rm_idx = possible_ids.index(to_rm_id) # get the index to remove
-        # remove the id from the possible ids
-        new_possible_ids = possible_ids[:rm_idx] + possible_ids[rm_idx+1:]
-        # do the same for counts
-        new_associated_counts = associated_counts[:rm_idx] + associated_counts[rm_idx+1:]
-        if len(new_possible_ids) == 0:
+        for rm_id in to_rm_id:
+
+            rm_idx = possible_ids.index(rm_id) # get the index to remove
+            # remove the id from the possible ids
+            possible_ids = possible_ids[:rm_idx] + possible_ids[rm_idx+1:]
+            # do the same for counts
+            associated_counts = associated_counts[:rm_idx] + associated_counts[rm_idx+1:]
+        assert len(possible_ids) == len(associated_counts), "Possible ids and counts must be same length after removing"
+        if len(possible_ids) == 0:
             return None, None
-        return new_possible_ids, new_associated_counts
+        return possible_ids, associated_counts
     
     sub_possibles[[MAP_IDS_COL, MAP_COUNTS_COL]] = sub_possibles.apply(process_get_new_sampling, axis=1, result_type="expand")
     sub_possibles = sub_possibles.drop(columns=["to_rm_ids"])
@@ -164,7 +163,6 @@ def handle_resample_and_update_possible_df(resample_evidences: pd.DataFrame, pos
     cannot_sample_anymore = sub_possibles[sub_possibles[MAP_IDS_COL].isna()]
 
     sub_possibles = sub_possibles[sub_possibles[MAP_IDS_COL].notna()]
-    sub_possibles[SYN_COUNT_COL] = 1
     # now we can sample from the new possible df
     updated_chosen_target_ids = sample_and_choose_target_ids(sub_possibles)
 
@@ -208,11 +206,12 @@ def determine_n_rela_for_each_hh(hh_df: pd.DataFrame, hhsz: str, n_rela_conditio
     return pd.concat(final_results, ignore_index=True).drop(columns=["synthesized_hhsz", "correct_hhsz"])
 
 
-def handle_impossible_sampling_1_lev(possible_to_sample, impossible_to_sample, target_mapping):
-    resample_evidences = None
-    updated_possible_samples, cannot_sample_cases = handle_resample_and_update_possible_df(resample_evidences, possible_to_sample)
-    new_sampled = merge_chosen_target_ids_with_known_cond(updated_possible_samples, target_mapping, agg_ids=False)
-    raise NotImplementedError("Not implemented yet")
+# def handle_wrong_sampling_1_lev(resample_evidences: pd.DataFrame, possible_to_sample: pd.DataFrame, target_mapping: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
+#     """Handle the wrong sampling by resampling and updating the possible df"""
+#     updated_possible_samples, cannot_sample_cases = handle_resample_and_update_possible_df(resample_evidences, possible_to_sample)
+#     print(updated_possible_samples)
+#     new_sampled = merge_chosen_target_ids_with_known_cond(updated_possible_samples, target_mapping, agg_ids=False)
+#     raise NotImplementedError("Not fdggdf yet")
 
 
 def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFrame], hhsz:str, relationship:str) -> pd.DataFrame:
@@ -229,6 +228,9 @@ def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFr
     # TODO: for case that cannot do sampling again, we do the whole process with the updated hh_df
     # Start the sampling process
     evidences_store = {HH_TAG: hh_df}
+    possibles_cond = {}
+    store_target_mapping = {}
+    cannot_sample_cases = {}
     for relationships in RELA_BY_LEVELS:
         # Doing the relationship in this level
         for rela in relationships:
@@ -239,7 +241,7 @@ def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFr
             for prev_src in BACK_CONNECTIONS[rela]:
                 print(f"Sampling {rela} from {prev_src}...")
                 conditional = final_conditonals[f"{prev_src}-{rela}"]
-                evidences = evidences_store[prev_src].drop(columns=[TARGET_ID], errors='ignore')
+                evidences = evidences_store[prev_src].drop(columns=[TARGET_ID, "src_sample"], errors='ignore')
 
                 # Process evidences to get the needed to sample only
                 evidences["prev_src_count"] = evidences[HHID].map(processed_hh_df.set_index(HHID)[f"n_{prev_src}"])
@@ -251,8 +253,40 @@ def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFr
                     continue
 
                 final_sampled_df, possible_to_sample, impossible_to_sample, target_mapping = direct_sample_from_conditional(conditional, evidences, can_sample_all=False)
+
+                # store for later use if needed
+                possibles_cond[f"{prev_src}-{rela}"] = possible_to_sample
+                store_target_mapping[f"{prev_src}-{rela}"] = target_mapping
+
+                # No this is wrong because we need to resample from before not from here
+                # for example impossible will tell us which hh cannot sammple given the evidence, this means the evidence is wrong
+                # so we need to resame the evidences (i.e. update the evidences of those HH), and to do so we must go back 1 step
+                # May need deeper reconstruction, but for now I can see, we can just merge to get the new evidences
+                if len(impossible_to_sample) > 0:
+                    prev_samples = evidences_store[prev_src].copy()
+                    to_resample_prev = prev_samples[prev_samples[HHID].isin(impossible_to_sample[HHID])]
+                    assert "src_sample" in to_resample_prev.columns, "src_sample must be in the prev df"
+                    assert TARGET_ID in to_resample_prev.columns, "target_id must be in the prev df"
+                    # split by src sample to handle
+                    for src_sample in to_resample_prev["src_sample"].unique():
+                        sub_prev_samples = to_resample_prev[to_resample_prev["src_sample"] == src_sample]
+                        sub_prev_samples = sub_prev_samples.drop(columns=["src_sample"])
+                        # start doing the resampling for prev
+                        prev_conditionals = possibles_cond[f"{src_sample}-{prev_src}"].copy()
+                        prev_target_mapping = store_target_mapping[f"{src_sample}-{prev_src}"].copy()
+                        # likely a while loop here that can update
+                        updated_conditional, cannot_sample = handle_resample_and_update_possible_df(sub_prev_samples, prev_conditionals)
+                        print(updated_conditional)
+                        print(cannot_sample)
+                        raise NotImplementedError("Not implemented ye3434t")
+                        # new_prev_samples, cannot_sample = handle_wrong_sampling_1_lev(sub_prev_samples, prev_conditionals, prev_target_mapping)
+                    # rela_results.append(new_samples)
+                    # cannot_sample_cases[f"{prev_src}-{rela}"] = cannot_sample
+
+                # final_sampled_df = pd.concat
+                final_sampled_df["src_sample"] = prev_src
                 rela_results.append(final_sampled_df)
-                sampled_ids += final_sampled_df[HHID].tolist()
+                sampled_ids += final_sampled_df[HHID].tolist() # updated to avoid duplicates
 
             if len(rela_results) == 0:
                 print(f"No {rela} to sample")
