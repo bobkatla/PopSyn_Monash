@@ -11,7 +11,7 @@ from PopSynthesis.Methods.CSP.run.rela_const import (
     BACK_CONNECTIONS,
     RELA_BY_LEVELS
 )
-from PopSynthesis.Methods.CSP.const import HHID
+from PopSynthesis.Methods.CSP.const import HHID, PP_ATTS
 
 
 TARGET_ID = "target_id"
@@ -215,6 +215,7 @@ def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFr
     for key in final_conditonals.keys():
         final_conditonals[key] = final_conditonals[key].reset_index(drop=True) # ensure we have a clean index
         final_conditonals[key][TARGET_ID] = final_conditonals[key].index + 1
+    # print("Processing hh_df... to get the n_rela for each hh")
     processed_hh_df = determine_n_rela_for_each_hh(hh_df.copy(), hhsz, final_conditonals[f"{HH_TAG}-counts"])
     assert processed_hh_df[HHID].nunique() == len(hh_df), "Processed hh df must have same hhid as original hh df"
     processed_hh_df[f"n_{HH_TAG}"] = 1 # just for compleness
@@ -229,12 +230,12 @@ def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFr
     for relationships in RELA_BY_LEVELS:
         # Doing the relationship in this level
         for rela in relationships:
-            print(f"Sampling {rela}...")
+            # print(f"Sampling {rela}...")
 
             rela_results = []
             sampled_ids = []
             for prev_src in BACK_CONNECTIONS[rela]:
-                print(f"Sampling {rela} from {prev_src}...")
+                # print(f"Sampling {rela} from {prev_src}...")
                 conditional = final_conditonals[f"{prev_src}-{rela}"]
                 evidences = evidences_store[prev_src].drop(columns=[TARGET_ID, "src_sample"], errors='ignore')
 
@@ -320,13 +321,20 @@ def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFr
 
 
             if len(rela_results) == 0:
-                print(f"No {rela} to sample")
+                # print(f"No {rela} to sample")
                 continue
             final_rela = pd.concat(rela_results, ignore_index=True)
             evidences_store[rela] = final_rela
 
-    for rela in EXPECTED_RELATIONSHIPS:
-        print(f"Checking {rela}...")
-        print(processed_hh_df[f"n_{rela}"].sum(), len(evidences_store.get(rela, [])))
-    raise NotImplementedError("Not implemented yet")
-    return
+    concat_pp_ls = []
+    for rela, df in evidences_store.items():
+        if rela == HH_TAG:
+            continue
+        df = df.drop(columns=[TARGET_ID, SYN_COUNT_COL, "src_sample"], errors='ignore')
+        df[relationship] = rela
+        df = df.rename(columns={f"{rela}_{att}": att for att in PP_ATTS})
+        concat_pp_ls.append(df)
+    # for rela in EXPECTED_RELATIONSHIPS:
+    #     print(f"Checking {rela}...")
+    #     print(processed_hh_df[f"n_{rela}"].sum(), len(evidences_store.get(rela, [])))
+    return pd.concat(concat_pp_ls, ignore_index=True)

@@ -36,8 +36,7 @@ def main():
     configs = load_configurations()
     # Run CSP with the given hh_df and configs
     resulted_pp = run_csp(hh_df, configs) # We must not change the hh
-    # print(resulted_pp)
-
+    resulted_pp.to_csv(OUTPUT_FOLDER / "csp_results_not_completed.csv", index=False)
 
 if __name__ == "__main__":
     main()
