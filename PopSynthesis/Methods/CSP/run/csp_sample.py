@@ -239,6 +239,9 @@ def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFr
             sampled_ids = []
             for prev_src in BACK_CONNECTIONS[rela]:
                 # print(f"Sampling {rela} from {prev_src}...")
+                if prev_src not in evidences_store:
+                    # Somehow this area does not have the prev rela
+                    continue
                 conditional = final_conditonals[f"{prev_src}-{rela}"]
                 evidences = evidences_store[prev_src].drop(columns=[TARGET_ID, "src_sample"], errors='ignore')
 
