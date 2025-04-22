@@ -13,13 +13,13 @@ from PopSynthesis.Methods.CSP.run.rela_const import (
 )
 from PopSynthesis.Methods.CSP.const import HHID
 
+
 TARGET_ID = "target_id"
 SYN_COUNT_COL = "syn_count"
 MAP_IDS_COL = "potential_target_ids"
 MAP_COUNTS_COL = "asscociated_counts"
 EVIDENCE_ID = "evidence_id"
-global debug_mode
-debug_mode = False
+
 
 def split_and_process_by_target_id(df: pd.DataFrame, evidence_cols: List[str], target_id: str) -> Tuple[pd.Series, pd.Series, pd.DataFrame]:
     """Split the df by target_id and return the evidence and sample df"""
