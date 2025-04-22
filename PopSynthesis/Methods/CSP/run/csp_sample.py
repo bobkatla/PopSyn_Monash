@@ -8,7 +8,6 @@ from PopSynthesis.Methods.CSP.run.rela_const import (
     MAIN_PERSON,
     COUNT_COL,
     EXPECTED_RELATIONSHIPS,
-    EPXECTED_CONNECTIONS,
     BACK_CONNECTIONS,
     RELA_BY_LEVELS
 )
@@ -68,17 +67,18 @@ def init_potentials_to_sample(conditionals: pd.DataFrame, evidences: pd.DataFram
                 results[id] += count
         return list(results.keys()), list(results.values())
     to_sample_df[[MAP_IDS_COL, MAP_COUNTS_COL]] = to_sample_df.apply(process_combined_to_combine_ids_counts, axis=1, result_type="expand")
-    to_sample_df[SYN_COUNT_COL] = to_sample_df[HHID].map(evidences.groupby(HHID)[SYN_COUNT_COL].sum())
+    # NOTE: use first NOT sum when do groupby HHID with SYN_COUNT_COL as they are repeated value, also can do mean(), same thing
+    to_sample_df[SYN_COUNT_COL] = to_sample_df[HHID].map(evidences.groupby(HHID)[SYN_COUNT_COL].first())
 
     # TODO: reduce runtime by grouping cases of similar potential ids
     # to_sample_df = to_sample_df.groupby([MAP_IDS_COL, MAP_COUNTS_COL])[HHID].apply(list)
 
-    cannot_sample_df = impossible_to_sample_df.groupby(HHID)[SYN_COUNT_COL].sum().reset_index()
+    cannot_sample_df = impossible_to_sample_df.groupby(HHID)[SYN_COUNT_COL].first().reset_index()
     cannot_sample_df = cannot_sample_df[~cannot_sample_df[HHID].isin(to_sample_df[HHID])]
 
     if can_sample_all:
         assert len(impossible_to_sample_df) == 0, "Impossible to sample df must be empty"
-    assert len(to_sample_df) + len(cannot_sample_df) == len(evidences[HHID].unique()), "Enusre all hhids are sampled"
+    assert len(to_sample_df) + len(cannot_sample_df) == len(evidences[HHID].unique()), "Ensure all hhids are sampled"
 
     return to_sample_df, cannot_sample_df, target_mapping
 
@@ -107,8 +107,6 @@ def merge_chosen_target_ids_with_known_cond(to_sample_df: pd.DataFrame, target_m
         to_sample_df[[HHID, TARGET_ID]] = pd.DataFrame(to_sample_df['zip_cols'].tolist(), index=to_sample_df.index)
 
     else:
-        # the case of HHID are just 1 value
-        n_before_explode = len(to_sample_df)
         to_sample_df = to_sample_df.explode(TARGET_ID)
 
     to_sample_df = to_sample_df.drop(columns=[MAP_IDS_COL, MAP_COUNTS_COL, SYN_COUNT_COL, 'zip_cols'], errors='ignore')
@@ -125,19 +123,22 @@ def direct_sample_from_conditional(conditionals: pd.DataFrame, evidences: pd.Dat
     to_sample_df = sample_and_choose_target_ids(possible_to_sample)
     final_sampled = merge_chosen_target_ids_with_known_cond(to_sample_df, target_mapping, agg_ids=False)
 
-    assert len(final_sampled) + impossible_to_sample[SYN_COUNT_COL].sum() == evidences[SYN_COUNT_COL].sum(), "Sampled df must be same length as original df"
+    expected_n_sampled = evidences.groupby(HHID)[SYN_COUNT_COL].first().sum()
+    assert len(final_sampled) + impossible_to_sample[SYN_COUNT_COL].sum() == expected_n_sampled, "Processed samples must be same as given evidences"
     return final_sampled, possible_to_sample, impossible_to_sample, target_mapping
 
 
-def handle_wrong_results_and_update_possible_df(wrong_results: pd.DataFrame, possible_to_sample_df: pd.DataFrame, target_mapping: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def handle_resample_and_update_possible_df(resample_evidences: pd.DataFrame, possible_to_sample_df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Resample based on the wrong results and remove the just sampled one as well"""
+    assert HHID in resample_evidences.columns, f"{HHID} must be in resample evidences"
+    assert TARGET_ID in resample_evidences.columns, f"{TARGET_ID} must be in resample evidences"
     evidence_cols = [x for x in possible_to_sample_df.columns if x not in (HHID, TARGET_ID, SYN_COUNT_COL, MAP_IDS_COL, MAP_COUNTS_COL)]
     # by the evidence cols we can get new hhid, counts
-    wrong_combs_w_ids = wrong_results.groupby(evidence_cols)[HHID].apply(list)
+    wrong_combs_w_ids = resample_evidences.groupby(evidence_cols)[HHID].apply(list)
     sub_possibles = possible_to_sample_df.set_index(evidence_cols).loc[wrong_combs_w_ids.index]
     sub_possibles[HHID] = sub_possibles.index.map(wrong_combs_w_ids) # update to smaller hh to hanldle
     sub_possibles = sub_possibles.drop(columns=[SYN_COUNT_COL]) # just not important yet, drop to avoid confusion
-    map_hhid_wrong_target_id = wrong_results.set_index(HHID)[TARGET_ID]
+    map_hhid_wrong_target_id = resample_evidences.set_index(HHID)[TARGET_ID]
     
     # map to get rm ids
     sub_possibles = sub_possibles.explode(HHID) # explode to get the target id for each hhid
@@ -196,7 +197,7 @@ def determine_n_rela_for_each_hh(hh_df: pd.DataFrame, hhsz: str, n_rela_conditio
         wrong_results = final_sampled_df[~final_sampled_df["correct_hhsz"]]
         n_wrong = len(wrong_results)
         if n_wrong > 0:
-            updated_possible_samples, cannot_sample_cases = handle_wrong_results_and_update_possible_df(wrong_results, possible_to_sample, target_mapping)
+            updated_possible_samples, cannot_sample_cases = handle_resample_and_update_possible_df(wrong_results, possible_to_sample)
             assert len(cannot_sample_cases) == 0, "Cannot sample cases must be empty" # this is the current case for hhsz confirmation
             new_sampled = merge_chosen_target_ids_with_known_cond(updated_possible_samples, target_mapping, agg_ids=False)
             final_sampled_df = new_sampled
@@ -208,7 +209,10 @@ def determine_n_rela_for_each_hh(hh_df: pd.DataFrame, hhsz: str, n_rela_conditio
 
 
 def handle_impossible_sampling_1_lev(possible_to_sample, impossible_to_sample, target_mapping):
-    NotImplemented
+    resample_evidences = None
+    updated_possible_samples, cannot_sample_cases = handle_resample_and_update_possible_df(resample_evidences, possible_to_sample)
+    new_sampled = merge_chosen_target_ids_with_known_cond(updated_possible_samples, target_mapping, agg_ids=False)
+    raise NotImplementedError("Not implemented yet")
 
 
 def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFrame], hhsz:str, relationship:str) -> pd.DataFrame:
@@ -256,4 +260,5 @@ def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFr
             final_rela = pd.concat(rela_results, ignore_index=True)
             evidences_store[rela] = final_rela
 
-    return None
+    raise NotImplementedError("Not implemented yet")
+    return
