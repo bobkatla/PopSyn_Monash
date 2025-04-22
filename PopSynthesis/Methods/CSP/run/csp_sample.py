@@ -147,6 +147,8 @@ def handle_resample_and_update_possible_df(resample_evidences: pd.DataFrame, pos
         possible_ids = row[MAP_IDS_COL]
         associated_counts = row[MAP_COUNTS_COL]
         for rm_id in to_rm_id:
+            if rm_id not in possible_ids:
+                continue
             rm_idx = possible_ids.index(rm_id) # get the index to remove
             # remove the id from the possible ids
             possible_ids = possible_ids[:rm_idx] + possible_ids[rm_idx+1:]
