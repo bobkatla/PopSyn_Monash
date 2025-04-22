@@ -40,13 +40,13 @@ def init_potentials_to_sample(conditionals: pd.DataFrame, evidences: pd.DataFram
 
     assert set(evidence_cols).issubset(set(conditionals.columns)), "Evidences must be subset of conditionals"
 
-    evidences_to_ids, evidences_to_counts, target_mapping = split_and_process_by_target_id(conditionals, evidence_cols, TARGET_ID)
-    assert len(evidences_to_ids) == len(evidences_to_counts), "Evidences to ids and counts must be same length"
-    assert set(evidences_to_ids.index) == set(evidences_to_counts.index), "Evidences to ids and counts must be same things"
+    evidences_combs_to_target_ids, evidences_combs_to_target_counts, target_mapping = split_and_process_by_target_id(conditionals, evidence_cols, TARGET_ID)
+    assert len(evidences_combs_to_target_ids) == len(evidences_combs_to_target_counts), "Evidences to ids and counts must be same length"
+    assert set(evidences_combs_to_target_ids.index) == set(evidences_combs_to_target_counts.index), "Evidences to ids and counts must be same things"
     
     # handle multiple hhid
-    evidences[MAP_IDS_COL] = evidences.set_index(evidence_cols).index.map(evidences_to_ids)
-    evidences[MAP_COUNTS_COL] = evidences.set_index(evidence_cols).index.map(evidences_to_counts)
+    evidences[MAP_IDS_COL] = evidences.set_index(evidence_cols).index.map(evidences_combs_to_target_ids)
+    evidences[MAP_COUNTS_COL] = evidences.set_index(evidence_cols).index.map(evidences_combs_to_target_counts)
 
     # split by na to check
     possible_to_sample_df = evidences[evidences[MAP_IDS_COL].notna()]
@@ -74,10 +74,11 @@ def init_potentials_to_sample(conditionals: pd.DataFrame, evidences: pd.DataFram
     # to_sample_df = to_sample_df.groupby([MAP_IDS_COL, MAP_COUNTS_COL])[HHID].apply(list)
 
     cannot_sample_df = impossible_to_sample_df.groupby(HHID)[SYN_COUNT_COL].sum().reset_index()
+    cannot_sample_df = cannot_sample_df[~cannot_sample_df[HHID].isin(to_sample_df[HHID])]
 
     if can_sample_all:
         assert len(impossible_to_sample_df) == 0, "Impossible to sample df must be empty"
-    assert len(to_sample_df) + len(cannot_sample_df) == len(evidences), "Results must be same length as original evidences"
+    assert len(to_sample_df) + len(cannot_sample_df) == len(evidences[HHID].unique()), "Enusre all hhids are sampled"
 
     return to_sample_df, cannot_sample_df, target_mapping
 
@@ -218,6 +219,7 @@ def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFr
         final_conditonals[key][TARGET_ID] = final_conditonals[key].index + 1
     processed_hh_df = determine_n_rela_for_each_hh(hh_df.copy(), hhsz, final_conditonals[f"{HH_TAG}-counts"])
     assert processed_hh_df[HHID].nunique() == len(hh_df), "Processed hh df must have same hhid as original hh df"
+    processed_hh_df[f"n_{HH_TAG}"] = 1 # just for compleness
 
     # easiest would be looping through each hh and sample the relationships based on the tree (i will do that if i give up)
     # Start the sampling process
@@ -227,7 +229,7 @@ def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFr
         for rela in relationships:
             print(f"Sampling {rela}...")
 
-            if rela != MAIN_PERSON:
+            if rela == "Grandchild":
                 global debug_mode
                 debug_mode = True
 
@@ -235,11 +237,20 @@ def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFr
             for prev_src in BACK_CONNECTIONS[rela]:
                 conditional = final_conditonals[f"{prev_src}-{rela}"]
                 evidences = evidences_store[prev_src].drop(columns=[TARGET_ID], errors='ignore')
+                # Must be here, evidence can have multiple hhid, I thought I handled it, check again tmr
+                evidences["prev_src_count"] = evidences[HHID].map(processed_hh_df.set_index(HHID)[f"n_{prev_src}"])
                 evidences[SYN_COUNT_COL] = evidences[HHID].map(processed_hh_df.set_index(HHID)[f"n_{rela}"])
-                evidences = evidences[evidences[SYN_COUNT_COL] > 0].copy() # only care where we need to sample
+                evidences = evidences[(evidences[SYN_COUNT_COL] > 0) & (evidences["prev_src_count"] > 0)].copy() # only care where we need to sample
+                evidences = evidences.drop(columns=["prev_src_count"])
+                if len(evidences) == 0:
+                    continue
+
                 final_sampled_df, possible_to_sample, impossible_to_sample, target_mapping = direct_sample_from_conditional(conditional, evidences, can_sample_all=False)
                 rela_results.append(final_sampled_df)
                 break
+            if len(rela_results) == 0:
+                print(f"No {rela} to sample")
+                continue
             final_rela = pd.concat(rela_results, ignore_index=True)
             evidences_store[rela] = final_rela
 
