@@ -73,7 +73,8 @@ def init_potentials_to_sample(conditionals: pd.DataFrame, evidences: pd.DataFram
         # to_sample_df = to_sample_df.groupby([MAP_IDS_COL, MAP_COUNTS_COL])[HHID].apply(list)
 
     cannot_sample_df = impossible_to_sample_df.groupby(HHID)[SYN_COUNT_COL].first().reset_index()
-    cannot_sample_df = cannot_sample_df[~cannot_sample_df[HHID].isin(to_sample_df[HHID])]
+    can_sample_hhid = to_sample_df[HHID].tolist() if len(to_sample_df) > 0 else []
+    cannot_sample_df = cannot_sample_df[~cannot_sample_df[HHID].isin(can_sample_hhid)]
 
     if can_sample_all:
         assert len(impossible_to_sample_df) == 0, "Impossible to sample df must be empty"
@@ -324,5 +325,8 @@ def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFr
             final_rela = pd.concat(rela_results, ignore_index=True)
             evidences_store[rela] = final_rela
 
+    for rela in EXPECTED_RELATIONSHIPS:
+        print(f"Checking {rela}...")
+        print(processed_hh_df[f"n_{rela}"].sum(), len(evidences_store.get(rela, [])))
     raise NotImplementedError("Not implemented yet")
     return
