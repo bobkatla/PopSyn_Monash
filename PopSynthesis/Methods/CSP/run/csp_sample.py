@@ -221,7 +221,8 @@ def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFr
     assert processed_hh_df[HHID].nunique() == len(hh_df), "Processed hh df must have same hhid as original hh df"
     processed_hh_df[f"n_{HH_TAG}"] = 1 # just for compleness
 
-    # easiest would be looping through each hh and sample the relationships based on the tree (i will do that if i give up)
+    # TODO: implement the resampling directly at the current sampling
+    # TODO: for case that cannot do sampling again, we do the whole process with the updated hh_df
     # Start the sampling process
     evidences_store = {HH_TAG: hh_df}
     for relationships in RELA_BY_LEVELS:
@@ -229,25 +230,26 @@ def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFr
         for rela in relationships:
             print(f"Sampling {rela}...")
 
-            if rela == "Grandchild":
-                global debug_mode
-                debug_mode = True
-
             rela_results = []
+            sampled_ids = []
             for prev_src in BACK_CONNECTIONS[rela]:
+                print(f"Sampling {rela} from {prev_src}...")
                 conditional = final_conditonals[f"{prev_src}-{rela}"]
                 evidences = evidences_store[prev_src].drop(columns=[TARGET_ID], errors='ignore')
-                # Must be here, evidence can have multiple hhid, I thought I handled it, check again tmr
+
+                # Process evidences to get the needed to sample only
                 evidences["prev_src_count"] = evidences[HHID].map(processed_hh_df.set_index(HHID)[f"n_{prev_src}"])
                 evidences[SYN_COUNT_COL] = evidences[HHID].map(processed_hh_df.set_index(HHID)[f"n_{rela}"])
                 evidences = evidences[(evidences[SYN_COUNT_COL] > 0) & (evidences["prev_src_count"] > 0)].copy() # only care where we need to sample
                 evidences = evidences.drop(columns=["prev_src_count"])
+                evidences = evidences[~evidences[HHID].isin(sampled_ids)] # get the ones have not sampled yet
                 if len(evidences) == 0:
                     continue
 
                 final_sampled_df, possible_to_sample, impossible_to_sample, target_mapping = direct_sample_from_conditional(conditional, evidences, can_sample_all=False)
                 rela_results.append(final_sampled_df)
-                break
+                sampled_ids += final_sampled_df[HHID].tolist()
+
             if len(rela_results) == 0:
                 print(f"No {rela} to sample")
                 continue
