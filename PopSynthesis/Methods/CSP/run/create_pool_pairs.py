@@ -2,7 +2,7 @@
 
 
 import pandas as pd
-from typing import Dict
+from typing import Dict, List
 from PopSynthesis.Methods.CSP.run.rela_const import (
     HH_TAG,
     COUNT_COL,
@@ -51,7 +51,18 @@ def create_count_for_pool(pools: Dict[str, pd.DataFrame]) -> Dict[str, pd.DataFr
     return result
 
 
-def create_pool_pairs(hh: pd.DataFrame, pp: pd.DataFrame, hhid: str, relationship: str) -> Dict[str, pd.DataFrame]:
+def add_count_rela_to_pools(pools: Dict[str, pd.DataFrame], hhid: str, rel_counts_each_hhid: pd.DataFrame, exclude_connections: List[str]=[]) -> Dict[str, pd.DataFrame]:
+    result = {}
+    for connection, df in pools.items():
+        if connection not in exclude_connections:
+            prev_rela, dest_rela = connection.split("-")
+            result[connection] = df.merge(
+                rel_counts_each_hhid, left_on=f"{prev_rela}_{hhid}", right_on=hhid, how="inner"
+            ).drop(columns=[f"{dest_rela}_{hhid}", f"{prev_rela}_{hhid}", hhid])
+    return result
+
+
+def create_pool_pairs(hh: pd.DataFrame, pp: pd.DataFrame, hhid: str, relationship: str, include_n_count_all:bool = False) -> Dict[str, pd.DataFrame]:
     assert set(pp[relationship]) == set(EXPECTED_RELATIONSHIPS), "Invalid relationship in pp"
     segmented_pp_by_rela = segment_by_col(pp, relationship)
     assert len(segmented_pp_by_rela[MAIN_PERSON]) == len(hh) # ensure each hh has 1 main person
@@ -63,13 +74,17 @@ def create_pool_pairs(hh: pd.DataFrame, pp: pd.DataFrame, hhid: str, relationshi
         dst_df = segmented_pp_by_rela.get(dst_rela, hh)
         paired_connections[f"{src_rela}-{dst_rela}"] = pair_by_id(
             src_df, dst_df, f"{src_rela}_{hhid}", f"{dst_rela}_{hhid}"
-        ).drop(columns=[f"{src_rela}_{hhid}", f"{dst_rela}_{hhid}"])
+        )
 
     # special case for counting rela
     rel_counts_each_hhid = count_n_states_for_each_hh(pp, relationship, hhid)
     paired_connections[f"{HH_TAG}-counts"] = hh.merge(
         rel_counts_each_hhid, left_on=f"{HH_TAG}_{hhid}", right_on=hhid, how="inner"
     ).drop(columns=[f"{HH_TAG}_{hhid}", hhid])
+    if include_n_count_all:
+        paired_connections = add_count_rela_to_pools(
+            paired_connections, hhid, rel_counts_each_hhid, exclude_connections=[f"{HH_TAG}-counts"]
+        )
 
     final_paired_connections = create_count_for_pool(paired_connections)
 
