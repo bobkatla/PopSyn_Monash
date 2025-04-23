@@ -7,6 +7,7 @@ from pgmpy.sampling import BayesianModelSampling
 from pgmpy.factors.discrete import State
 from pgmpy.base import DAG
 from PopSynthesis.Methods.CSP.run.rela_const import HH_TAG, RELA_BY_LEVELS, BACK_CONNECTIONS, EXPECTED_RELATIONSHIPS, COUNT_COL
+from PopSynthesis.Methods.CSP.run.sample_utils import SYN_COUNT_COL
 from PopSynthesis.Methods.CSP.const import HHID, PP_ATTS
 from typing import Dict, List, Callable
 import warnings
@@ -19,6 +20,13 @@ N_RELA_COLS = [f"n_{rela}" for rela in EXPECTED_RELATIONSHIPS]
 def model_sample(model: DAG, evidences: pd.DataFrame, target_cols: List[str], func_check: Callable) -> pd.DataFrame:
     # groupby evidences into different combinations and count
     assert HHID in evidences.columns, "The evidences must contain the HHID column"
+    assert SYN_COUNT_COL in evidences.columns, "The evidences must contain the SYN_COUNT_COL column"
+    # Multiple hhid, choose the first one only, TODO: may need to rethink this later
+    evidences = evidences[~evidences[HHID].duplicated(keep='first')]
+    # Multiple outputs, we can just increase the hhid and create list and explode
+    evidences[HHID] = evidences.apply(lambda x: [x[HHID]] * x[SYN_COUNT_COL], axis=1)
+    evidences = evidences.explode(HHID).drop(columns=[SYN_COUNT_COL])
+  
     evidence_cols = [x for x in evidences.columns if x != HHID]
     processed_evidences = evidences.groupby(evidence_cols)[HHID].apply(list).reset_index()
 
@@ -51,7 +59,7 @@ def model_sample(model: DAG, evidences: pd.DataFrame, target_cols: List[str], fu
     # concat and return
     sampled_df = pd.concat(sampled_dfs, ignore_index=True)
     # check the sampled df
-    assert len(sampled_df) == len(evidences), "The sampled df must have the same count as the evidences"
+    assert len(sampled_df) == len(evidences), "The sampled df must have the same count as the processed evidences"
     assert set(sampled_df[HHID]) == set(evidences[HHID]), "The sampled df must have the same hhid as the evidences"
     return sampled_df[target_cols].copy()
 
@@ -79,6 +87,7 @@ def sample_rela_BN(hh_df: pd.DataFrame, final_conditonals: pd.DataFrame, hhsz: s
     # go through each and sample, sample directly from the model
     # for some cases we need to resample the impossible cases
     hh_df = hh_df.rename(columns={col: f"{HH_TAG}_{col}" for col in hh_df.columns if col != HHID})
+    hh_att_cols = [col for col in hh_df.columns]
     hh_counts_cond = final_conditonals[f"{HH_TAG}-counts"]
     # Special handle for n relas to update the possible states
     n_counts_states = {}
@@ -90,11 +99,47 @@ def sample_rela_BN(hh_df: pd.DataFrame, final_conditonals: pd.DataFrame, hhsz: s
     # create the models
     conn_models = build_models_for_each_connection(final_conditonals, update_possible_states)
 
-    processed_hh_df = model_sample(conn_models[f"{HH_TAG}-counts"], hh_df, N_RELA_COLS + hh_df.columns.tolist(), check_hhsz_mismatch)
-    print(processed_hh_df)
+    hh_df[SYN_COUNT_COL] = 1 # init all is one
+    processed_hh_df = model_sample(conn_models[f"{HH_TAG}-counts"], hh_df, N_RELA_COLS + hh_att_cols, check_hhsz_mismatch)
+    expected_n_pp = processed_hh_df[N_RELA_COLS].sum().sum()
+
     evidences_store = {HH_TAG: processed_hh_df}
-    
-    raise NotImplementedError("This function is not implemented yet")
+    for relationships in RELA_BY_LEVELS:
+        # Doing the relationship in this level
+        for rela in relationships:
+            for prev_rela in BACK_CONNECTIONS[rela]:
+                print(f"Sampling {rela} from {prev_rela}...")
+                rela_results = []
+                if prev_rela not in evidences_store:
+                    # Somehow this area does not have the prev rela
+                    continue
+                evidences = evidences_store[prev_rela]
+                check = (evidences[f"n_{rela}"] > 0)
+                if f"n_{prev_rela}" in evidences.columns:
+                    check = check & (evidences[f"n_{prev_rela}"] > 0)
+                evidences = evidences[check].copy() # only care where we need to sample
+                if len(evidences) == 0:
+                    continue
+                evidences[SYN_COUNT_COL] = evidences[f"n_{rela}"]
+                sampled_df = model_sample(conn_models[f"{prev_rela}-{rela}"], evidences, N_RELA_COLS + [f"{rela}_{att}" for att in PP_ATTS] + [HHID], None)
+                rela_results.append(sampled_df)
+            if len(rela_results) == 0:
+                continue
+            evidences_store[rela] = pd.concat(rela_results, ignore_index=True)
+            assert len(evidences_store[rela]) == processed_hh_df[f"n_{rela}"].sum(), f"Must be able to sample all for this {rela}"
+
+    concat_pp_ls = []
+    for rela, df in evidences_store.items():
+        if rela == HH_TAG:
+            continue
+        df = df.drop(columns=N_RELA_COLS, errors='ignore')
+        df[relationship] = rela
+        df = df.rename(columns={f"{rela}_{att}": att for att in PP_ATTS})
+        concat_pp_ls.append(df)
+    final_pp = pd.concat(concat_pp_ls, ignore_index=True)
+    assert len(final_pp) == expected_n_pp, f"Final syn pp must match from HH, but got {len(final_pp)} vs {expected_n_pp}"
+    return final_pp
+
 
 ###### here some funcs to check the impossible cases
 def check_hhsz_mismatch(syn_hh_df: pd.DataFrame) -> pd.Series:
