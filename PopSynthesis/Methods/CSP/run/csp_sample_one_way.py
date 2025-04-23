@@ -12,7 +12,7 @@ from PopSynthesis.Methods.CSP.run.sample_utils import (
 )
 from typing import Dict, List
 
-def sample_one_way(hh_df: pd.DataFrame, final_conditonals: pd.DataFrame, hhsz: str, relationship: str, possible_states:Dict[str, List[str]]=None) -> pd.DataFrame:
+def sample_one_way(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFrame], hhsz: str, relationship: str, possible_states:Dict[str, List[str]]=None) -> pd.DataFrame:
     """Sample one way from the hh df"""
     # the n rela will be determined as normal
     # process each conditionals to have target id
