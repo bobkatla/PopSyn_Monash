@@ -59,6 +59,8 @@ def add_count_rela_to_pools(pools: Dict[str, pd.DataFrame], hhid: str, rel_count
             result[connection] = df.merge(
                 rel_counts_each_hhid, left_on=f"{prev_rela}_{hhid}", right_on=hhid, how="inner"
             ).drop(columns=[f"{dest_rela}_{hhid}", f"{prev_rela}_{hhid}", hhid])
+        else:
+            result[connection] = df.copy()
     return result
 
 
