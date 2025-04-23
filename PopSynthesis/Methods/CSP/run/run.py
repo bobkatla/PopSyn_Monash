@@ -5,7 +5,7 @@ from PopSynthesis.Methods.CSP.run.create_pool_pairs import create_pool_pairs
 from PopSynthesis.Methods.CSP.run.process_pools_by_needs import process_original_pools
 from PopSynthesis.Methods.CSP.const import ZONE_ID, HHID
 import pandas as pd
-from typing import Dict,Union
+from typing import Dict, Union, List
 
 
 def inflate_based_on_total(df, target_col: str) -> pd.DataFrame:
@@ -16,6 +16,10 @@ def inflate_based_on_total(df, target_col: str) -> pd.DataFrame:
     # Drop the column
     df_repeated = df_repeated.drop(columns=target_col)
     return df_repeated
+
+
+def get_possible_states_each_att(hh_df: pd.DataFrame, pp_df: pd.DataFrame, exclude_cols: List[str]) -> pd.DataFrame:
+    NotImplemented
 
 
 def run_csp(hh_df: pd.DataFrame, configs: Dict[str, Union[str, pd.DataFrame]], handle_by_zone: bool=False, handle_1_way: bool=True) -> pd.DataFrame:
