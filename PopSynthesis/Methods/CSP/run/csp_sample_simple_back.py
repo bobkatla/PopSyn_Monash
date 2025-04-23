@@ -1,7 +1,7 @@
 """CSP core: sample by each relationship and ensure the household size matching"""
 
 import pandas as pd
-from typing import Dict
+from typing import Dict, List
 from PopSynthesis.Methods.CSP.run.rela_const import (
     HH_TAG,
     BACK_CONNECTIONS,
@@ -18,7 +18,7 @@ from PopSynthesis.Methods.CSP.run.sample_utils import (
 )
 
 
-def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFrame], hhsz:str, relationship:str) -> pd.DataFrame:
+def csp_sample_by_hh(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFrame], hhsz:str, relationship:str, possible_states:Dict[str, List[str]]=None) -> pd.DataFrame:
     # process each conditionals to have target id
     hh_df = hh_df.rename(columns={col: f"{HH_TAG}_{col}" for col in hh_df.columns if col != HHID})
     for key in final_conditonals.keys():

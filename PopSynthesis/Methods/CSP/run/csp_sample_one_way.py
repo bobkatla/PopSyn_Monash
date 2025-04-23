@@ -10,8 +10,9 @@ from PopSynthesis.Methods.CSP.run.sample_utils import (
     handle_resample_and_update_possible_df,
     merge_chosen_target_ids_with_known_cond
 )
+from typing import Dict, List
 
-def sample_one_way(hh_df, final_conditonals, hhsz, relationship):
+def sample_one_way(hh_df: pd.DataFrame, final_conditonals: pd.DataFrame, hhsz: str, relationship: str, possible_states:Dict[str, List[str]]=None) -> pd.DataFrame:
     """Sample one way from the hh df"""
     # the n rela will be determined as normal
     # process each conditionals to have target id
