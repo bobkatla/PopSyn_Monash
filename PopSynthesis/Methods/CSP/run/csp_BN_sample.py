@@ -1,9 +1,5 @@
 """Using BN to sample should quick for each step, but the conditional need to think abit"""
 
-# need the possible states for each atts, also including the min and max for each count (n_rela)
-# process the given dict of conditionals (seed matching with count) to do the fitting for BN
-# dertermine the n_rela for each hh using BN (merge later), need conditional sampling and then merge
-# 
 import pandas as pd
 import random
 from PopSynthesis.Methods.BN.utils.learn_BN import learn_struct_BN_score, learn_para_BN
@@ -16,8 +12,9 @@ from typing import Dict, List, Callable
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
-n_rela_cols = [f"n_{rela}" for rela in EXPECTED_RELATIONSHIPS]
-CHECK_COL = "check_possible"
+
+N_RELA_COLS = [f"n_{rela}" for rela in EXPECTED_RELATIONSHIPS]
+
 
 def model_sample(model: DAG, evidences: pd.DataFrame, target_cols: List[str], func_check: Callable) -> pd.DataFrame:
     # groupby evidences into different combinations and count
@@ -68,7 +65,7 @@ def build_models_for_each_connection(conditional: Dict[str, pd.DataFrame], possi
         for att in df.columns:
             if att == COUNT_COL or att == HHID:
                 continue
-            actual_att = att if att in n_rela_cols else att.split("_")[1]
+            actual_att = att if att in N_RELA_COLS else att.split("_")[1]
             states[att] = possible_states[actual_att]
         # create the model
         processed_df = df.drop(columns=[HHID], errors='ignore').rename(columns={COUNT_COL: "_weight"})
@@ -93,7 +90,7 @@ def sample_rela_BN(hh_df: pd.DataFrame, final_conditonals: pd.DataFrame, hhsz: s
     # create the models
     conn_models = build_models_for_each_connection(final_conditonals, update_possible_states)
 
-    processed_hh_df = model_sample(conn_models[f"{HH_TAG}-counts"], hh_df, n_rela_cols+hh_df.columns.tolist(), check_hhsz_mismatch)
+    processed_hh_df = model_sample(conn_models[f"{HH_TAG}-counts"], hh_df, N_RELA_COLS + hh_df.columns.tolist(), check_hhsz_mismatch)
     print(processed_hh_df)
     evidences_store = {HH_TAG: processed_hh_df}
     
@@ -104,7 +101,7 @@ def check_hhsz_mismatch(syn_hh_df: pd.DataFrame) -> pd.Series:
     """Check if the hh size is mismatch with the df"""
     hhsz = "HH_hhsize" # TODO: hardcoded here, find another way later
     assert hhsz in syn_hh_df.columns, "The df must contain the hh size column"
-    syn_hh_df["syn_hhsize"] = syn_hh_df[n_rela_cols].sum(axis=1)
+    syn_hh_df["syn_hhsize"] = syn_hh_df[N_RELA_COLS].sum(axis=1)
     def check_hhsz(row):
         if row[hhsz] == "8+":
             return row["syn_hhsize"] >= 8
