@@ -17,6 +17,16 @@ from PopSynthesis.Methods.CSP.const import (
 )
 
 
+def inflate_based_on_total(df, target_col: str) -> pd.DataFrame:
+    assert target_col in df.columns, "The dataframe must contain the target column"
+    # Repeat rows based on column values
+    df_repeated = df.loc[df.index.repeat(df[target_col])].reset_index(drop=True)
+
+    # Drop the column
+    df_repeated = df_repeated.drop(columns=target_col)
+    return df_repeated
+
+
 def load_configurations():
     """from const file, create a config dict"""
     config = {
@@ -32,11 +42,23 @@ def load_configurations():
 
 
 def main():
-    hh_df = pd.read_csv(DATA_FOLDER / "new_IPF_results_wo_zerocell.csv")
+    # hh_df = pd.read_csv(DATA_FOLDER / "new_IPF_results_wo_zerocell.csv")
+    # hh_df = inflate_based_on_total(hh_df, "total")
+    # # add hhid
+    # hh_df[HHID] = hh_df.reset_index(drop=True).index + 1
+    # hh_df.to_csv(OUTPUT_FOLDER / "syn_hh_ipf.csv", index=False)
+
+    hh_df = pd.read_csv(OUTPUT_FOLDER / "syn_hh_ipf.csv")
     configs = load_configurations()
     # Run CSP with the given hh_df and configs
-    resulted_pp = run_csp(hh_df, configs, True, True, True) # We must not change the hh
-    resulted_pp.to_csv(OUTPUT_FOLDER / "csp_results_BN.csv", index=False)
+    # resulted_pp = run_csp(hh_df, configs, False, True, True) # We must not change the hh
+    # resulted_pp.to_csv(OUTPUT_FOLDER / "csp_results_BN.csv", index=False)
+
+    # resulted_pp = run_csp(hh_df, configs, True, True, False) # We must not change the hh
+    # resulted_pp.to_csv(OUTPUT_FOLDER / "csp_results_eachz.csv", index=False)
+
+    resulted_pp = run_csp(hh_df, configs, False, True, False) # We must not change the hh
+    resulted_pp.to_csv(OUTPUT_FOLDER / "csp_results_allz.csv", index=False)
 
 if __name__ == "__main__":
     main()

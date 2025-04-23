@@ -9,16 +9,6 @@ import pandas as pd
 from typing import Dict, Union, List
 
 
-def inflate_based_on_total(df, target_col: str) -> pd.DataFrame:
-    assert target_col in df.columns, "The dataframe must contain the target column"
-    # Repeat rows based on column values
-    df_repeated = df.loc[df.index.repeat(df[target_col])].reset_index(drop=True)
-
-    # Drop the column
-    df_repeated = df_repeated.drop(columns=target_col)
-    return df_repeated
-
-
 def get_possible_states_each_att(hh_df: pd.DataFrame, pp_df: pd.DataFrame, exclude_cols: List[str]) -> pd.DataFrame:
     results = {}
     for df in [hh_df, pp_df]:
@@ -36,9 +26,6 @@ def get_possible_states_each_att(hh_df: pd.DataFrame, pp_df: pd.DataFrame, exclu
 def run_csp(hh_df: pd.DataFrame, configs: Dict[str, Union[str, pd.DataFrame]], handle_by_zone: bool=False, handle_1_way: bool=True, use_BN:bool = False) -> pd.DataFrame:
     """Run CSP with the given hh df and configs"""
     # From config we can have the seed hh, seed pp, we constraint by hh_size
-    hh_df = inflate_based_on_total(hh_df, "total")
-    # add hhid
-    hh_df[HHID] = hh_df.reset_index(drop=True).index + 1
     hh_seed = configs["hh_seed"]
     pp_seed = configs["pp_seed"]
     hhid = configs["hhid"]
