@@ -52,7 +52,7 @@ def main():
     configs = load_configurations()
     # Run CSP with the given hh_df and configs
     resulted_pp = run_csp(hh_df, configs, False, True, True) # We must not change the hh
-    resulted_pp.to_csv(OUTPUT_FOLDER / "csp_results_BN_better_constraints.csv", index=False)
+    resulted_pp.to_csv(OUTPUT_FOLDER / "csp_BN_from_IPF.csv", index=False)
 
     # resulted_pp = run_csp(hh_df, configs, True, True, False) # We must not change the hh
     # resulted_pp.to_csv(OUTPUT_FOLDER / "csp_results_eachz.csv", index=False)

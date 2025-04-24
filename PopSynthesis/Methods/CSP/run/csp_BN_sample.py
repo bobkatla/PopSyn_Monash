@@ -18,6 +18,16 @@ N_RELA_COLS = [f"n_{rela}" for rela in EXPECTED_RELATIONSHIPS]
 # just need to better constraints with possibles
 
 
+def inflate_based_on_total(df, target_col: str) -> pd.DataFrame:
+    assert target_col in df.columns, "The dataframe must contain the target column"
+    # Repeat rows based on column values
+    df_repeated = df.loc[df.index.repeat(df[target_col])].reset_index(drop=True)
+
+    # Drop the column
+    df_repeated = df_repeated.drop(columns=target_col)
+    return df_repeated
+
+
 def model_sample(model: DAG, evidences: pd.DataFrame, target_cols: List[str], func_check: Callable) -> pd.DataFrame:
     # groupby evidences into different combinations and count
     assert HHID in evidences.columns, "The evidences must contain the HHID column"
@@ -72,7 +82,8 @@ def build_models_for_each_connection(conditional: Dict[str, pd.DataFrame], possi
         # get the states for each att
         states = {att: possible_states[att] for att in df.columns if att != COUNT_COL}
         # create the model
-        processed_df = df.drop(columns=[HHID], errors='ignore').rename(columns={COUNT_COL: "_weight"})
+        processed_df = df.drop(columns=[HHID], errors='ignore')
+        processed_df = inflate_based_on_total(processed_df, COUNT_COL)
         model = learn_struct_BN_score(processed_df, state_names=states, show_struct=False)
         model = learn_para_BN(model, processed_df, state_names=states)
         results[conn] = model
