@@ -66,5 +66,5 @@ def run_csp(hh_df: pd.DataFrame, configs: Dict[str, Union[str, pd.DataFrame]], h
             syn_pp[ZONE_ID] = zid
             final_syn_pp.append(syn_pp)
         return pd.concat(final_syn_pp, ignore_index=True)
-    return sample_method(hh_df.drop(columns=[ZONE_ID]), final_conditonals, hhsz, relationship, possible_states)
+    return sample_method(hh_df.drop(columns=[ZONE_ID], errors="ignore"), final_conditonals, hhsz, relationship, possible_states)
 

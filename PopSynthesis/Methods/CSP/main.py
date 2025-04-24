@@ -48,11 +48,13 @@ def main():
     # hh_df[HHID] = hh_df.reset_index(drop=True).index + 1
     # hh_df.to_csv(OUTPUT_FOLDER / "syn_hh_ipf.csv", index=False)
 
-    hh_df = pd.read_csv(OUTPUT_FOLDER / "syn_hh_ipf.csv")
+    # hh_df = pd.read_csv(OUTPUT_FOLDER / "syn_hh_ipf.csv")
+    hh_df = pd.read_csv(DATA_FOLDER / "pure_BN_HH.csv")
     configs = load_configurations()
     # Run CSP with the given hh_df and configs
     resulted_pp = run_csp(hh_df, configs, False, True, True) # We must not change the hh
-    resulted_pp.to_csv(OUTPUT_FOLDER / "csp_BN_from_IPF.csv", index=False)
+    # resulted_pp.to_csv(OUTPUT_FOLDER / "csp_BN_from_IPF.csv", index=False)
+    resulted_pp.to_csv(OUTPUT_FOLDER / "csp_BN_from_BN.csv", index=False)
 
     # resulted_pp = run_csp(hh_df, configs, True, True, False) # We must not change the hh
     # resulted_pp.to_csv(OUTPUT_FOLDER / "csp_results_eachz.csv", index=False)
