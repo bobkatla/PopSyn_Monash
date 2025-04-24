@@ -4,22 +4,34 @@ from PopSynthesis.Methods.CSP.run.csp_sample_one_way import sample_one_way
 from PopSynthesis.Methods.CSP.run.csp_BN_sample import sample_rela_BN
 from PopSynthesis.Methods.CSP.run.create_pool_pairs import create_pool_pairs
 from PopSynthesis.Methods.CSP.run.process_pools_by_needs import process_original_pools
-from PopSynthesis.Methods.CSP.const import ZONE_ID, HHID
+from PopSynthesis.Methods.CSP.const import ZONE_ID
+from PopSynthesis.Methods.CSP.run.rela_const import EXPECTED_RELATIONSHIPS, HH_TAG
 import pandas as pd
 from typing import Dict, Union, List
 
 
-def get_possible_states_each_att(hh_df: pd.DataFrame, pp_df: pd.DataFrame, exclude_cols: List[str]) -> pd.DataFrame:
+def get_possible_states_each_att(hh_df: pd.DataFrame, pp_df: pd.DataFrame, exclude_cols: List[str], relationship:str) -> pd.DataFrame:
     results = {}
-    for df in [hh_df, pp_df]:
-        for col in df.columns:
+    # process hh
+    for col in hh_df.columns:
+        if col in exclude_cols:
+            continue
+        if col in results:
+            raise ValueError(f"Likely, duplicates column names in the seed data")
+        # Get the unique values for each column in hh_df
+        unique_values = hh_df[col].unique()
+        results[f"{HH_TAG}_{col}"] = list(unique_values)
+    # process pp
+    for rela in EXPECTED_RELATIONSHIPS:
+        sub_pp_df = pp_df[pp_df[relationship] == rela].copy()
+        for col in sub_pp_df.columns:
             if col in exclude_cols:
                 continue
             if col in results:
                 raise ValueError(f"Likely, duplicates column names in the seed data")
-            # Get the unique values for each column in hh_df
-            unique_values = df[col].unique()
-            results[col] = list(unique_values)
+            # Get the unique values for each column in pp_df
+            unique_values = sub_pp_df[col].unique()
+            results[f"{rela}_{col}"] = list(unique_values)
     return results
 
 
@@ -32,7 +44,7 @@ def run_csp(hh_df: pd.DataFrame, configs: Dict[str, Union[str, pd.DataFrame]], h
     relationship = configs["relationship"]
     hhsz = configs["hh_size"]
 
-    possible_states = get_possible_states_each_att(hh_df, pp_seed, exclude_cols=[hhid, relationship])
+    possible_states = get_possible_states_each_att(hh_df, pp_seed, exclude_cols=[hhid, relationship], relationship=relationship)
 
     sample_method = csp_sample_by_hh
     include_n_count_all = False

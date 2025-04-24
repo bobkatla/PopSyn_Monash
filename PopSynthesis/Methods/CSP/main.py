@@ -51,14 +51,14 @@ def main():
     hh_df = pd.read_csv(OUTPUT_FOLDER / "syn_hh_ipf.csv")
     configs = load_configurations()
     # Run CSP with the given hh_df and configs
-    # resulted_pp = run_csp(hh_df, configs, False, True, True) # We must not change the hh
-    # resulted_pp.to_csv(OUTPUT_FOLDER / "csp_results_BN.csv", index=False)
+    resulted_pp = run_csp(hh_df, configs, False, True, True) # We must not change the hh
+    resulted_pp.to_csv(OUTPUT_FOLDER / "csp_results_BN_better_constraints.csv", index=False)
 
     # resulted_pp = run_csp(hh_df, configs, True, True, False) # We must not change the hh
     # resulted_pp.to_csv(OUTPUT_FOLDER / "csp_results_eachz.csv", index=False)
 
-    resulted_pp = run_csp(hh_df, configs, False, True, False) # We must not change the hh
-    resulted_pp.to_csv(OUTPUT_FOLDER / "csp_results_allz.csv", index=False)
+    # resulted_pp = run_csp(hh_df, configs, False, True, False) # We must not change the hh
+    # resulted_pp.to_csv(OUTPUT_FOLDER / "csp_results_allz.csv", index=False)
 
 if __name__ == "__main__":
     main()

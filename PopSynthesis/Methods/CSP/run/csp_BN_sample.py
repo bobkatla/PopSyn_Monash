@@ -8,13 +8,14 @@ from pgmpy.factors.discrete import State
 from pgmpy.base import DAG
 from PopSynthesis.Methods.CSP.run.rela_const import HH_TAG, RELA_BY_LEVELS, BACK_CONNECTIONS, EXPECTED_RELATIONSHIPS, COUNT_COL
 from PopSynthesis.Methods.CSP.run.sample_utils import SYN_COUNT_COL
-from PopSynthesis.Methods.CSP.const import HHID, PP_ATTS
+from PopSynthesis.Methods.CSP.const import HHID, PP_ATTS, HH_ATTS, HH_SZ
 from typing import Dict, List, Callable
 import logging
 logging.getLogger("pgmpy").setLevel(logging.ERROR)
 
 
 N_RELA_COLS = [f"n_{rela}" for rela in EXPECTED_RELATIONSHIPS]
+# just need to better constraints with possibles
 
 
 def model_sample(model: DAG, evidences: pd.DataFrame, target_cols: List[str], func_check: Callable) -> pd.DataFrame:
@@ -69,12 +70,7 @@ def build_models_for_each_connection(conditional: Dict[str, pd.DataFrame], possi
     results = {}
     for conn, df in conditional.items():
         # get the states for each att
-        states = {}
-        for att in df.columns:
-            if att == COUNT_COL or att == HHID:
-                continue
-            actual_att = att if att in N_RELA_COLS else att.split("_")[1]
-            states[att] = possible_states[actual_att]
+        states = {att: possible_states[att] for att in df.columns if att != COUNT_COL}
         # create the model
         processed_df = df.drop(columns=[HHID], errors='ignore').rename(columns={COUNT_COL: "_weight"})
         model = learn_struct_BN_score(processed_df, state_names=states, show_struct=False)
@@ -83,7 +79,7 @@ def build_models_for_each_connection(conditional: Dict[str, pd.DataFrame], possi
     return results
 
 
-def sample_rela_BN(hh_df: pd.DataFrame, final_conditonals: pd.DataFrame, hhsz: str, relationship: str, possible_states:Dict[str, List[str]]=None) -> pd.DataFrame:
+def sample_rela_BN(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFrame], hhsz: str, relationship: str, possible_states:Dict[str, List[str]]=None) -> pd.DataFrame:
     # go through each and sample, sample directly from the model
     # for some cases we need to resample the impossible cases
     hh_df = hh_df.rename(columns={col: f"{HH_TAG}_{col}" for col in hh_df.columns if col != HHID})
