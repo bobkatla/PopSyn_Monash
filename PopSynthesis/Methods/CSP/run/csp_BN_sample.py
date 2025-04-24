@@ -10,8 +10,8 @@ from PopSynthesis.Methods.CSP.run.rela_const import HH_TAG, RELA_BY_LEVELS, BACK
 from PopSynthesis.Methods.CSP.run.sample_utils import SYN_COUNT_COL
 from PopSynthesis.Methods.CSP.const import HHID, PP_ATTS
 from typing import Dict, List, Callable
-import warnings
-warnings.filterwarnings("ignore", category=UserWarning)
+import logging
+logging.getLogger("pgmpy").setLevel(logging.ERROR)
 
 
 N_RELA_COLS = [f"n_{rela}" for rela in EXPECTED_RELATIONSHIPS]
@@ -41,7 +41,7 @@ def model_sample(model: DAG, evidences: pd.DataFrame, target_cols: List[str], fu
         hhid_ls = row[HHID]
         random.shuffle(hhid_ls)
         while True:
-            sampled_results = inference.likelihood_weighted_sample(evidence=sample_evidences, size=len(hhid_ls))
+            sampled_results = inference.likelihood_weighted_sample(evidence=sample_evidences, size=len(hhid_ls), show_progress=False)
             sampled_results[HHID] = hhid_ls
             if func_check is None:
                 comb_correct_results.append(sampled_results)
