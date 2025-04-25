@@ -50,7 +50,9 @@ def main():
 
     # hh_df = pd.read_csv(OUTPUT_FOLDER / "syn_hh_ipf.csv")
     # hh_df = pd.read_csv(DATA_FOLDER / "pure_BN_HH.csv")
-    hh_df = pd.read_csv(DATA_FOLDER / "hh_pureBN_hhtype_filter.csv")
+    hh_df = pd.read_csv(DATA_FOLDER / "hh_pureBN_hhtype_filter_constrained.csv")
+    hh_df["hhsize"] = hh_df["hhsize"].astype(str)
+    hh_df["totalvehs"] = hh_df["totalvehs"].astype(str)
     configs = load_configurations()
     # Run CSP with the given hh_df and configs
     resulted_pp = run_csp(hh_df, configs, False, True, True, True) # We must not change the hh
