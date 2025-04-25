@@ -35,7 +35,7 @@ def get_possible_states_each_att(hh_df: pd.DataFrame, pp_df: pd.DataFrame, exclu
     return results
 
 
-def run_csp(hh_df: pd.DataFrame, configs: Dict[str, Union[str, pd.DataFrame]], handle_by_zone: bool=False, handle_1_way: bool=True, use_BN:bool = False) -> pd.DataFrame:
+def run_csp(hh_df: pd.DataFrame, configs: Dict[str, Union[str, pd.DataFrame]], handle_by_zone: bool=False, handle_1_way: bool=True, use_BN:bool = False, hh_has_n_already: bool = False) -> pd.DataFrame:
     """Run CSP with the given hh df and configs"""
     # From config we can have the seed hh, seed pp, we constraint by hh_size
     hh_seed = configs["hh_seed"]
@@ -62,9 +62,9 @@ def run_csp(hh_df: pd.DataFrame, configs: Dict[str, Union[str, pd.DataFrame]], h
         final_syn_pp = []
         for zid in hh_df[ZONE_ID].unique():
             print(f"Processing zone {zid}")
-            syn_pp = sample_method(hh_df[hh_df[ZONE_ID]==zid].drop(columns=[ZONE_ID]), final_conditonals, hhsz, relationship, possible_states)
+            syn_pp = sample_method(hh_df[hh_df[ZONE_ID]==zid].drop(columns=[ZONE_ID]), final_conditonals, hhsz, relationship, possible_states, hh_has_n_already)
             syn_pp[ZONE_ID] = zid
             final_syn_pp.append(syn_pp)
         return pd.concat(final_syn_pp, ignore_index=True)
-    return sample_method(hh_df.drop(columns=[ZONE_ID], errors="ignore"), final_conditonals, hhsz, relationship, possible_states)
+    return sample_method(hh_df.drop(columns=[ZONE_ID], errors="ignore"), final_conditonals, hhsz, relationship, possible_states, hh_has_n_already)
 

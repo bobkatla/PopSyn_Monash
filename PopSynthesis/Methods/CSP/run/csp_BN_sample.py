@@ -90,14 +90,14 @@ def build_models_for_each_connection(conditional: Dict[str, pd.DataFrame], possi
     return results
 
 
-def sample_rela_BN(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFrame], hhsz: str, relationship: str, possible_states:Dict[str, List[str]]=None) -> pd.DataFrame:
+def sample_rela_BN(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFrame], hhsz: str, relationship: str, possible_states:Dict[str, List[str]]=None, hh_has_n_already:bool=False) -> pd.DataFrame:
     # go through each and sample, sample directly from the model
     # for some cases we need to resample the impossible cases
-    hh_df = hh_df.rename(columns={col: f"{HH_TAG}_{col}" for col in hh_df.columns if col != HHID})
-    hh_att_cols = [col for col in hh_df.columns]
-    hh_counts_cond = final_conditonals[f"{HH_TAG}-counts"]
+    hh_df = hh_df.rename(columns={col: f"{HH_TAG}_{col}" for col in hh_df.columns if col not in N_RELA_COLS+[HHID, "hh_type"]})
+
     # Special handle for n relas to update the possible states
     n_counts_states = {}
+    hh_counts_cond = final_conditonals[f"{HH_TAG}-counts"]
     for rela in EXPECTED_RELATIONSHIPS:
         rela_count_states = list(range(hh_counts_cond[f"n_{rela}"].min(), hh_counts_cond[f"n_{rela}"].max() + 1))
         n_counts_states[f"n_{rela}"] = rela_count_states
@@ -106,8 +106,13 @@ def sample_rela_BN(hh_df: pd.DataFrame, final_conditonals: Dict[str, pd.DataFram
     # create the models
     conn_models = build_models_for_each_connection(final_conditonals, update_possible_states)
 
-    hh_df[SYN_COUNT_COL] = 1 # init all is one
-    processed_hh_df = model_sample(conn_models[f"{HH_TAG}-counts"], hh_df, N_RELA_COLS + hh_att_cols, check_hhsz_mismatch)
+    processed_hh_df = None
+    if not hh_has_n_already:
+        hh_att_cols = [col for col in hh_df.columns]
+        hh_df[SYN_COUNT_COL] = 1 # init all is one
+        processed_hh_df = model_sample(conn_models[f"{HH_TAG}-counts"], hh_df, N_RELA_COLS + hh_att_cols, check_hhsz_mismatch)
+    else:
+        processed_hh_df = hh_df.copy().drop(columns=["hh_type"])
     expected_n_pp = processed_hh_df[N_RELA_COLS].sum().sum()
 
     evidences_store = {HH_TAG: processed_hh_df}
