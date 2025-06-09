@@ -2,6 +2,21 @@
 name = "PopSynthesis"
 version = "0.1.0"
 description = "Monash PopSyn"
+dependencies = [
+    "synthpop @ git+https://github.com/bobkatla/synthpop",
+    "click",
+    "pandas",
+    "polars",
+    "geopandas",
+    "matplotlib",
+    "numpy",
+    "pgmpy",
+    "pomegranate",
+    "scikit-learn",
+    "scipy",
+    "tensorflow",
+    "torch",
+]
 
 [build-system]
 build-backend = "flit_core.buildapi"
