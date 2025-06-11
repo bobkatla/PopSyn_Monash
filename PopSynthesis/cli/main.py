@@ -62,6 +62,8 @@ def synthesize(runs_yml, output_path):
                 marg, pool = get_file_general("p_marg_file"), get_file_general("p_sample_file")
             else:
                 raise ValueError(f"Level {run_info['level']} not supported.")
+            meta_output_dir = output_path_run / "meta"
+            meta_output_dir.mkdir(parents=True, exist_ok=True)
             run_saa(
                 marg_file=marg,
                 pool_file=pool,
@@ -76,6 +78,7 @@ def synthesize(runs_yml, output_path):
                 add_name_for_step_output=run_info["add_name_for_step_output"],
                 include_zero_cell_values=run_info["include_zero_cell_values"],
                 randomly_add_last=run_info.get("randomly_add_last", []),
+                meta_output_dir=meta_output_dir
             )
         else:
             raise ValueError(f"Method {method} not supported.")

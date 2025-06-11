@@ -18,6 +18,7 @@ from PopSynthesis.Methods.IPSF.SAA.SAA import SAA
 import polars as pl
 from typing import Tuple, List
 import random
+from pathlib import Path
 
 
 def get_test_pp() -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -130,6 +131,7 @@ def saa_run(
     add_name_for_step_output: str = "",
     include_zero_cell_values: bool = False,
     randomly_add_last: List[str] = [],
+    meta_output_dir: Path = output_dir,
 ) -> Tuple[pd.DataFrame, List[int]]:
     assert set(ordered_to_adjust_atts) <= set(considered_atts)
     atts_in_marg = set(targeted_marg.columns.get_level_values(0)) - {zone_field}
@@ -160,7 +162,12 @@ def saa_run(
         )
         saa = SAA(targeted_marg, considered_atts, ordered_to_adjust_atts, count_pool)
         ### Actual running to get the synthetic pop
-        final_syn_pop = saa.run(extra_name=f"_{add_name_for_step_output}_{n_run_time}", output_each_step=output_each_step, include_zero_cell_values=include_zero_cell_values)
+        final_syn_pop = saa.run(
+            extra_name=f"_{add_name_for_step_output}_{n_run_time}", 
+            output_each_step=output_each_step, 
+            include_zero_cell_values=include_zero_cell_values,
+            output_dir=meta_output_dir
+        )
         assert len(final_syn_pop) == n_removed_err
         ###
 
@@ -188,7 +195,7 @@ def saa_run(
         for i, df in enumerate(chosen_syn):
             if df is not None:
                 df.write_csv(
-                    output_dir / f"kept_syn_run_{i}.csv"
+                    meta_output_dir / f"kept_syn_run_{i}.csv"
                 )
 
     final_syn_hh = pl.concat([df.select(considered_atts+[zone_field]) for df in chosen_syn if df is not None])

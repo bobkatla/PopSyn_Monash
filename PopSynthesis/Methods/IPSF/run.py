@@ -35,6 +35,7 @@ def run_saa(
         add_name_for_step_output: str = "",
         include_zero_cell_values: bool = False,
         randomly_add_last: List[str] = [],
+        meta_output_dir: Path = None,
         ) -> None:
     marg, pool = process_data_from_files(marg_file, pool_file, zone_field)
     condensed_pool = condense_df(pool.astype(str))
@@ -52,6 +53,7 @@ def run_saa(
         add_name_for_step_output=add_name_for_step_output,
         include_zero_cell_values=include_zero_cell_values,
         randomly_add_last=randomly_add_last,
+        meta_output_dir=meta_output_dir if meta_output_dir is not None else output_file.parent / "meta",
     )
 
     final_syn_hh.write_csv(output_file)

@@ -14,6 +14,7 @@ from PopSynthesis.Methods.IPSF.SAA.operations.general import (
     adjust_atts_state_match_census,
 )
 from typing import List
+from pathlib import Path
 
 
 class SAA:
@@ -35,7 +36,7 @@ class SAA:
         )
         self.segmented_marg = converted_segment_marg
 
-    def run(self, output_each_step: bool = False, extra_name: str = "", include_zero_cell_values: bool = False) -> pl.DataFrame:
+    def run(self, output_each_step: bool = False, extra_name: str = "", include_zero_cell_values: bool = False, output_dir: Path = output_dir) -> pl.DataFrame:
         # Output the synthetic population, the main point
         curr_syn_pop = None
         adjusted_atts = []
