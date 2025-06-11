@@ -7,7 +7,7 @@ dependencies = [
     "synthpop @ git+https://github.com/bobkatla/synthpop",
     "click>=8.0",
     "pandas>=2.0",
-    "polars>=0.20",
+    "polars==1.12.0",
     "geopandas>=0.14",
     "matplotlib>=3.7",
     "numpy>=1.26",
@@ -19,6 +19,8 @@ dependencies = [
     "torch>=2.7.0",
     "torchvision>=0.22.0",
     "pyyaml>=6.0.2",
+    "pulp>=3.2.1",
+    "pyarrow>=20.0.0",
 ]
 
 [project.scripts]

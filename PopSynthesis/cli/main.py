@@ -2,6 +2,7 @@ import click
 import yaml
 from pathlib import Path
 from PopSynthesis.Methods.IPU.run import run_ipu
+from PopSynthesis.Methods.IPSF.run import run_saa
 
 
 def process_absolute_path(path: Path, parent_path: Path) -> Path:
@@ -52,6 +53,29 @@ def synthesize(runs_yml, output_path):
                 hh_syn_name=run_info["hh_syn_name"],
                 pp_syn_name=run_info["pp_syn_name"],
                 stats_name=run_info["stats_name"]
+            )
+        elif method == "saa":
+            marg = pool = None
+            if run_info["level"] == "hh":
+                marg, pool = get_file_general("hh_marg_file"), get_file_general("hh_sample_file")
+            elif run_info["level"] == "pp":
+                marg, pool = get_file_general("p_marg_file"), get_file_general("p_sample_file")
+            else:
+                raise ValueError(f"Level {run_info['level']} not supported.")
+            run_saa(
+                marg_file=marg,
+                pool_file=pool,
+                zone_field=run_info["zone_field"],
+                output_file=output_path_run / run_info["hh_syn_name"],
+                considered_atts=run_info["considered_atts"],
+                ordered_to_adjust_atts=run_info["ordered_to_adjust_atts"],
+                max_run_time=run_info["max_run_time"],
+                extra_rm_frac=run_info["extra_rm_frac"],
+                last_adjustment_order=run_info["last_adjustment_order"],
+                output_each_step=run_info["output_each_step"],
+                add_name_for_step_output=run_info["add_name_for_step_output"],
+                include_zero_cell_values=run_info["include_zero_cell_values"],
+                randomly_add_last=run_info.get("randomly_add_last", []),
             )
         else:
             raise ValueError(f"Method {method} not supported.")
