@@ -45,8 +45,8 @@
   extra_rm_frac: 0.3
   randomly_add_last:
     - hhinc
-  output_each_step: False
-  add_name_for_step_output: ""
+  output_each_step: True
+  add_name_for_step_output: "test"
   include_zero_cell_values: False
   output_name: "saa_small"
   hh_syn_name: "hh_syn_saa.csv"

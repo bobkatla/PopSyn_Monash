@@ -78,7 +78,7 @@ HH_TAG = "HH"
 data_dir = Path(__file__).parent.resolve() / "data" / "raw"
 small_test_dir = Path(__file__).parent.resolve() / "data" / "small_test"
 processed_dir = Path(__file__).parent.resolve() / "data" / "processed"
-output_dir = Path(__file__).parent.resolve() / "output"
+output_dir = Path(__file__).parent.resolve() / "output" / "meta"
 
 SAA_ODERED_ATTS_HH = [
     "hhsize",

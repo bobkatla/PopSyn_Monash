@@ -7,6 +7,7 @@ from PopSynthesis.Methods.IPSF.const import (
     small_test_dir,
     processed_dir,
     zone_field,
+    output_dir,
 )
 from PopSynthesis.Methods.IPSF.utils.synthetic_checked_census import (
     adjust_kept_rec_match_census,
@@ -177,10 +178,18 @@ def saa_run(
                 chosen = pl.from_pandas(kept_syn)
                 chosen = chosen.with_columns(pl.col(zone_field).cast(pl.String))
                 chosen_syn.append(chosen)
-
+            else:
+                chosen_syn.append(None)
             # Update for next run
             n_removed_err = len(final_syn_pop) - len(kept_syn)
             targeted_marg = new_marg
+    
+    if output_each_step:
+        for i, df in enumerate(chosen_syn):
+            if df is not None:
+                df.write_csv(
+                    output_dir / f"kept_syn_run_{i}.csv"
+                )
 
-    final_syn_hh = pl.concat([df.select(considered_atts+[zone_field]) for df in chosen_syn])
+    final_syn_hh = pl.concat([df.select(considered_atts+[zone_field]) for df in chosen_syn if df is not None])
     return final_syn_hh, err_rm
