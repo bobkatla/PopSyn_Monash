@@ -15,9 +15,10 @@ dependencies = [
     "pomegranate",
     "scikit-learn",
     "scipy",
+    "ipfn",
     "torch>=2.7.0",
     "torchvision>=0.22.0",
-    "ipfn",
+    "pyyaml>=6.0.2",
 ]
 
 [tool.uv.sources]
