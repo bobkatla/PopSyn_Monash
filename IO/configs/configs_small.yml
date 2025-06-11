@@ -1,0 +1,5 @@
+general_data:
+  hh_marg_file: "../processed_data/small/hh_marginals_small.csv"
+  p_marg_file: "../processed_data/small/pp_small_marginals.csv"
+  hh_sample_file: "../processed_data/small/hh_sample_ipu.csv"
+  p_sample_file: "../processed_data/small/pp_sample_ipu.csv"

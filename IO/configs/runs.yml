@@ -1,0 +1,5 @@
+- method: ipu
+  data_general: ./configs_small.yml
+  hh_syn_name: "hh_syn_ipu.csv"
+  pp_syn_name: "pp_syn_ipu.csv"
+  stats_name: "stats_ipu.csv"
