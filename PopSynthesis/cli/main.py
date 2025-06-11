@@ -32,20 +32,15 @@ def synthesize(runs_yml, output_path):
     with open(runs_yml, "r") as f:
         runs = yaml.safe_load(f)
     for run_info in runs:
+        def get_file_general(key):
+            return process_absolute_path(
+                Path(run_info[key]),
+                Path(runs_yml).parent
+            )
         method = run_info["method"]  
-        data_general_path = process_absolute_path(
-            Path(run_info["data_general"]),
-            Path(runs_yml).parent
-        )
-        with open(data_general_path, "r") as f:
-            config = yaml.safe_load(f)
-        output_path_run = Path(output_path) / method
+        output_path_run = Path(output_path) / run_info["output_name"]
         output_path_run.mkdir(parents=True, exist_ok=True)
 
-        get_file_general = lambda x: process_absolute_path(
-            Path(config["general_data"][x]),
-            data_general_path.parent
-        )
         # Run the method
         if method == "ipu":
             run_ipu(
