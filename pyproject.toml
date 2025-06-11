@@ -5,21 +5,24 @@ description = "Monash PopSyn"
 requires-python = ">=3.9"
 dependencies = [
     "synthpop @ git+https://github.com/bobkatla/synthpop",
-    "click",
-    "pandas",
-    "polars",
-    "geopandas",
-    "matplotlib",
-    "numpy",
-    "pgmpy",
-    "pomegranate",
-    "scikit-learn",
-    "scipy",
-    "ipfn",
+    "click>=8.0",
+    "pandas>=2.0",
+    "polars>=0.20",
+    "geopandas>=0.14",
+    "matplotlib>=3.7",
+    "numpy>=1.26",
+    "pgmpy>=0.1.25",
+    "pomegranate>=1.0.0",
+    "scikit-learn>=1.4",
+    "scipy>=1.12",
+    "ipfn>=1.4.4",
     "torch>=2.7.0",
     "torchvision>=0.22.0",
     "pyyaml>=6.0.2",
 ]
+
+[project.scripts]
+psim = "PopSynthesis.cli.main:cli"
 
 [tool.uv.sources]
 torch = [
