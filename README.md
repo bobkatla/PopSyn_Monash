@@ -31,6 +31,15 @@ Or, for development:
 pip install -e .
 ```
 
+The project uses uv so it can be installed on another machine for CLI run only
+```bash
+uv pip install git+https://github.com/bobkatla/PopSyn_Monash.git
+```
+or to upgrade (for new developments) with
+```bash
+uv pip install --upgrade git+https://github.com/bobkatla/PopSyn_Monash.git
+```
+
 ## Usage
 
 ### Command Line Interface (CLI)
