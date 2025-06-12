@@ -19,8 +19,8 @@
 #   stats_name: "stats_ipu.csv"
 
 - method: saa
-  hh_marg_file: "../processed_data/small/hh_marginals_small.csv"
-  hh_sample_file: "../processed_data/small/hh_sample_ipu.csv"
+  hh_marg_file: "./data/full/hh_marginals_ipu.csv"
+  hh_sample_file: "./data/full/HH_pool.csv"
   level: "hh"
   zone_field: "zone_id"
   considered_atts:
@@ -41,13 +41,81 @@
     - hhinc
     - dwelltype
     - owndwell
-  max_run_time: 10
+  max_run_time: 15
   extra_rm_frac: 0.3
   randomly_add_last:
     - hhinc
   output_each_step: True
-  add_name_for_step_output: "test"
+  add_name_for_step_output: "BN"
   include_zero_cell_values: False
-  output_name: "saa_small"
+  output_name: "saa_BN_pool"
   hh_syn_name: "hh_syn_saa.csv"
-  reruns: 1
+  reruns: 10
+
+- method: saa
+  hh_marg_file: "./data/full/hh_marginals_ipu.csv"
+  hh_sample_file: "./data/full/hh_sample_ipu.csv"
+  level: "hh"
+  zone_field: "zone_id"
+  considered_atts:
+    - hhsize
+    - hhinc
+    - totalvehs
+    - dwelltype
+    - owndwell
+  ordered_to_adjust_atts:
+    - hhsize
+    - totalvehs
+    - hhinc
+    - dwelltype
+    - owndwell
+  last_adjustment_order:
+    - hhsize
+    - totalvehs
+    - hhinc
+    - dwelltype
+    - owndwell
+  max_run_time: 15
+  extra_rm_frac: 0.3
+  randomly_add_last:
+    - hhinc
+  output_each_step: True
+  add_name_for_step_output: "misszero"
+  include_zero_cell_values: False
+  output_name: "saa_seed_misszero"
+  hh_syn_name: "hh_syn_saa.csv"
+  reruns: 10
+
+- method: saa
+  hh_marg_file: "./data/full/hh_marginals_ipu.csv"
+  hh_sample_file: "./data/full/hh_sample_ipu.csv"
+  level: "hh"
+  zone_field: "zone_id"
+  considered_atts:
+    - hhsize
+    - hhinc
+    - totalvehs
+    - dwelltype
+    - owndwell
+  ordered_to_adjust_atts:
+    - hhsize
+    - totalvehs
+    - hhinc
+    - dwelltype
+    - owndwell
+  last_adjustment_order:
+    - hhsize
+    - totalvehs
+    - hhinc
+    - dwelltype
+    - owndwell
+  max_run_time: 15
+  extra_rm_frac: 0.3
+  randomly_add_last:
+    - hhinc
+  output_each_step: True
+  add_name_for_step_output: "addzero"
+  include_zero_cell_values: True
+  output_name: "saa_seed_addzero"
+  hh_syn_name: "hh_syn_saa.csv"
+  reruns: 10

@@ -10,5 +10,4 @@
 module load miniforge3
 conda activate psim
 python --version
-
-psim --help
+psim synthesize -runs runs.yml -o out/
