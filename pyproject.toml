@@ -9,15 +9,12 @@ dependencies = [
     "pandas>=2.0",
     "polars==1.12.0",
     "geopandas>=0.14",
-    "matplotlib>=3.7",
     "numpy>=1.26",
     "pgmpy>=0.1.25",
-    "pomegranate>=1.0.0",
     "scikit-learn>=1.4",
     "scipy>=1.12",
     "ipfn>=1.4.4",
     "torch>=2.7.0",
-    "torchvision>=0.22.0",
     "pyyaml>=6.0.2",
     "pulp>=3.2.1",
     "pyarrow>=20.0.0",
@@ -28,22 +25,12 @@ psim = "PopSynthesis.cli.main:cli"
 
 [tool.uv.sources]
 torch = [
-  { index = "pytorch-cpu", marker = "sys_platform != 'linux'" },
-  { index = "pytorch-cu128", marker = "sys_platform == 'linux'" },
-]
-torchvision = [
-  { index = "pytorch-cpu", marker = "sys_platform != 'linux'" },
-  { index = "pytorch-cu128", marker = "sys_platform == 'linux'" },
+  { index = "pytorch-cpu" },
 ]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
-explicit = true
-
-[[tool.uv.index]]
-name = "pytorch-cu128"
-url = "https://download.pytorch.org/whl/cu128"
 explicit = true
 
 [build-system]

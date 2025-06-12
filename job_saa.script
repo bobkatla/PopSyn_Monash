@@ -1,12 +1,14 @@
 #!/bin/bash
-#SBATCH --job-name=run_hh_seq_loop
+#SBATCH --job-name=run_saa
 #SBATCH --partition=comp
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=2
 #SBATCH --ntasks=1
 #SBATCH --time=160:00:00
-#SBATCH --output=run_hh_seq_loop.out
+#SBATCH --output=run_saa.out
 
-source .venv/bin/activate
+module load miniforge3
+conda activate psim
+python --version
 
-python PopSynthesis/Methods/IPSF/SAA/run_hh.py
+psim --help
