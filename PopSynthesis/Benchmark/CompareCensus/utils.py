@@ -76,3 +76,28 @@ def inflate_based_on_total(df: pd.DataFrame, weight_cols: str = "total") -> pd.D
     # Drop the column
     df_repeated = df_repeated.drop(columns=weight_cols)
     return df_repeated
+
+
+def convert_raw_census(
+    raw_census_data: pd.DataFrame,
+    zone_id_name: str = "zone_id",
+    to_drop_cols: List[str] = ["sample_geog"],
+) -> pd.DataFrame:
+    """
+    Convert raw census data to a DataFrame with zone_id as index and specified columns dropped.
+    """
+    zone_id_col = [col for col in raw_census_data.columns if col[0] == zone_id_name][0]
+    assert raw_census_data[zone_id_col].nunique() == raw_census_data.shape[0]
+    census_data = raw_census_data.set_index(zone_id_col)
+    census_data = census_data.drop(columns=to_drop_cols, errors='ignore')
+    return census_data
+
+
+def convert_syn_pop_raw(target_syn_pop: pd.DataFrame, converted_census: pd.DataFrame) -> pd.DataFrame:
+    """
+    Convert synthetic population data to a DataFrame with zone_id as index.
+    """
+    # Convert the synthetic population to marginal counts
+    syn_pop = convert_full_to_marg_count(target_syn_pop)
+    syn_pop = impute_new_marg(converted_census, syn_pop)
+    return syn_pop
