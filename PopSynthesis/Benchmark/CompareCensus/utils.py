@@ -66,3 +66,13 @@ def impute_new_marg(
     converted_census_marg = add_0_to_missing(converted_census_marg, missing_cols_ori, 0)
     converted_census_marg = add_0_to_missing(converted_census_marg, missing_rows_ori, 1)
     return converted_new_hh_marg
+
+
+def inflate_based_on_total(df: pd.DataFrame, weight_cols: str = "total") -> pd.DataFrame:
+    assert weight_cols in df.columns, f"The dataframe must contain a '{weight_cols}' column to inflate based on."
+    # Repeat rows based on 'total'
+    df_repeated = df.loc[df.index.repeat(df[weight_cols])].reset_index(drop=True)
+
+    # Drop the column
+    df_repeated = df_repeated.drop(columns=weight_cols)
+    return df_repeated
