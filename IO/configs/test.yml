@@ -30,4 +30,4 @@
   include_zero_cell_values: False
   output_name: "saa_small"
   hh_syn_name: "hh_syn_saa.csv"
-  reruns: 1
+  reruns: 2
