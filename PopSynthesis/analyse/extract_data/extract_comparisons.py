@@ -30,6 +30,7 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
         census = convert_raw_census(census_raw)
 
         store_diff_runs = []
+        extra_results = []
         for run in range(config_run["reruns"]):
             # Results for each rerun (completely separate)
             result_path = output_path / config_run["output_name"] / f"reruns_{run}"
@@ -45,8 +46,18 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
             if config_run["method"] == "saa":
                 saa_meta_path = result_path / "meta"
                 meta_results = extract_saa_runs_meta(saa_meta_path, config_run["max_run_time"], config_run["ordered_to_adjust_atts"], census)
-                print(meta_results)
+                extra_results.append(meta_results)
         fin_rmse_records = pd.concat(store_diff_runs, axis=1).T
+
+        # atm, only get mean rmse for meta
+        fin_meta_results = pd.DataFrame()
+        if len(extra_results) > 0:
+            meta_results = [x[x.columns[x.columns.get_level_values(0) == "mean"][0]] for x in extra_results]
+            for i, x in enumerate(meta_results):
+                x.name = f"run_{i}"
+            fin_meta_results = pd.concat(meta_results, axis=1)
+        
+        return fin_rmse_records, fin_meta_results
 
 
 def extract_saa_runs_meta(meta_path: Path, n_adjust: int, adjusted_atts: List[str], census: pd.DataFrame) -> pd.DataFrame:
