@@ -89,6 +89,9 @@ def convert_raw_census(
     zone_id_col = [col for col in raw_census_data.columns if col[0] == zone_id_name][0]
     assert raw_census_data[zone_id_col].nunique() == raw_census_data.shape[0]
     census_data = raw_census_data.set_index(zone_id_col)
+    # Sort the MultiIndex before dropping columns to avoid performance warning
+    if isinstance(census_data.columns, pd.MultiIndex):
+        census_data = census_data.sort_index(axis=1)
     census_data = census_data.drop(columns=to_drop_cols, errors='ignore')
     return census_data
 
