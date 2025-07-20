@@ -8,6 +8,8 @@ from PopSynthesis.Benchmark.CompareCensus.compare import get_RMSE
 from PopSynthesis.analyse.utils.process_yaml import handle_yaml_abs_path
 from typing import List
 
+# NOTE: only RMSE for census comparison, not JSD yet
+
 def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level: str = "hh") -> None:
     """Extract general data from the result .yml file."""
     with open(yaml_path, 'r') as file:
@@ -42,27 +44,43 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
             # consider special case for saa
             if config_run["method"] == "saa":
                 saa_meta_path = result_path / "meta"
-                extract_saa_runs_meta(saa_meta_path, config_run["max_run_time"], config_run["ordered_to_adjust_atts"])
+                meta_results = extract_saa_runs_meta(saa_meta_path, config_run["max_run_time"], config_run["ordered_to_adjust_atts"], census)
+                print(meta_results)
         fin_rmse_records = pd.concat(store_diff_runs, axis=1).T
 
 
-def extract_saa_runs_meta(meta_path: Path, n_adjust: int, adjusted_atts: List[str]) -> pd.DataFrame:
-    # Here a list of csv including adjusting and the stored
+def extract_saa_runs_meta(meta_path: Path, n_adjust: int, adjusted_atts: List[str], census: pd.DataFrame) -> pd.DataFrame:
+    # So what we need to do here is actually combine the kept and adjusted to have the population at each step
+    rmse_results = []
+    chosen_syn = []
     for i in range(n_adjust):
-        # The chosen synthesized populations
-        # This means that we don't know which ones are removed, only the kept and the begin ones
-        result_kept_syn = pd.read_csv(meta_path / f"kept_syn_run_{i}.csv")
         for j in range(len(adjusted_atts)):
             # find the file
-            glob_pattern = f"step_adjusted_{j}_*_test_{i}.csv"
+            glob_pattern = f"step_adjusted_{j}_*_{i}.csv"
             possible_files = glob(str(meta_path / glob_pattern))
-            if j == 0:
+            if len(possible_files) == 0:
                 print(f"No adjusted files found for pattern: {glob_pattern}")
                 continue
             assert len(possible_files) == 1, f"Expected one file matching only {glob_pattern}, found {len(possible_files)}"
             adjusted_file = possible_files[0]
+            adjusted_att = Path(adjusted_file).stem.replace(f"step_adjusted_{j}_", "").replace(f"_{i}", "")
             adjusted_syn = pd.read_csv(adjusted_file)
-            print(adjusted_syn.shape)
+                
+            curr_syn = adjusted_syn
+            if len(chosen_syn) > 0:
+                curr_syn = pd.concat(chosen_syn + [adjusted_syn], axis=0)
+            curr_syn = convert_syn_pop_raw(curr_syn, census)
+            # Process the benchmarks for each population to check the results
+            attr_rmse = get_RMSE(census, curr_syn, return_type="attribute")
+            # replace the index of attr_rmse which is a pd.Series with the attribute name
+            attr_rmse.name = f"run_{i}_adjusted_{j}"
+            attr_rmse.loc["mean"] = attr_rmse.mean()
+            attr_rmse.loc["adjusted_att"] = adjusted_att
+            rmse_results.append(attr_rmse)
+
+        result_kept_syn = pd.read_csv(meta_path / f"kept_syn_run_{i}.csv")
+        chosen_syn.append(result_kept_syn)
+    return pd.concat(rmse_results, axis=1).T
 
 
 if __name__ == "__main__":
