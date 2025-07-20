@@ -81,7 +81,7 @@ def err_check_against_marg(
     new_diff_marg = get_diff_marg(converted_marg, kept_marg)
     # check it is no neg indeed
     checking_not_neg = new_diff_marg < 0
-    assert checking_not_neg.any(axis=None) == False
+    assert not checking_not_neg.any(axis=None)
     # now get the new marg
     new_diff_marg.index = new_diff_marg.index.astype(int)
     new_diff_marg.index.name = zone_field
