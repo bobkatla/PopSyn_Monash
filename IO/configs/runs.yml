@@ -19,8 +19,8 @@
 #   stats_name: "stats_ipu.csv"
 
 - method: saa
-  hh_marg_file: "./data/full/hh_marginals_ipu.csv"
-  hh_sample_file: "./data/full/HH_pool.csv"
+  hh_marg_file: "../processed_data/full/hh_marginals_ipu.csv"
+  hh_sample_file: "../processed_data/full/HH_pool.csv"
   level: "hh"
   zone_field: "zone_id"
   considered_atts:
@@ -53,8 +53,8 @@
   reruns: 10
 
 - method: saa
-  hh_marg_file: "./data/full/hh_marginals_ipu.csv"
-  hh_sample_file: "./data/full/hh_sample_ipu.csv"
+  hh_marg_file: "../processed_data/full/hh_marginals_ipu.csv"
+  hh_sample_file: "../processed_data/full/hh_sample_ipu.csv"
   level: "hh"
   zone_field: "zone_id"
   considered_atts:
@@ -87,8 +87,8 @@
   reruns: 10
 
 - method: saa
-  hh_marg_file: "./data/full/hh_marginals_ipu.csv"
-  hh_sample_file: "./data/full/hh_sample_ipu.csv"
+  hh_marg_file: "../processed_data/full/hh_marginals_ipu.csv"
+  hh_sample_file: "../processed_data/full/hh_sample_ipu.csv"
   level: "hh"
   zone_field: "zone_id"
   considered_atts:
