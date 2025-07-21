@@ -47,8 +47,8 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
             syn_pop_converted_pd = convert_syn_pop_raw(syn_pop_pd, census_pd)
             
             # Process the benchmarks for each population to check the results
-            attr_rmse_pd = get_RMSE(census_pd, syn_pop_converted_pd, return_type="attribute")
-            attr_rmse_pd.name = f"run_{run}"
+            attr_rmse_pd = get_RMSE(census_pd.to_numpy(), syn_pop_converted_pd.to_numpy(), return_type="attribute")
+            attr_rmse_pd = pd.Series(attr_rmse_pd, index=syn_pop_converted_pd.columns, name=f"run_{run}")
             
             # Convert RMSE results to Polars - handle MultiIndex properly
             attr_rmse_pl = pl.Series(name=f"run_{run}", values=attr_rmse_pd.values, dtype=pl.Float64)
@@ -143,9 +143,9 @@ def extract_saa_runs_meta(meta_path: Path, n_adjust: int, adjusted_atts: List[st
             curr_syn_converted_pd = convert_syn_pop_raw(curr_syn_pd, census_pd)
             
             # Process the benchmarks for each population to check the results
-            attr_rmse = get_RMSE(census_pd, curr_syn_converted_pd, return_type="attribute")
+            attr_rmse = get_RMSE(census_pd.to_numpy(), curr_syn_converted_pd.to_numpy(), return_type="attribute")
+            attr_rmse = pd.Series(attr_rmse, index=curr_syn_converted_pd.columns, name=f"run_{i}_adjusted_{j}")
             # replace the index of attr_rmse which is a pd.Series with the attribute name
-            attr_rmse.name = f"run_{i}_adjusted_{j}"
             attr_rmse.loc["mean"] = attr_rmse.mean()
             attr_rmse.loc["adjusted_att"] = adjusted_att
             rmse_results.append(attr_rmse)
