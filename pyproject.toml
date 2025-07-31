@@ -18,6 +18,7 @@ dependencies = [
     "pyyaml>=6.0.2",
     "pulp>=3.2.1",
     "pyarrow>=20.0.0",
+    "pydeck>=0.9.1",
 ]
 
 [project.scripts]
