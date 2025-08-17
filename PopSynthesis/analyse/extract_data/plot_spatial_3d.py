@@ -88,6 +88,10 @@ def plot_3d_map(
         var_name='metric',
         value_name='height'
     )
+    
+    # ROBUSTNESS FIX: Gracefully handle any NaN values in the height data
+    long_df['height'] = long_df['height'].fillna(0)
+
 
     # --- Colors, Offsets, and Opacity ---
     num_bars = len(bar_df_processed.columns)
@@ -102,9 +106,18 @@ def plot_3d_map(
 
     long_df['lon'] = long_df['lon_centroid'] + long_df['metric'].apply(lambda m: metric_props[m]['offset'])
     
-    # IMPROVEMENT: Calculate variable opacity based on bar height
+    # Calculate variable opacity based on bar height
     min_height, max_height = long_df['height'].min(), long_df['height'].max()
-    long_df['alpha'] = 100 + ((long_df['height'] - min_height) / (max_height - min_height) * 155)
+    
+    # Handle the edge case where all bar heights are the same
+    if (max_height - min_height) == 0:
+        print("All bar heights are identical. Setting a constant opacity.")
+        long_df['alpha'] = 255 # Assign a solid opacity
+    else:
+        # Normalize heights to a 0-1 range and then scale to 100-255 for opacity
+        long_df['alpha'] = 100 + ((long_df['height'] - min_height) / (max_height - min_height) * 155)
+
+    # Combine the color with the calculated alpha value
     long_df['color_with_alpha'] = long_df.apply(
         lambda row: metric_props[row['metric']]['color'] + [int(row['alpha'])], axis=1
     )
@@ -123,7 +136,7 @@ def plot_3d_map(
                               
     column_layer = pdk.Layer('ColumnLayer', data=long_df, get_position='[lon, lat_centroid]',
                              get_elevation='height', elevation_scale=100, 
-                             radius=120, # IMPROVEMENT: Increased bar thickness
+                             radius=120, # Increased bar thickness
                              get_fill_color='color_with_alpha', # Use the new RGBA color
                              pickable=True, auto_highlight=True)
     
