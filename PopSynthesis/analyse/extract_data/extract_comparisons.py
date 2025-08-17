@@ -45,6 +45,12 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
             # Convert to pandas for external function processing
             syn_pop_pd = syn_pop_pl.to_pandas()
             syn_pop_converted_pd = convert_syn_pop_raw(syn_pop_pd, census_pd)
+            syn_pop_converted_pd = syn_pop_converted_pd[census_pd.columns]  # Ensure columns match census
+            syn_pop_converted_pd = syn_pop_converted_pd.reindex(census_pd.index)  # Ensure index matches census
+            assert syn_pop_converted_pd.columns.equals(census_pd.columns), \
+                "Columns of synthetic population do not match census."
+            assert syn_pop_converted_pd.index.equals(census_pd.index), \
+                "Index of synthetic population does not match census."
             
             # Process the benchmarks for each population to check the results
             attr_rmse_pd = get_RMSE(census_pd.to_numpy(), syn_pop_converted_pd.to_numpy(), return_type="attribute")
@@ -65,15 +71,16 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
             store_diff_runs.append(attr_rmse_pl)
 
             # consider special case for saa
-            if config_run["method"] == "saa":
-                saa_meta_path = result_path / "meta"
-                meta_results_pd = extract_saa_runs_meta(saa_meta_path, config_run["max_run_time"], 
-                                                      config_run["ordered_to_adjust_atts"], census_pd)
-                # Convert meta results to Polars
-                meta_results_pl = pl.from_pandas(meta_results_pd)
-                extra_results.append(meta_results_pl)
+            # if config_run["method"] == "saa":
+            #     saa_meta_path = result_path / "meta"
+            #     meta_results_pd = extract_saa_runs_meta(saa_meta_path, config_run["max_run_time"], 
+            #                                           config_run["ordered_to_adjust_atts"], census_pd)
+            #     # Convert meta results to Polars
+            #     meta_results_pl = pl.from_pandas(meta_results_pd)
+            #     extra_results.append(meta_results_pl)
         
         # Combine RMSE results
+        fin_rmse_records = pl.DataFrame()
         if store_diff_runs:
             # Create a base DataFrame with attributes
             base_df = store_diff_runs[0].select("attribute")
@@ -87,9 +94,11 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
                 )
             
             fin_rmse_records = base_df
-        else:
-            fin_rmse_records = pl.DataFrame()
-
+            # attribute now is like ('totalvehs', '0'), need separate them into 2 columns
+            fin_rmse_records = fin_rmse_records.with_columns([
+                fin_rmse_records["attribute"].str.extract(r'\(([^,]+),', 1).alias("att"),
+                fin_rmse_records["attribute"].str.extract(r',\s*([^)]+)\)', 1).alias("state")
+            ]).drop("attribute")
         # Process meta results for SAA
         fin_meta_results = pl.DataFrame()
         if len(extra_results) > 0:
@@ -160,8 +169,11 @@ def extract_saa_runs_meta(meta_path: Path, n_adjust: int, adjusted_atts: List[st
 if __name__ == "__main__":
     current_file_path = Path(__file__).resolve()
     IO_path = current_file_path / "../../../../IO"
-    yaml_path = IO_path / "configs/test.yml"
-    corresponding_output_path = IO_path / "output/runs/small"
+    # yaml_path = IO_path / "configs/test.yml"
+    # corresponding_output_path = IO_path / "output/runs/small"
+    yaml_path = IO_path / "configs/runs.yml"
+    corresponding_output_path = IO_path / "output/runs/big"
     a, b = extract_general_from_resulted_syn(yaml_path, corresponding_output_path)
     # print(a.mean(axis=1))
-    print(b)
+    a.write_csv(IO_path / "output/runs/big/fin_rmse_records.csv")
+    print(a)
