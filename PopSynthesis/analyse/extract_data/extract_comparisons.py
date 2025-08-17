@@ -18,7 +18,8 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
     
     results_main = []
     for config_run in configs:
-        method = config_run["method"]
+        print(f"Processing run: {config_run['output_name']}")
+        # method = config_run["method"]
         if level == "hh":
             census_path_raw = config_run["hh_marg_file"]
             syn_pop_file = f"{config_run['hh_syn_name']}"
@@ -101,7 +102,7 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
                 fin_rmse_records["attribute"].str.extract(r',\s*([^)]+)\)', 1).alias("state")
             ]).drop("attribute")
             fin_rmse_records = fin_rmse_records.with_columns(
-                pl.lit(config_run["method"]).alias("method")
+                pl.lit(config_run["output_name"]).alias("method_run")
             )
         # Process meta results for SAA
         # fin_meta_results = pl.DataFrame()
