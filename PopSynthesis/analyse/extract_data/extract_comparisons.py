@@ -16,8 +16,9 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
     with open(yaml_path, 'r') as file:
         configs = yaml.safe_load(file)
     
+    results_main = []
     for config_run in configs:
-        # method = config_run["method"]
+        method = config_run["method"]
         if level == "hh":
             census_path_raw = config_run["hh_marg_file"]
             syn_pop_file = f"{config_run['hh_syn_name']}"
@@ -71,7 +72,7 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
             store_diff_runs.append(attr_rmse_pl)
 
             # consider special case for saa
-            # if config_run["method"] == "saa":
+            # if method == "saa":
             #     saa_meta_path = result_path / "meta"
             #     meta_results_pd = extract_saa_runs_meta(saa_meta_path, config_run["max_run_time"], 
             #                                           config_run["ordered_to_adjust_atts"], census_pd)
@@ -99,27 +100,31 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
                 fin_rmse_records["attribute"].str.extract(r'\(([^,]+),', 1).alias("att"),
                 fin_rmse_records["attribute"].str.extract(r',\s*([^)]+)\)', 1).alias("state")
             ]).drop("attribute")
+            fin_rmse_records = fin_rmse_records.with_columns(
+                pl.lit(config_run["method"]).alias("method")
+            )
         # Process meta results for SAA
-        fin_meta_results = pl.DataFrame()
-        if len(extra_results) > 0:
-            # Extract mean columns from meta results
-            meta_dfs = []
-            for i, meta_df in enumerate(extra_results):
-                # Find columns that contain "mean" in their name
-                mean_cols = [col for col in meta_df.columns if "mean" in col.lower()]
-                if mean_cols:
-                    mean_col = mean_cols[0]
-                    meta_series = meta_df.select(mean_col).to_series()
-                    meta_series = meta_series.alias(f"run_{i}")
-                    meta_dfs.append(meta_series.to_frame())
+        # fin_meta_results = pl.DataFrame()
+        # if len(extra_results) > 0:
+        #     # Extract mean columns from meta results
+        #     meta_dfs = []
+        #     for i, meta_df in enumerate(extra_results):
+        #         # Find columns that contain "mean" in their name
+        #         mean_cols = [col for col in meta_df.columns if "mean" in col.lower()]
+        #         if mean_cols:
+        #             mean_col = mean_cols[0]
+        #             meta_series = meta_df.select(mean_col).to_series()
+        #             meta_series = meta_series.alias(f"run_{i}")
+        #             meta_dfs.append(meta_series.to_frame())
             
-            if meta_dfs:
-                # Combine all meta results horizontally
-                fin_meta_results = meta_dfs[0]
-                for meta_df in meta_dfs[1:]:
-                    fin_meta_results = fin_meta_results.hstack(meta_df)
+        #     if meta_dfs:
+        #         # Combine all meta results horizontally
+        #         fin_meta_results = meta_dfs[0]
+        #         for meta_df in meta_dfs[1:]:
+        #             fin_meta_results = fin_meta_results.hstack(meta_df)
         
-        return fin_rmse_records, fin_meta_results
+        results_main.append(fin_rmse_records)
+    return pl.concat(results_main)
 
 
 def extract_saa_runs_meta(meta_path: Path, n_adjust: int, adjusted_atts: List[str], census_pd: pd.DataFrame) -> pd.DataFrame:
@@ -173,7 +178,7 @@ if __name__ == "__main__":
     # corresponding_output_path = IO_path / "output/runs/small"
     yaml_path = IO_path / "configs/runs.yml"
     corresponding_output_path = IO_path / "output/runs/big"
-    a, b = extract_general_from_resulted_syn(yaml_path, corresponding_output_path)
+    a = extract_general_from_resulted_syn(yaml_path, corresponding_output_path)
     # print(a.mean(axis=1))
-    a.write_csv(IO_path / "output/runs/big/fin_rmse_records.csv")
+    a.write_csv(corresponding_output_path / "fin_rmse_records.csv")
     print(a)
