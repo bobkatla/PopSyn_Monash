@@ -1,6 +1,7 @@
 - method: saa
   hh_marg_file: "../processed_data/small/hh_marginals_small.csv"
   hh_sample_file: "../processed_data/full/HH_pool.csv"
+  hh_seed_data: "../processed_data/small/hh_sample_ipu.csv"
   level: "hh"
   zone_field: "zone_id"
   considered_atts:

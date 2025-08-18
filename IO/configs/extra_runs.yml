@@ -1,6 +1,7 @@
 - method: ipf
   hh_marg_file: "../processed_data/full/hh_marginals_ipu.csv"
   hh_sample_file: "../processed_data/full/HH_sample_ipu.csv"
+  hh_seed_data: "../processed_data/full/HH_sample_ipu.csv"
   level: "hh"
   zone_field: "zone_id"
   output_name: "ipf_normal"
@@ -10,6 +11,7 @@
 - method: ipf
   hh_marg_file: "../processed_data/full/hh_marginals_ipu.csv"
   hh_sample_file: "../processed_data/full/HH_pool.csv"
+  hh_seed_data: "../processed_data/full/HH_sample_ipu.csv"
   level: "hh"
   zone_field: "zone_id"
   output_name: "ipf_bn"
@@ -18,7 +20,7 @@
 
 - method: bn
   hh_marg_file: "../processed_data/full/hh_marginals_ipu.csv"
-  seed_data: "../processed_data/full/HH_sample_ipu.csv"
+  hh_seed_data: "../processed_data/full/HH_sample_ipu.csv"
   hh_sample_file: "../processed_data/full/HH_pool.csv"
   level: "hh"
   retrain: False
@@ -29,7 +31,7 @@
 
 - method: wgan
   hh_marg_file: "../processed_data/full/hh_marginals_ipu.csv"
-  seed_data: "../processed_data/full/HH_sample_ipu.csv"
+  hh_seed_data: "../processed_data/full/HH_sample_ipu.csv"
   hh_sample_file: "../processed_data/full/wgan_pool.csv"
   level: "hh"
   zone_field: "zone_id"

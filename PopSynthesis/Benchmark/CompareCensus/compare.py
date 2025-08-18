@@ -2,8 +2,11 @@
 Compare with the census
 """
 import numpy as np
-from typing import Tuple, List, Union
+from scipy.spatial.distance import jensenshannon
 
+def get_JSD(p: np.ndarray, q: np.ndarray) -> float:
+    js_distance = jensenshannon(p, q)
+    return js_distance
 
 def powered2_diff(census_matrix: np.ndarray, syn_matrix: np.ndarray) -> np.ndarray:
     """

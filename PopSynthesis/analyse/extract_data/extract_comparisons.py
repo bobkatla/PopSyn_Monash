@@ -5,7 +5,7 @@ import pandas as pd
 import polars as pl
 from glob import glob
 from PopSynthesis.Benchmark.CompareCensus.utils import convert_raw_census, convert_syn_pop_raw
-from PopSynthesis.Benchmark.CompareCensus.compare import get_RMSE
+from PopSynthesis.Benchmark.CompareCensus.compare import get_RMSE, get_JSD
 from PopSynthesis.analyse.utils.process_yaml import handle_yaml_abs_path
 from typing import List
 
@@ -16,25 +16,32 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
     with open(yaml_path, 'r') as file:
         configs = yaml.safe_load(file)
     
-    results_main = []
+    results_main_rmse = []
+    results_main_jsd = []
     for config_run in configs:
         print(f"Processing run: {config_run['output_name']}")
         # method = config_run["method"]
         if level == "hh":
             census_path_raw = config_run["hh_marg_file"]
             syn_pop_file = f"{config_run['hh_syn_name']}"
+            seed_data_file = f"{config_run['hh_seed_data']}"
         elif level == "pp":
             census_path_raw = config_run["pp_marg_file"]
             syn_pop_file = f"{config_run['pp_syn_name']}"
+            seed_data_file = f"{config_run['pp_seed_data']}"
         else:
             raise ValueError(f"Unknown level: {level}. Use 'hh' or 'pp'.")
 
         census_path = handle_yaml_abs_path(Path(census_path_raw), yaml_path)
+        seed_path = handle_yaml_abs_path(Path(seed_data_file), yaml_path)
         # Read census data with pandas (for MultiIndex header) and convert
         census_raw_pd = pd.read_csv(census_path, header=[0, 1])
         census_pd = convert_raw_census(census_raw_pd)
 
-        store_diff_runs = []
+        seed_pd = pd.read_csv(seed_path)
+
+        store_rmse = []
+        store_jsd = []
         extra_results = []
         
         for run in range(config_run["reruns"]):
@@ -55,6 +62,21 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
                 "Index of synthetic population does not match census."
             
             # Process the benchmarks for each population to check the results
+            # also need to handle the seed_data for benchmark with JSD
+            atts = set(syn_pop_pd.columns) - {"zone_id"}
+            jsd_vals = {}
+            for att in atts:
+                sum_syn = syn_pop_pd[att].astype(str).value_counts(normalize=True)
+                sum_seed = seed_pd[att].astype(str).value_counts(normalize=True)
+                p, q = sum_syn.align(sum_seed, fill_value=0)
+                # Convert to NumPy arrays
+                p_array = p.to_numpy()
+                q_array = q.to_numpy()
+                jsd_vals[att] = get_JSD(p_array, q_array)
+            # Convert JSD results to Polars
+            jsd_pd = pd.Series(jsd_vals, name=f"run_{run}")
+            store_jsd.append(jsd_pd)
+
             attr_rmse_pd = get_RMSE(census_pd.to_numpy(), syn_pop_converted_pd.to_numpy(), return_type="attribute")
             attr_rmse_pd = pd.Series(attr_rmse_pd, index=syn_pop_converted_pd.columns, name=f"run_{run}")
             
@@ -70,7 +92,7 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
             attr_rmse_pl = attr_rmse_pl.to_frame().with_columns(
                 pl.Series(name="attribute", values=attr_names)
             )
-            store_diff_runs.append(attr_rmse_pl)
+            store_rmse.append(attr_rmse_pl)
 
             # consider special case for saa
             # if method == "saa":
@@ -83,18 +105,17 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
         
         # Combine RMSE results
         fin_rmse_records = pl.DataFrame()
-        if store_diff_runs:
+        fin_jsd_records = pl.DataFrame()
+        if store_rmse and store_jsd:
             # Create a base DataFrame with attributes
-            base_df = store_diff_runs[0].select("attribute")
-            
+            base_df = store_rmse[0].select("attribute")
             # Join all run results
-            for i, run_df in enumerate(store_diff_runs):
+            for i, run_df in enumerate(store_rmse):
                 base_df = base_df.join(
                     run_df.select(["attribute", f"run_{i}"]),
                     on="attribute",
                     how="left"
                 )
-            
             fin_rmse_records = base_df
             # attribute now is like ('totalvehs', '0'), need separate them into 2 columns
             fin_rmse_records = fin_rmse_records.with_columns([
@@ -104,6 +125,11 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
             fin_rmse_records = fin_rmse_records.with_columns(
                 pl.lit(config_run["output_name"]).alias("method_run")
             )
+
+            combined_jsd = pd.DataFrame(store_jsd).T.reset_index(names=["att"])
+            combined_jsd["method_run"] = config_run["output_name"]
+            fin_jsd_records = pl.from_pandas(combined_jsd)
+
         # Process meta results for SAA
         # fin_meta_results = pl.DataFrame()
         # if len(extra_results) > 0:
@@ -124,8 +150,9 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
         #         for meta_df in meta_dfs[1:]:
         #             fin_meta_results = fin_meta_results.hstack(meta_df)
         
-        results_main.append(fin_rmse_records)
-    return pl.concat(results_main)
+        results_main_rmse.append(fin_rmse_records)
+        results_main_jsd.append(fin_jsd_records)
+    return pl.concat(results_main_rmse), pl.concat(results_main_jsd)
 
 
 def extract_saa_runs_meta(meta_path: Path, n_adjust: int, adjusted_atts: List[str], census_pd: pd.DataFrame) -> pd.DataFrame:
@@ -181,7 +208,9 @@ if __name__ == "__main__":
     # corresponding_output_path = IO_path / "output/runs/big"
     yaml_path = IO_path / "configs/extra_runs.yml"
     corresponding_output_path = IO_path / "output/runs/others_quick"
-    a = extract_general_from_resulted_syn(yaml_path, corresponding_output_path)
+    main_rmse, main_jsd = extract_general_from_resulted_syn(yaml_path, corresponding_output_path)
     # print(a.mean(axis=1))
-    a.write_csv(corresponding_output_path / "fin_rmse_records.csv")
-    print(a)
+    main_rmse.write_csv(corresponding_output_path / "fin_rmse_records.csv")
+    print(main_rmse)
+    main_jsd.write_csv(corresponding_output_path / "fin_jsd_records.csv")
+    print(main_jsd)
