@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 # -----------------------------
 CSV_PATH = r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\IO\output\runs\big\fin_meta_results.csv"
 SAA_METHODS = ["saa_BN_pool", "saa_seed_addzero", "saa_seed_misszero"]
-ZOOM_START = 6        # start loopback for zoom
-ZOOM_END = 15         # end loopback for zoom (inclusive)
+ATTRIBUTES = ["hhinc", "hhsize", "dwelltype", "totalvehs", "owndwell"]
+ZOOM_START = 6
+ZOOM_END = 15
 
 # -----------------------------
 # Helpers
@@ -32,6 +33,16 @@ def parse_adjust_order(s):
     if not m:
         return None, None
     return int(m.group(1)), int(m.group(2))
+
+def normalize_attr_name(txt):
+    """Map any adjusted_att string to one of our canonical attributes."""
+    if txt is None:
+        return None
+    low = str(txt).lower()
+    for a in ATTRIBUTES:
+        if a in low:
+            return a
+    return txt  # fallback (unlikely)
 
 def base_dataframe(csv_path):
     """Load CSV with two-row header and build a tidy frame for plotting."""
@@ -59,84 +70,97 @@ def base_dataframe(csv_path):
     df["att_order"] = df["att_idx"] + 1
     df["step"] = df["run_idx"] * 5 + df["att_idx"] + 1
 
+    df["method_run"] = df["method_run"].astype(str)
     df = df[df["method_run"].isin(SAA_METHODS)].copy()
     df["rerun"] = df["rerun"].astype("Int64")
-    return df
+
+    # Keep the original multi-index dataframe for per-attribute RMSE calculation
+    return df_multi, df
+
+def get_attribute_columns(df_multi, attribute):
+    """Return the full list of (top, sub) columns for an attribute's states."""
+    return [c for c in df_multi.columns if isinstance(c, tuple) and c[0] == attribute]
+
+def compute_per_attribute_rmse_for_rows(df_multi, row_indexer):
+    """
+    For the selected rows (row_indexer), compute per-attribute RMSEs:
+        RMSE_attr(row) = sqrt( mean_k ( value(row, state_k)^2 ) )
+    Returns a DataFrame with columns = ATTRIBUTES, aligned to the filtered rows.
+    """
+    out = {}
+    for att in ATTRIBUTES:
+        cols = get_attribute_columns(df_multi, att)
+        # if attribute missing (shouldn't be), fill with NaN
+        if len(cols) == 0:
+            out[att] = np.full(np.sum(row_indexer), np.nan)
+            continue
+        block = df_multi.loc[row_indexer, cols]
+        # Convert to float
+        block_vals = block.to_numpy(dtype=float)
+        # RMSE over states for this row
+        rmse_attr = np.sqrt(np.nanmean(np.square(block_vals), axis=1))
+        out[att] = rmse_attr
+    return pd.DataFrame(out, index=df_multi.index[row_indexer])
 
 # -----------------------------
-# Plotters (full-range)
+# Plotters already provided earlier (kept here)
 # -----------------------------
-def plot_rmse_per_loopback_mean(df, title_suffix="(full range)"):
-    """RMSE per loopback (avg of 5 attributes), mean across reruns + min–max band."""
+def plot_rmse_per_loopback_mean(df):
     df_loop = df.groupby(["method_run", "rerun", "loopback"])["mean"].mean().reset_index()
-
     plt.figure(figsize=(14, 7))
     for method in SAA_METHODS:
         df_m = df_loop[df_loop["method_run"] == method]
         pivot = df_m.pivot_table(index="loopback", columns="rerun", values="mean")
         pivot = pivot.reindex(np.arange(1, 15 + 1))
-
         steps = pivot.index.to_numpy(int)
         mean_vals = pivot.mean(axis=1, skipna=True).to_numpy(float)
         min_vals = pivot.min(axis=1, skipna=True).to_numpy(float)
         max_vals = pivot.max(axis=1, skipna=True).to_numpy(float)
-
         plt.plot(steps, mean_vals, linewidth=2, label=f"{method} (mean)")
         plt.fill_between(steps, min_vals, max_vals, alpha=0.2)
-
     plt.xlabel("Loopback (1–15)")
     plt.ylabel("RMSE (mean of 5 attributes per loopback)")
-    plt.title(f"SAA RMSE per loopback {title_suffix}")
+    plt.title("SAA RMSE per loopback (10 reruns per method; mean + range)")
     plt.legend()
     plt.grid(True, axis="y")
     plt.tight_layout()
     plt.show()
 
-def plot_target_per_loopback_mean(df, title_suffix="(full range)"):
-    """Target_n_syn per loopback (avg of 5 attributes), mean across reruns + min–max band."""
+def plot_target_per_loopback_mean(df):
     df_loop = df.groupby(["method_run", "rerun", "loopback"])["target_n_syn"].mean().reset_index()
-
     plt.figure(figsize=(14, 7))
     for method in SAA_METHODS:
         df_m = df_loop[df_loop["method_run"] == method]
         pivot = df_m.pivot_table(index="loopback", columns="rerun", values="target_n_syn")
         pivot = pivot.reindex(np.arange(1, 15 + 1))
-
         steps = pivot.index.to_numpy(int)
         mean_vals = pivot.mean(axis=1, skipna=True).to_numpy(float)
         min_vals = pivot.min(axis=1, skipna=True).to_numpy(float)
         max_vals = pivot.max(axis=1, skipna=True).to_numpy(float)
-
         plt.plot(steps, mean_vals, linewidth=2, label=f"{method} (mean)")
         plt.fill_between(steps, min_vals, max_vals, alpha=0.2)
-
     plt.xlabel("Loopback (1–15)")
     plt.ylabel("Target number of synthetic agents (avg over 5 attributes)")
-    plt.title(f"Target synthetic population per loopback {title_suffix}")
+    plt.title("Target synthetic population per loopback (mean + range across reruns)")
     plt.legend()
     plt.grid(True, axis="y")
     plt.tight_layout()
     plt.show()
 
 def plot_rmse_75_steps(df):
-    """RMSE across all 75 steps: mean across reruns + min–max band; separators each 5 steps."""
     plt.figure(figsize=(16, 7))
     for method in SAA_METHODS:
         df_m = df[df["method_run"] == method]
         pivot = df_m.pivot_table(index="step", columns="rerun", values="mean")
         pivot = pivot.reindex(np.arange(1, 75 + 1))
-
         steps = pivot.index.to_numpy(int)
         mean_vals = pivot.mean(axis=1, skipna=True).to_numpy(float)
         min_vals = pivot.min(axis=1, skipna=True).to_numpy(float)
         max_vals = pivot.max(axis=1, skipna=True).to_numpy(float)
-
         plt.plot(steps, mean_vals, linewidth=2, label=f"{method} (mean)")
         plt.fill_between(steps, min_vals, max_vals, alpha=0.18)
-
     for b in range(5, 75, 5):
         plt.axvline(b + 0.5, linestyle=":", linewidth=0.8)
-
     plt.xlabel("Adjustment step (1–75)")
     plt.ylabel("RMSE")
     plt.title("SAA RMSE across 75 adjustment steps (mean + range)")
@@ -146,10 +170,89 @@ def plot_rmse_75_steps(df):
     plt.show()
 
 # -----------------------------
-# Plotters (zoomed)
+# NEW: First loopback, per-attribute RMSE with min–max bands, x = adjusted attribute names
+# -----------------------------
+def plot_first_loopback_per_attribute_rmse(df_multi, df):
+    """
+    For loopback == 1 only:
+      - X-axis = attribute being adjusted at each step (actual 'adjusted_att' order for loopback 1)
+      - For each method: 5 lines (one per attribute), each is mean across 10 reruns,
+        shaded with min–max across reruns at each step.
+    """
+    # Identify loopback 1 rows
+    mask_first = (df["loopback"] == 1)
+    # Compute per-attribute RMSE for those rows using the multi-index numeric blocks
+    per_attr_rmse = compute_per_attribute_rmse_for_rows(df_multi, mask_first.values)
+
+    # Align with df subset (same row order)
+    df_first = df.loc[mask_first, ["method_run", "rerun", "att_order", "adjusted_att"]].copy().reset_index(drop=True)
+    # Normalize adjusted_att for labeling the x-axis
+    df_first["adjusted_attr_base"] = df_first["adjusted_att"].map(normalize_attr_name)
+
+    # Determine the actual order of adjusted attributes in loopback 1 (by att_order 1..5)
+    order_map = (
+        df_first[["att_order", "adjusted_attr_base"]]
+        .dropna()
+        .sort_values("att_order")
+        .drop_duplicates(subset=["att_order"])
+        .set_index("att_order")["adjusted_attr_base"]
+        .to_dict()
+    )
+    # x-axis labels in step order (1..5)
+    x_labels = [order_map.get(i, str(i)) for i in range(1, 6)]
+
+    # Attach RMSE columns
+    for att in ATTRIBUTES:
+        df_first[att] = per_attr_rmse[att].values
+
+    # For each method, build the figure
+    for method in SAA_METHODS:
+        sub = df_first[df_first["method_run"] == method].copy()
+
+        # We'll compute, for each plotted attribute P in ATTRIBUTES:
+        #    for each step s in 1..5:
+        #        collect RMSE_P across reruns where att_order == s
+        #        aggregate mean, min, max over reruns
+        step_idx = np.array([1, 2, 3, 4, 5], dtype=int)
+
+        plt.figure(figsize=(10, 6))
+        for plot_attr in ATTRIBUTES:
+            means = []
+            mins = []
+            maxs = []
+            for s in step_idx:
+                vals = sub.loc[sub["att_order"] == s, plot_attr].astype(float)
+                if len(vals) == 0:
+                    means.append(np.nan)
+                    mins.append(np.nan)
+                    maxs.append(np.nan)
+                else:
+                    means.append(vals.mean())
+                    mins.append(vals.min())
+                    maxs.append(vals.max())
+
+            x = np.arange(1, 6)
+            means = np.array(means, dtype=float)
+            mins = np.array(mins, dtype=float)
+            maxs = np.array(maxs, dtype=float)
+
+            # plot mean + min–max band for this attribute line
+            plt.plot(x, means, marker="o", label=plot_attr)
+            plt.fill_between(x, mins, maxs, alpha=0.2)
+
+        plt.title(f"First loopback — per-attribute RMSE with min–max bands (method: {method})")
+        plt.xlabel("Adjusted attribute at each step (loopback 1)")
+        plt.ylabel("RMSE (per attribute)")
+        plt.xticks([1, 2, 3, 4, 5], x_labels)
+        plt.grid(True, axis="y")
+        plt.legend(title="Attribute (line)")
+        plt.tight_layout()
+        plt.show()
+
+# -----------------------------
+# Zoomed versions kept from before
 # -----------------------------
 def _zoom_slice(pivot, start=6, end=15):
-    """Slice a pivot (index=loopback) to [start..end] inclusive, keeping dtype sane."""
     z = pivot.loc[start:end]
     steps = z.index.to_numpy(int)
     mean_vals = z.mean(axis=1, skipna=True).to_numpy(float)
@@ -158,19 +261,15 @@ def _zoom_slice(pivot, start=6, end=15):
     return steps, mean_vals, min_vals, max_vals
 
 def plot_rmse_per_loopback_mean_zoom(df, start=ZOOM_START, end=ZOOM_END):
-    """Zoomed version of RMSE per loopback (avg of 5 attributes) for loopbacks [start..end]."""
     df_loop = df.groupby(["method_run", "rerun", "loopback"])["mean"].mean().reset_index()
-
     plt.figure(figsize=(12, 6))
     for method in SAA_METHODS:
         df_m = df_loop[df_loop["method_run"] == method]
         pivot = df_m.pivot_table(index="loopback", columns="rerun", values="mean")
         pivot = pivot.reindex(np.arange(1, 15 + 1))
-
         steps, mean_vals, min_vals, max_vals = _zoom_slice(pivot, start, end)
         plt.plot(steps, mean_vals, linewidth=2, label=f"{method} (mean)")
         plt.fill_between(steps, min_vals, max_vals, alpha=0.2)
-
     plt.xlabel(f"Loopback ({start}–{end})")
     plt.ylabel("RMSE (mean of 5 attributes per loopback)")
     plt.title(f"SAA RMSE per loopback (zoom {start}–{end})")
@@ -180,19 +279,15 @@ def plot_rmse_per_loopback_mean_zoom(df, start=ZOOM_START, end=ZOOM_END):
     plt.show()
 
 def plot_target_per_loopback_mean_zoom(df, start=ZOOM_START, end=ZOOM_END):
-    """Zoomed version of target_n_syn per loopback (avg of 5 attributes) for loopbacks [start..end]."""
     df_loop = df.groupby(["method_run", "rerun", "loopback"])["target_n_syn"].mean().reset_index()
-
     plt.figure(figsize=(12, 6))
     for method in SAA_METHODS:
         df_m = df_loop[df_loop["method_run"] == method]
         pivot = df_m.pivot_table(index="loopback", columns="rerun", values="target_n_syn")
         pivot = pivot.reindex(np.arange(1, 15 + 1))
-
         steps, mean_vals, min_vals, max_vals = _zoom_slice(pivot, start, end)
         plt.plot(steps, mean_vals, linewidth=2, label=f"{method} (mean)")
         plt.fill_between(steps, min_vals, max_vals, alpha=0.2)
-
     plt.xlabel(f"Loopback ({start}–{end})")
     plt.ylabel("Target number of synthetic agents (avg over 5 attributes)")
     plt.title(f"Target synthetic population per loopback (zoom {start}–{end})")
@@ -205,13 +300,16 @@ def plot_target_per_loopback_mean_zoom(df, start=ZOOM_START, end=ZOOM_END):
 # Run
 # -----------------------------
 if __name__ == "__main__":
-    df_all = base_dataframe(CSV_PATH)
+    df_multi, df_all = base_dataframe(CSV_PATH)
 
-    # Full-range plots
-    plot_rmse_per_loopback_mean(df_all, title_suffix="(full range)")
-    plot_target_per_loopback_mean(df_all, title_suffix="(full range)")
+    # Existing plots
+    plot_rmse_per_loopback_mean(df_all)
+    plot_target_per_loopback_mean(df_all)
     plot_rmse_75_steps(df_all)
 
-    # Zoomed plots (last 10 loopbacks: 6–15)
+    # Zoomed (6–15)
     plot_rmse_per_loopback_mean_zoom(df_all, start=6, end=15)
     plot_target_per_loopback_mean_zoom(df_all, start=6, end=15)
+
+    # NEW: First loopback, per-attribute RMSE with min–max bands, x labels by actual adjusted attribute
+    plot_first_loopback_per_attribute_rmse(df_multi, df_all)
