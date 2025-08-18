@@ -171,14 +171,14 @@ if __name__ == "__main__":
         max_col="max_rmse",
         att_order=att_order,
         method_order=method_order,
-        title="RMSE by Attribute (Mean with Min-Max, Limit 0-15)",
+        title="RMSE by Attribute",
         y_label="RMSE",
         annotate=True,         # show bold numbers
         y_top=15,              # 0-15 axis
         shift_frac=0.25,
         bold=True
     )
-    # plt.savefig("rmse_mean_minmax_0to15.png", dpi=300)
+    plt.savefig("rmse_mean_minmax_0to15.png", dpi=300)
     plt.show()
 
     # --- JSD summary + plot (no numbers) ---
@@ -194,12 +194,12 @@ if __name__ == "__main__":
         max_col="max_jsd",
         att_order=att_order,
         method_order=method_order,
-        title="JSD by Attribute (Mean with Min-Max, No Annotations)",
+        title="JSD by Attribute",
         y_label="JSD",
         annotate=False,        # <- no numbers for JSD
         y_top=None
     )
-    # plt.savefig("jsd_mean_minmax.png", dpi=300)
+    plt.savefig("jsd_mean_minmax.png", dpi=300)
     plt.show()
 
     print("Saved: rmse_mean_minmax_0to15.png, jsd_mean_minmax.png")

@@ -179,6 +179,7 @@ def scatter_means_plot(method_means: pd.DataFrame, title: str, colors: dict):
     ax.set_title(title)
     ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.5)
     plt.tight_layout()
+    plt.savefig(f"{title.replace(' ', '_')}.png", dpi=300)
     plt.show()
 
 def area_zoom_plot(per_run_xy: pd.DataFrame, method_filter, title: str, colors: dict, clip_pct=(2,98)):
@@ -233,6 +234,7 @@ def area_zoom_plot(per_run_xy: pd.DataFrame, method_filter, title: str, colors: 
     ax.set_title(title)
     ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.5)
     plt.tight_layout()
+    plt.savefig(f"{title.replace(' ', '_')}.png", dpi=300)
     plt.show()
 
 if __name__ == "__main__":
@@ -243,7 +245,7 @@ if __name__ == "__main__":
     fixed_colors = {m: PALETTE[i % len(PALETTE)] for i, m in enumerate(sorted(per_run["method_run"].unique()))}
 
     # 1) Scatter of method means (one point per method)
-    scatter_means_plot(method_means, title="Trade-off: average across 10 runs", colors=fixed_colors)
+    scatter_means_plot(method_means, title="Average across 10 runs", colors=fixed_colors)
 
     # 2) Area zoom: SAA + IPF
     area_zoom_plot(
@@ -258,7 +260,7 @@ if __name__ == "__main__":
     area_zoom_plot(
         per_run,
         method_filter=lambda m: is_bn(m) or is_wgan(m),
-        title="Zoomed areas: BN and WGAN (from 10 per-run points)",
+        title="BN and WGAN (from 10 per-run points)",
         clip_pct=(2, 98),
         colors=fixed_colors
     )

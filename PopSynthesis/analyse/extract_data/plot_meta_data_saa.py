@@ -118,12 +118,13 @@ def plot_rmse_per_loopback_mean(df):
         max_vals = pivot.max(axis=1, skipna=True).to_numpy(float)
         plt.plot(steps, mean_vals, linewidth=2, label=f"{method} (mean)")
         plt.fill_between(steps, min_vals, max_vals, alpha=0.2)
-    plt.xlabel("Loopback (1–15)")
-    plt.ylabel("RMSE (mean of 5 attributes per loopback)")
-    plt.title("SAA RMSE per loopback (10 reruns per method; mean + range)")
+    plt.xlabel("Loopback")
+    plt.ylabel("RMSE")
+    plt.title("SAA RMSE per loopback")
     plt.legend()
     plt.grid(True, axis="y")
     plt.tight_layout()
+    plt.savefig("saa_rmse_per_loopback.png", dpi=300)
     plt.show()
 
 def plot_target_per_loopback_mean(df):
@@ -145,6 +146,7 @@ def plot_target_per_loopback_mean(df):
     plt.legend()
     plt.grid(True, axis="y")
     plt.tight_layout()
+    plt.savefig("saa_target_per_loopback.png", dpi=300)
     plt.show()
 
 def plot_rmse_75_steps(df):
@@ -161,12 +163,13 @@ def plot_rmse_75_steps(df):
         plt.fill_between(steps, min_vals, max_vals, alpha=0.18)
     for b in range(5, 75, 5):
         plt.axvline(b + 0.5, linestyle=":", linewidth=0.8)
-    plt.xlabel("Adjustment step (1–75)")
+    plt.xlabel("Adjustment step (1-75)")
     plt.ylabel("RMSE")
-    plt.title("SAA RMSE across 75 adjustment steps (mean + range)")
+    plt.title("SAA RMSE across 75 adjustment steps")
     plt.legend()
     plt.grid(True, axis="y")
     plt.tight_layout()
+    plt.savefig("saa_rmse_across_75_adjustment_steps.png", dpi=300)
     plt.show()
 
 # -----------------------------
@@ -240,13 +243,14 @@ def plot_first_loopback_per_attribute_rmse(df_multi, df):
             plt.plot(x, means, marker="o", label=plot_attr)
             plt.fill_between(x, mins, maxs, alpha=0.2)
 
-        plt.title(f"First loopback — per-attribute RMSE with min–max bands (method: {method})")
-        plt.xlabel("Adjusted attribute at each step (loopback 1)")
-        plt.ylabel("RMSE (per attribute)")
+        plt.title(f"First loopback adjustment (method: {method})")
+        plt.xlabel("Adjusted attribute")
+        plt.ylabel("RMSE")
         plt.xticks([1, 2, 3, 4, 5], x_labels)
         plt.grid(True, axis="y")
-        plt.legend(title="Attribute (line)")
+        plt.legend(title="Attributes")
         plt.tight_layout()
+        plt.savefig(f"first_loopback_adjustment_{method}.png", dpi=300)
         plt.show()
 
 # -----------------------------
@@ -270,9 +274,9 @@ def plot_rmse_per_loopback_mean_zoom(df, start=ZOOM_START, end=ZOOM_END):
         steps, mean_vals, min_vals, max_vals = _zoom_slice(pivot, start, end)
         plt.plot(steps, mean_vals, linewidth=2, label=f"{method} (mean)")
         plt.fill_between(steps, min_vals, max_vals, alpha=0.2)
-    plt.xlabel(f"Loopback ({start}–{end})")
-    plt.ylabel("RMSE (mean of 5 attributes per loopback)")
-    plt.title(f"SAA RMSE per loopback (zoom {start}–{end})")
+    plt.xlabel("Loopback")
+    plt.ylabel("RMSE")
+    plt.title("SAA RMSE per loopback")
     plt.legend()
     plt.grid(True, axis="y")
     plt.tight_layout()
@@ -288,12 +292,13 @@ def plot_target_per_loopback_mean_zoom(df, start=ZOOM_START, end=ZOOM_END):
         steps, mean_vals, min_vals, max_vals = _zoom_slice(pivot, start, end)
         plt.plot(steps, mean_vals, linewidth=2, label=f"{method} (mean)")
         plt.fill_between(steps, min_vals, max_vals, alpha=0.2)
-    plt.xlabel(f"Loopback ({start}–{end})")
-    plt.ylabel("Target number of synthetic agents (avg over 5 attributes)")
-    plt.title(f"Target synthetic population per loopback (zoom {start}–{end})")
+    plt.xlabel("Loopback")
+    plt.ylabel("Target number of synthetic agents")
+    plt.title("Target synthetic population per loopback")
     plt.legend()
     plt.grid(True, axis="y")
     plt.tight_layout()
+    plt.savefig("saa_target_per_loopback.png", dpi=300)
     plt.show()
 
 # -----------------------------
