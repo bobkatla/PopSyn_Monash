@@ -177,8 +177,10 @@ if __name__ == "__main__":
     IO_path = current_file_path / "../../../../IO"
     # yaml_path = IO_path / "configs/test.yml"
     # corresponding_output_path = IO_path / "output/runs/small"
-    yaml_path = IO_path / "configs/runs.yml"
-    corresponding_output_path = IO_path / "output/runs/big"
+    # yaml_path = IO_path / "configs/runs.yml"
+    # corresponding_output_path = IO_path / "output/runs/big"
+    yaml_path = IO_path / "configs/extra_runs.yml"
+    corresponding_output_path = IO_path / "output/runs/others_quick"
     a = extract_general_from_resulted_syn(yaml_path, corresponding_output_path)
     # print(a.mean(axis=1))
     a.write_csv(corresponding_output_path / "fin_rmse_records.csv")
