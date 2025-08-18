@@ -179,6 +179,7 @@ def extract_saa_runs_meta(meta_path: Path, n_adjust: int, adjusted_atts: List[st
             # replace the index of attr_rmse which is a pd.Series with the attribute name
             attr_rmse.loc["mean"] = attr_rmse.mean()
             attr_rmse.loc["adjusted_att"] = adjusted_att
+            attr_rmse.loc["target_n_syn"] = len(adjusted_syn_pd)
             rmse_results.append(attr_rmse)
 
         # Read kept synthetic population - treat all as strings
