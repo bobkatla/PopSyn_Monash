@@ -21,13 +21,13 @@ method_order = [
     "bn",
 ]
 method_map = {
-    "saa_BN_pool":       "saa_BN_pool",
-    "saa_seed_addzero":  "saa_seed_addzero",
-    "saa_seed_misszero": "saa_seed_misszero",
-    "ipf_normal":        "ipf_normal",
-    "ipf_bn":            "ipf_fromBN",   # rename to match requested label
-    "wgan":              "wgan_hhsz",    # rename to match requested label
-    "bn":                "bn",
+    "saa_BN_pool":       "SAA_BN_pool",
+    "saa_seed_addzero":  "SAA_seed_addzero",
+    "saa_seed_misszero": "SAA_seed_misszero",
+    "ipf_normal":        "IPF_normal",
+    "ipf_bn":            "IPF_fromBN",   # rename to match requested label
+    "wgan":              "WGAN_hhsz",    # rename to match requested label
+    "bn":                "BN_hhsz",
 }
 
 # Attribute order

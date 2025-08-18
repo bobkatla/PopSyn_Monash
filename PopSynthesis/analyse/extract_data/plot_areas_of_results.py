@@ -15,6 +15,16 @@ from shapely.affinity import scale as shapely_scale
 from scipy.spatial import ConvexHull
 from shapely.affinity import scale as shapely_scale
 
+method_map = {
+    "saa_BN_pool":       "SAA_BN_pool",
+    "saa_seed_addzero":  "SAA_seed_addzero",
+    "saa_seed_misszero": "SAA_seed_misszero",
+    "ipf_normal":        "IPF_normal",
+    "ipf_bn":            "IPF_fromBN",   # rename to match requested label
+    "wgan":              "WGAN_hhsz",    # rename to match requested label
+    "bn":                "BN_hhsz",
+}
+
 # --- Input files ---
 RMSE_CSV = r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\IO\output\runs\combined_fin_rmse_records.csv"
 JSD_CSV  = r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\IO\output\runs\combined_fin_jsd_records.csv"
@@ -228,6 +238,7 @@ def area_zoom_plot(per_run_xy: pd.DataFrame, method_filter, title: str, colors: 
 if __name__ == "__main__":
     # ---------- Compute once, plot three figures ----------
     per_run = compute_per_run_xy(RMSE_CSV, JSD_CSV)
+    per_run["method_run"] = per_run["method_run"].map(method_map)
     method_means = compute_method_means(per_run)
     fixed_colors = {m: PALETTE[i % len(PALETTE)] for i, m in enumerate(sorted(per_run["method_run"].unique()))}
 
