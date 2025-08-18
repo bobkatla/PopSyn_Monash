@@ -84,6 +84,14 @@ def synthesize(runs_yml, output_path):
                     randomly_add_last=run_info.get("randomly_add_last", []),
                     meta_output_dir=meta_output_dir
                 )
+            elif method == "ipf":
+                NotImplementedError("IPF method is not implemented yet.")
+            elif method == "bn":
+                # Separate the case of retrain or not
+                NotImplementedError("Bayesian Network method is not implemented yet.")
+            elif method == "wgan":
+                # Separate the case of retrain or not
+                NotImplementedError("WGAN method is not implemented yet.")
             else:
                 raise ValueError(f"Method {method} not supported.")
             end_time = time.time()
