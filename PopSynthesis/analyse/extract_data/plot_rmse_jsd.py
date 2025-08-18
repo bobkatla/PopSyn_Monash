@@ -12,13 +12,13 @@ JSD_CSV  = Path(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\IO\output\runs\c
 
 # Method naming/order (SAA → IPF → WGAN → BN)
 method_order = [
-    "saa_BN_pool",
-    "saa_seed_addzero",
-    "saa_seed_misszero",
-    "ipf_normal",
-    "ipf_fromBN",
-    "wgan_hhsz",
-    "bn",
+    "SAA_BN_pool",
+    "SAA_seed_addzero",
+    "SAA_seed_misszero",
+    "IPF_normal",
+    "IPF_fromBN",
+    "WGAN_hhsz",
+    "BN_hhsz",
 ]
 method_map = {
     "saa_BN_pool":       "SAA_BN_pool",
@@ -171,10 +171,10 @@ if __name__ == "__main__":
         max_col="max_rmse",
         att_order=att_order,
         method_order=method_order,
-        title="RMSE by Attribute (Mean with Min–Max, Limit 0–15)",
+        title="RMSE by Attribute (Mean with Min-Max, Limit 0-15)",
         y_label="RMSE",
         annotate=True,         # show bold numbers
-        y_top=15,              # 0–15 axis
+        y_top=15,              # 0-15 axis
         shift_frac=0.25,
         bold=True
     )
@@ -194,7 +194,7 @@ if __name__ == "__main__":
         max_col="max_jsd",
         att_order=att_order,
         method_order=method_order,
-        title="JSD by Attribute (Mean with Min–Max, No Annotations)",
+        title="JSD by Attribute (Mean with Min-Max, No Annotations)",
         y_label="JSD",
         annotate=False,        # <- no numbers for JSD
         y_top=None
