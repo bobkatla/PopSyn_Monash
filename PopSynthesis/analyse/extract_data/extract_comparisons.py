@@ -100,7 +100,6 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
                 meta_results_pd = extract_saa_runs_meta(saa_meta_path, config_run["max_run_time"], 
                                                       config_run["ordered_to_adjust_atts"], census_pd)
                 meta_results_pd["rerun"] = run
-                # Convert meta results to Polars
                 extra_results.append(meta_results_pd)
         
         # Combine RMSE results
@@ -146,8 +145,9 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
 def extract_saa_runs_meta(meta_path: Path, n_adjust: int, adjusted_atts: List[str], census_pd: pd.DataFrame) -> pd.DataFrame:
     # So what we need to do here is actually combine the kept and adjusted to have the population at each step
     rmse_results = []
-    chosen_syn_dfs = []
     
+    hold_chosen_syn = None
+    expected_n_syn = 0
     for i in range(n_adjust):
         for j in range(len(adjusted_atts)):
             # find the file
@@ -161,17 +161,18 @@ def extract_saa_runs_meta(meta_path: Path, n_adjust: int, adjusted_atts: List[st
             adjusted_att = Path(adjusted_file).stem.replace(f"step_adjusted_{j}_", "").replace(f"_{i}", "")
             
             # Read with Polars and convert to pandas for external functions - treat all as strings
-            adjusted_syn_pl = pl.read_csv(adjusted_file, infer_schema_length=0)
-            adjusted_syn_pd = adjusted_syn_pl.to_pandas()
-                
-            curr_syn_pd = adjusted_syn_pd
-            if len(chosen_syn_dfs) > 0:
-                # Combine all chosen synthetic populations
-                chosen_syn_combined = pl.concat(chosen_syn_dfs + [adjusted_syn_pl])
-                curr_syn_pd = chosen_syn_combined.to_pandas()
-            
-            curr_syn_converted_pd = convert_syn_pop_raw(curr_syn_pd, census_pd)
-            
+            adjusted_syn_pd = pd.read_csv(adjusted_file, dtype=str)
+            if expected_n_syn == 0:
+                expected_n_syn = len(adjusted_syn_pd)
+
+            result_full_syn = adjusted_syn_pd
+            if hold_chosen_syn is not None:
+                result_full_syn = pd.concat([hold_chosen_syn, adjusted_syn_pd])
+            assert len(result_full_syn) == expected_n_syn, f"Expected {expected_n_syn} rows, got {len(result_full_syn)}"
+            curr_syn_converted_pd = convert_syn_pop_raw(result_full_syn, census_pd)
+            curr_syn_converted_pd = curr_syn_converted_pd[census_pd.columns]  # Ensure columns match census
+            curr_syn_converted_pd = curr_syn_converted_pd.reindex(census_pd.index)  # Ensure index matches census
+
             # Process the benchmarks for each population to check the results
             attr_rmse = get_RMSE(census_pd.to_numpy(), curr_syn_converted_pd.to_numpy(), return_type="attribute")
             attr_rmse = pd.Series(attr_rmse, index=curr_syn_converted_pd.columns, name=f"run_{i}_adjusted_{j}")
@@ -181,8 +182,8 @@ def extract_saa_runs_meta(meta_path: Path, n_adjust: int, adjusted_atts: List[st
             rmse_results.append(attr_rmse)
 
         # Read kept synthetic population - treat all as strings
-        result_kept_syn_pl = pl.read_csv(meta_path / f"kept_syn_run_{i}.csv", infer_schema_length=0)
-        chosen_syn_dfs.append(result_kept_syn_pl)
+        result_kept_syn_pl = pd.read_csv(meta_path / f"kept_syn_run_{i}.csv", dtype=str)
+        hold_chosen_syn = pd.concat([hold_chosen_syn, result_kept_syn_pl]) if hold_chosen_syn is not None else result_kept_syn_pl
     
     return pd.concat(rmse_results, axis=1).T
 
