@@ -11,16 +11,16 @@ from typing import List
 
 # NOTE: only RMSE for census comparison, not JSD yet
 
-def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level: str = "hh") -> tuple[pl.DataFrame, pl.DataFrame]:
+def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level: str = "hh", handle_meta_data: bool = False) -> tuple[pl.DataFrame, pl.DataFrame, pd.DataFrame]:
     """Extract general data from the result .yml file."""
     with open(yaml_path, 'r') as file:
         configs = yaml.safe_load(file)
     
     results_main_rmse = []
     results_main_jsd = []
+    results_main_meta = []
     for config_run in configs:
         print(f"Processing run: {config_run['output_name']}")
-        # method = config_run["method"]
         if level == "hh":
             census_path_raw = config_run["hh_marg_file"]
             syn_pop_file = f"{config_run['hh_syn_name']}"
@@ -95,13 +95,13 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
             store_rmse.append(attr_rmse_pl)
 
             # consider special case for saa
-            # if method == "saa":
-            #     saa_meta_path = result_path / "meta"
-            #     meta_results_pd = extract_saa_runs_meta(saa_meta_path, config_run["max_run_time"], 
-            #                                           config_run["ordered_to_adjust_atts"], census_pd)
-            #     # Convert meta results to Polars
-            #     meta_results_pl = pl.from_pandas(meta_results_pd)
-            #     extra_results.append(meta_results_pl)
+            if config_run["method"] == "saa" and handle_meta_data:
+                saa_meta_path = result_path / "meta"
+                meta_results_pd = extract_saa_runs_meta(saa_meta_path, config_run["max_run_time"], 
+                                                      config_run["ordered_to_adjust_atts"], census_pd)
+                meta_results_pd["rerun"] = run
+                # Convert meta results to Polars
+                extra_results.append(meta_results_pd)
         
         # Combine RMSE results
         fin_rmse_records = pl.DataFrame()
@@ -131,28 +131,16 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
             fin_jsd_records = pl.from_pandas(combined_jsd)
 
         # Process meta results for SAA
-        # fin_meta_results = pl.DataFrame()
-        # if len(extra_results) > 0:
-        #     # Extract mean columns from meta results
-        #     meta_dfs = []
-        #     for i, meta_df in enumerate(extra_results):
-        #         # Find columns that contain "mean" in their name
-        #         mean_cols = [col for col in meta_df.columns if "mean" in col.lower()]
-        #         if mean_cols:
-        #             mean_col = mean_cols[0]
-        #             meta_series = meta_df.select(mean_col).to_series()
-        #             meta_series = meta_series.alias(f"run_{i}")
-        #             meta_dfs.append(meta_series.to_frame())
-            
-        #     if meta_dfs:
-        #         # Combine all meta results horizontally
-        #         fin_meta_results = meta_dfs[0]
-        #         for meta_df in meta_dfs[1:]:
-        #             fin_meta_results = fin_meta_results.hstack(meta_df)
-        
+        fin_meta_results = pd.DataFrame()
+        if len(extra_results) > 0:
+            fin_meta_results = pd.concat(extra_results)
+            fin_meta_results = fin_meta_results.reset_index(names=["adjust_order"])
+            fin_meta_results["method_run"] = config_run["output_name"]
+
+        results_main_meta.append(fin_meta_results)
         results_main_rmse.append(fin_rmse_records)
         results_main_jsd.append(fin_jsd_records)
-    return pl.concat(results_main_rmse), pl.concat(results_main_jsd)
+    return pl.concat(results_main_rmse), pl.concat(results_main_jsd), pd.concat(results_main_meta)
 
 
 def extract_saa_runs_meta(meta_path: Path, n_adjust: int, adjusted_atts: List[str], census_pd: pd.DataFrame) -> pd.DataFrame:
@@ -204,13 +192,15 @@ if __name__ == "__main__":
     IO_path = current_file_path / "../../../../IO"
     # yaml_path = IO_path / "configs/test.yml"
     # corresponding_output_path = IO_path / "output/runs/small"
-    # yaml_path = IO_path / "configs/runs.yml"
-    # corresponding_output_path = IO_path / "output/runs/big"
-    yaml_path = IO_path / "configs/extra_runs.yml"
-    corresponding_output_path = IO_path / "output/runs/others_quick"
-    main_rmse, main_jsd = extract_general_from_resulted_syn(yaml_path, corresponding_output_path)
+    yaml_path = IO_path / "configs/runs.yml"
+    corresponding_output_path = IO_path / "output/runs/big"
+    # yaml_path = IO_path / "configs/extra_runs.yml"
+    # corresponding_output_path = IO_path / "output/runs/others_quick"
+    main_rmse, main_jsd, meta_results = extract_general_from_resulted_syn(yaml_path, corresponding_output_path, handle_meta_data = True)
     # print(a.mean(axis=1))
     main_rmse.write_csv(corresponding_output_path / "fin_rmse_records.csv")
     print(main_rmse)
     main_jsd.write_csv(corresponding_output_path / "fin_jsd_records.csv")
     print(main_jsd)
+    meta_results.to_csv(corresponding_output_path / "fin_meta_results.csv")
+    print(meta_results)
