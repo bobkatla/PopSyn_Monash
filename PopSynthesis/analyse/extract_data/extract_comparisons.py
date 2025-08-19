@@ -11,7 +11,7 @@ from typing import List
 
 # NOTE: only RMSE for census comparison, not JSD yet
 
-def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level: str = "hh", handle_meta_data: bool = False) -> tuple[pl.DataFrame, pl.DataFrame, pd.DataFrame]:
+def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level: str = "hh", handle_meta_data: bool = False) -> tuple[pl.DataFrame, pl.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Extract general data from the result .yml file."""
     with open(yaml_path, 'r') as file:
         configs = yaml.safe_load(file)
@@ -19,6 +19,8 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
     results_main_rmse = []
     results_main_jsd = []
     results_main_meta = []
+    results_main_missing_percen = []
+
     for config_run in configs:
         print(f"Processing run: {config_run['output_name']}")
         if level == "hh":
@@ -43,6 +45,7 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
         store_rmse = []
         store_jsd = []
         extra_results = []
+        hold_percen_missing = []
         
         for run in range(config_run["reruns"]):
             # Results for each rerun (completely separate)
@@ -75,13 +78,13 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
                 jsd_vals[att] = get_JSD(p_array, q_array)
             # Convert JSD results to Polars
             jsd_pd = pd.Series(jsd_vals, name=f"run_{run}")
+            store_jsd.append(jsd_pd)
 
             # Handle to get the population diversity
             combs_in_seed = set(seed_pd[list(atts)].value_counts().index)
             combs_in_syn = set(syn_pop_pd[list(atts)].value_counts().index)
             missing_combs = combs_in_seed - combs_in_syn
-            jsd_pd.loc["percen_missing_combs"] = 100 * len(missing_combs) / len(combs_in_seed)
-            store_jsd.append(jsd_pd)
+            hold_percen_missing.append(100 * len(missing_combs) / len(combs_in_seed))
 
             attr_rmse_pd = get_RMSE(census_pd.to_numpy(), syn_pop_converted_pd.to_numpy(), return_type="attribute")
             attr_rmse_pd = pd.Series(attr_rmse_pd, index=syn_pop_converted_pd.columns, name=f"run_{run}")
@@ -145,7 +148,10 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
         results_main_meta.append(fin_meta_results)
         results_main_rmse.append(fin_rmse_records)
         results_main_jsd.append(fin_jsd_records)
-    return pl.concat(results_main_rmse), pl.concat(results_main_jsd), pd.concat(results_main_meta)
+        fin_missing_percen = pd.Series(hold_percen_missing, name=config_run["output_name"], index=[f"run_{i}" for i in range(len(hold_percen_missing))])
+        results_main_missing_percen.append(fin_missing_percen)
+
+    return pl.concat(results_main_rmse), pl.concat(results_main_jsd), pd.concat(results_main_meta), pd.concat(results_main_missing_percen, axis=1)
 
 
 def extract_saa_runs_meta(meta_path: Path, n_adjust: int, adjusted_atts: List[str], census_pd: pd.DataFrame) -> pd.DataFrame:
@@ -200,11 +206,11 @@ if __name__ == "__main__":
     IO_path = current_file_path / "../../../../IO"
     # yaml_path = IO_path / "configs/test.yml"
     # corresponding_output_path = IO_path / "output/runs/small"
-    yaml_path = IO_path / "configs/runs.yml"
-    corresponding_output_path = IO_path / "output/runs/big"
-    # yaml_path = IO_path / "configs/extra_runs.yml"
-    # corresponding_output_path = IO_path / "output/runs/others_quick"
-    main_rmse, main_jsd, meta_results = extract_general_from_resulted_syn(yaml_path, corresponding_output_path, handle_meta_data = False)
+    # yaml_path = IO_path / "configs/runs.yml"
+    # corresponding_output_path = IO_path / "output/runs/big"
+    yaml_path = IO_path / "configs/extra_runs.yml"
+    corresponding_output_path = IO_path / "output/runs/others_quick"
+    main_rmse, main_jsd, meta_results, main_missing_percen = extract_general_from_resulted_syn(yaml_path, corresponding_output_path, handle_meta_data = False)
     # print(a.mean(axis=1))
     main_rmse.write_csv(corresponding_output_path / "fin_rmse_records.csv")
     print(main_rmse)
@@ -212,3 +218,5 @@ if __name__ == "__main__":
     print(main_jsd)
     # meta_results.to_csv(corresponding_output_path / "fin_meta_results.csv")
     # print(meta_results)
+    main_missing_percen.to_csv(corresponding_output_path / "fin_missing_percen.csv")
+    print(main_missing_percen)
