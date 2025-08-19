@@ -280,6 +280,7 @@ def plot_rmse_per_loopback_mean_zoom(df, start=ZOOM_START, end=ZOOM_END):
     plt.legend()
     plt.grid(True, axis="y")
     plt.tight_layout()
+    plt.savefig("saa_rmse_per_loopback_zoom.png", dpi=300)
     plt.show()
 
 def plot_target_per_loopback_mean_zoom(df, start=ZOOM_START, end=ZOOM_END):
@@ -298,7 +299,7 @@ def plot_target_per_loopback_mean_zoom(df, start=ZOOM_START, end=ZOOM_END):
     plt.legend()
     plt.grid(True, axis="y")
     plt.tight_layout()
-    plt.savefig("saa_target_per_loopback.png", dpi=300)
+    plt.savefig("zoom_saa_target_per_loopback.png", dpi=300)
     plt.show()
 
 # -----------------------------
