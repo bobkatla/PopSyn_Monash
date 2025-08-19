@@ -75,6 +75,12 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
                 jsd_vals[att] = get_JSD(p_array, q_array)
             # Convert JSD results to Polars
             jsd_pd = pd.Series(jsd_vals, name=f"run_{run}")
+
+            # Handle to get the population diversity
+            combs_in_seed = set(seed_pd[list(atts)].value_counts().index)
+            combs_in_syn = set(syn_pop_pd[list(atts)].value_counts().index)
+            missing_combs = combs_in_seed - combs_in_syn
+            jsd_pd.loc["percen_missing_combs"] = 100 * len(missing_combs) / len(combs_in_seed)
             store_jsd.append(jsd_pd)
 
             attr_rmse_pd = get_RMSE(census_pd.to_numpy(), syn_pop_converted_pd.to_numpy(), return_type="attribute")
@@ -198,11 +204,11 @@ if __name__ == "__main__":
     corresponding_output_path = IO_path / "output/runs/big"
     # yaml_path = IO_path / "configs/extra_runs.yml"
     # corresponding_output_path = IO_path / "output/runs/others_quick"
-    main_rmse, main_jsd, meta_results = extract_general_from_resulted_syn(yaml_path, corresponding_output_path, handle_meta_data = True)
+    main_rmse, main_jsd, meta_results = extract_general_from_resulted_syn(yaml_path, corresponding_output_path, handle_meta_data = False)
     # print(a.mean(axis=1))
     main_rmse.write_csv(corresponding_output_path / "fin_rmse_records.csv")
     print(main_rmse)
     main_jsd.write_csv(corresponding_output_path / "fin_jsd_records.csv")
     print(main_jsd)
-    meta_results.to_csv(corresponding_output_path / "fin_meta_results.csv")
-    print(meta_results)
+    # meta_results.to_csv(corresponding_output_path / "fin_meta_results.csv")
+    # print(meta_results)
