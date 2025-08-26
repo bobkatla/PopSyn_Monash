@@ -20,6 +20,8 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
     results_main_jsd = []
     results_main_meta = []
     results_main_missing_percen = []
+    result_neg_inc = []
+    temp_census_neg_inc = None
 
     for config_run in configs:
         print(f"Processing run: {config_run['output_name']}")
@@ -86,6 +88,13 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
             missing_combs = combs_in_seed - combs_in_syn
             hold_percen_missing.append(100 * len(missing_combs) / len(combs_in_seed))
 
+            # Handle Negative income
+            syn_pop_neg_inc = syn_pop_converted_pd[("hhinc", "Negative income")]
+            syn_pop_neg_inc.name = (config_run["output_name"], f"run_{run}")
+            if temp_census_neg_inc is None:
+                temp_census_neg_inc = census_pd[("hhinc", "Negative income")]
+            result_neg_inc.append(syn_pop_neg_inc)
+
             attr_rmse_pd = get_RMSE(census_pd.to_numpy(), syn_pop_converted_pd.to_numpy(), return_type="attribute")
             attr_rmse_pd = pd.Series(attr_rmse_pd, index=syn_pop_converted_pd.columns, name=f"run_{run}")
             
@@ -151,7 +160,10 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
         fin_missing_percen = pd.Series(hold_percen_missing, name=config_run["output_name"], index=[f"run_{i}" for i in range(len(hold_percen_missing))])
         results_main_missing_percen.append(fin_missing_percen)
 
-    return pl.concat(results_main_rmse), pl.concat(results_main_jsd), pd.concat(results_main_meta), pd.concat(results_main_missing_percen, axis=1)
+    if len(result_neg_inc) > 0:
+        neg_inc_for_this_config = pd.DataFrame(result_neg_inc + [temp_census_neg_inc]).T
+
+    return pl.concat(results_main_rmse), pl.concat(results_main_jsd), pd.concat(results_main_meta), pd.concat(results_main_missing_percen, axis=1), neg_inc_for_this_config
 
 
 def extract_saa_runs_meta(meta_path: Path, n_adjust: int, adjusted_atts: List[str], census_pd: pd.DataFrame) -> pd.DataFrame:
@@ -206,11 +218,11 @@ if __name__ == "__main__":
     IO_path = current_file_path / "../../../../IO"
     # yaml_path = IO_path / "configs/test.yml"
     # corresponding_output_path = IO_path / "output/runs/small"
-    # yaml_path = IO_path / "configs/runs.yml"
-    # corresponding_output_path = IO_path / "output/runs/big"
-    yaml_path = IO_path / "configs/extra_runs.yml"
-    corresponding_output_path = IO_path / "output/runs/others_quick"
-    main_rmse, main_jsd, meta_results, main_missing_percen = extract_general_from_resulted_syn(yaml_path, corresponding_output_path, handle_meta_data = False)
+    yaml_path = IO_path / "configs/runs.yml"
+    corresponding_output_path = IO_path / "output/runs/big"
+    # yaml_path = IO_path / "configs/extra_runs.yml"
+    # corresponding_output_path = IO_path / "output/runs/others_quick"
+    main_rmse, main_jsd, meta_results, main_missing_percen, neg_inc = extract_general_from_resulted_syn(yaml_path, corresponding_output_path, handle_meta_data = False)
     # print(a.mean(axis=1))
     main_rmse.write_csv(corresponding_output_path / "fin_rmse_records.csv")
     print(main_rmse)
@@ -220,3 +232,5 @@ if __name__ == "__main__":
     # print(meta_results)
     main_missing_percen.to_csv(corresponding_output_path / "fin_missing_percen.csv")
     print(main_missing_percen)
+    neg_inc.to_csv(corresponding_output_path / "fin_neg_inc.csv")
+    print(neg_inc)
