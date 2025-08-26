@@ -218,10 +218,10 @@ if __name__ == "__main__":
     IO_path = current_file_path / "../../../../IO"
     # yaml_path = IO_path / "configs/test.yml"
     # corresponding_output_path = IO_path / "output/runs/small"
-    yaml_path = IO_path / "configs/runs.yml"
-    corresponding_output_path = IO_path / "output/runs/big"
-    # yaml_path = IO_path / "configs/extra_runs.yml"
-    # corresponding_output_path = IO_path / "output/runs/others_quick"
+    # yaml_path = IO_path / "configs/runs.yml"
+    # corresponding_output_path = IO_path / "output/runs/big"
+    yaml_path = IO_path / "configs/extra_runs.yml"
+    corresponding_output_path = IO_path / "output/runs/others_quick"
     main_rmse, main_jsd, meta_results, main_missing_percen, neg_inc = extract_general_from_resulted_syn(yaml_path, corresponding_output_path, handle_meta_data = False)
     # print(a.mean(axis=1))
     main_rmse.write_csv(corresponding_output_path / "fin_rmse_records.csv")
