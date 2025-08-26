@@ -72,5 +72,5 @@ fig.legend(handles=[line_handle],
            frameon=False)
 
 plt.subplots_adjust(left=0.07, right=0.90, bottom=0.18, top=0.90)
-plt.show()
 plt.savefig("neg_inc_hexbin.png", dpi=300, bbox_inches='tight')
+plt.show()
