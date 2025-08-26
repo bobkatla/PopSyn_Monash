@@ -10,6 +10,13 @@ from pathlib import Path
 RMSE_CSV = Path(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\IO\output\runs\combined_fin_rmse_records.csv")
 JSD_CSV  = Path(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\IO\output\runs\combined_fin_jsd_records.csv")
 
+# Font size settings for better readability
+TITLE_FONTSIZE = 20
+AXIS_LABEL_FONTSIZE = 18
+LEGEND_FONTSIZE = 16
+LEGEND_TITLE_FONTSIZE = 16
+TICK_FONTSIZE = 14
+
 # Method naming/order (SAA → IPF → WGAN → BN)
 method_order = [
     "SAA_BN_pool",
@@ -75,15 +82,17 @@ def _bar_with_minmax(ax, df, x_col, y_col, min_col, max_col,
             ax.text(
                 x_text, y_text, f"{y_val:.1f}",
                 ha="center", va="bottom", rotation=90,
-                fontsize=9, fontweight=("bold" if bold else "normal")
+                fontsize=10, fontweight=("bold" if bold else "normal")  # Slightly larger font
             )
 
-    ax.set_title(title)
-    ax.set_xlabel("Attribute")
-    ax.set_ylabel(y_label)
+    ax.set_title(title, fontsize=TITLE_FONTSIZE, pad=20)
+    ax.set_xlabel("Attribute", fontsize=AXIS_LABEL_FONTSIZE)
+    ax.set_ylabel(y_label, fontsize=AXIS_LABEL_FONTSIZE)
+    ax.tick_params(axis='both', which='major', labelsize=TICK_FONTSIZE)
     if y_top is not None:
         ax.set_ylim(0, y_top)
-    ax.legend(title="Method", bbox_to_anchor=(1.05, 1), loc="upper left")
+    ax.legend(title="Method", bbox_to_anchor=(1.05, 1), loc="upper left",
+              fontsize=LEGEND_FONTSIZE, title_fontsize=LEGEND_TITLE_FONTSIZE)
     plt.tight_layout()
 
 
@@ -161,7 +170,7 @@ if __name__ == "__main__":
     # --- RMSE summary + plot ---
     rmse_summary = summarize_rmse(RMSE_CSV)
 
-    fig, ax = plt.subplots(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(14, 8))  # Larger figure
     _bar_with_minmax(
         ax=ax,
         df=rmse_summary,
@@ -178,13 +187,13 @@ if __name__ == "__main__":
         shift_frac=0.25,
         bold=True
     )
-    plt.savefig("rmse_mean_minmax_0to15.png", dpi=300)
+    plt.savefig("rmse_mean_minmax_0to15.png", dpi=300, bbox_inches='tight')
     plt.show()
 
     # --- JSD summary + plot (no numbers) ---
     jsd_summary = summarize_jsd(JSD_CSV)
 
-    fig, ax = plt.subplots(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(14, 8))  # Larger figure
     _bar_with_minmax(
         ax=ax,
         df=jsd_summary,
@@ -199,7 +208,7 @@ if __name__ == "__main__":
         annotate=False,        # <- no numbers for JSD
         y_top=None
     )
-    plt.savefig("jsd_mean_minmax.png", dpi=300)
+    plt.savefig("jsd_mean_minmax.png", dpi=300, bbox_inches='tight')
     plt.show()
 
     print("Saved: rmse_mean_minmax_0to15.png, jsd_mean_minmax.png")

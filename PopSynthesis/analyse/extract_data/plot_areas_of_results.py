@@ -13,7 +13,6 @@ import alphashape
 from shapely.geometry import Polygon, Point, MultiPoint
 from shapely.affinity import scale as shapely_scale
 from scipy.spatial import ConvexHull
-from shapely.affinity import scale as shapely_scale
 
 method_map = {
     "saa_BN_pool":       "SAA_BN_pool",
@@ -39,6 +38,13 @@ EDGE_WIDTH   = 1.4
 JITTER_FAC   = 0.01     # jitter if degenerate: fraction of data range
 BUFFER_FAC   = 0.010     # fallback tiny circle radius as fraction of data range
 AREA_BUFFER_FAC = 0.2   # outward polygon scale (e.g., 0.02 = +2%)
+
+# Font size settings for better readability
+TITLE_FONTSIZE = 20
+AXIS_LABEL_FONTSIZE = 18
+LEGEND_FONTSIZE = 16
+LEGEND_TITLE_FONTSIZE = 16
+TICK_FONTSIZE = 14
 
 PALETTE = [
     "#1f77b4","#ff7f0e","#2ca02c","#d62728","#674586",
@@ -164,7 +170,7 @@ def color_map_for(methods):
     return {m: PALETTE[i % len(PALETTE)] for i, m in enumerate(sorted(methods))}
 
 def scatter_means_plot(method_means: pd.DataFrame, title: str, colors: dict):
-    fig, ax = plt.subplots(figsize=(8.8, 6.8))
+    fig, ax = plt.subplots(figsize=(10.0, 8.0))  # Slightly larger figure
     for _, row in method_means.iterrows():
         m = row["method_run"]
         ax.scatter(row["x_mean"], row["y_mean"],
@@ -173,13 +179,15 @@ def scatter_means_plot(method_means: pd.DataFrame, title: str, colors: dict):
     # legend without duplicates
     handles, labels = ax.get_legend_handles_labels()
     uniq = dict(zip(labels, handles))
-    ax.legend(uniq.values(), uniq.keys(), title="Method", loc="best", frameon=True)
-    ax.set_xlabel("RMSE (avg across attributes)")
-    ax.set_ylabel("JSD (avg across attributes)")
-    ax.set_title(title)
+    ax.legend(uniq.values(), uniq.keys(), title="Method", loc="best", frameon=True,
+              fontsize=LEGEND_FONTSIZE, title_fontsize=LEGEND_TITLE_FONTSIZE)
+    ax.set_xlabel("RMSE (avg across attributes)", fontsize=AXIS_LABEL_FONTSIZE)
+    ax.set_ylabel("JSD (avg across attributes)", fontsize=AXIS_LABEL_FONTSIZE)
+    ax.set_title(title, fontsize=TITLE_FONTSIZE, pad=20)
+    ax.tick_params(axis='both', which='major', labelsize=TICK_FONTSIZE)
     ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.5)
     plt.tight_layout()
-    plt.savefig(f"{title.replace(' ', '_')}.png", dpi=300)
+    plt.savefig(f"{title.replace(' ', '_')}.png", dpi=300, bbox_inches='tight')
     plt.show()
 
 def area_zoom_plot(per_run_xy: pd.DataFrame, method_filter, title: str, colors: dict, clip_pct=(2,98)):
@@ -191,7 +199,8 @@ def area_zoom_plot(per_run_xy: pd.DataFrame, method_filter, title: str, colors: 
     df = per_run_xy[per_run_xy["method_run"].apply(method_filter)].copy()
 
     # Build polygons
-    x_all = df["x"].values; y_all = df["y"].values
+    x_all = df["x"].values
+    y_all = df["y"].values
     xrng = float(x_all.max() - x_all.min()) if len(x_all) else 1.0
     yrng = float(y_all.max() - y_all.min()) if len(y_all) else 1.0
 
@@ -208,7 +217,7 @@ def area_zoom_plot(per_run_xy: pd.DataFrame, method_filter, title: str, colors: 
     # Draw big first
     polys.sort(key=lambda t: t[2], reverse=True)
 
-    fig, ax = plt.subplots(figsize=(9.0, 7.0))
+    fig, ax = plt.subplots(figsize=(10.0, 8.0))  # Larger figure for better readability
     for m, coords, _ in polys:
         col = colors[m]
         ax.fill(coords[:,0], coords[:,1],
@@ -216,7 +225,8 @@ def area_zoom_plot(per_run_xy: pd.DataFrame, method_filter, title: str, colors: 
                 alpha=AREA_ALPHA, linewidth=EDGE_WIDTH, label=m)
 
     # Axis zoom by percentiles (on included methods only)
-    x = df["x"].values; y = df["y"].values
+    x = df["x"].values
+    y = df["y"].values
     xlo, xhi = np.percentile(x, clip_pct[0]), np.percentile(x, clip_pct[1])
     ylo, yhi = np.percentile(y, clip_pct[0]), np.percentile(y, clip_pct[1])
     xpad = 0.06 * (xhi - xlo if xhi > xlo else 1.0)
@@ -227,14 +237,16 @@ def area_zoom_plot(per_run_xy: pd.DataFrame, method_filter, title: str, colors: 
     # Legend without duplicates
     handles, labels = ax.get_legend_handles_labels()
     uniq = dict(zip(labels, handles))
-    ax.legend(uniq.values(), uniq.keys(), title="Method", loc="best", frameon=True)
+    ax.legend(uniq.values(), uniq.keys(), title="Method", loc="best", frameon=True,
+              fontsize=LEGEND_FONTSIZE, title_fontsize=LEGEND_TITLE_FONTSIZE)
 
-    ax.set_xlabel("RMSE (avg across attributes)")
-    ax.set_ylabel("JSD (avg across attributes)")
-    ax.set_title(title)
+    ax.set_xlabel("RMSE (avg across attributes)", fontsize=AXIS_LABEL_FONTSIZE)
+    ax.set_ylabel("JSD (avg across attributes)", fontsize=AXIS_LABEL_FONTSIZE)
+    ax.set_title(title, fontsize=TITLE_FONTSIZE, pad=20)
+    ax.tick_params(axis='both', which='major', labelsize=TICK_FONTSIZE)
     ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.5)
     plt.tight_layout()
-    plt.savefig(f"{title.replace(' ', '_')}.png", dpi=300)
+    plt.savefig(f"{title.replace(' ', '_')}.png", dpi=300, bbox_inches='tight')
     plt.show()
 
 if __name__ == "__main__":

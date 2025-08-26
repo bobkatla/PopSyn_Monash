@@ -12,6 +12,12 @@ ATTRIBUTES = ["hhinc", "hhsize", "dwelltype", "totalvehs", "owndwell"]
 ZOOM_START = 6
 ZOOM_END = 15
 
+# Font size settings for better readability
+TITLE_FONTSIZE = 20
+AXIS_LABEL_FONTSIZE = 18
+LEGEND_FONTSIZE = 20
+LEGEND_TITLE_FONTSIZE = 16
+TICK_FONTSIZE = 16
 # -----------------------------
 # Helpers
 # -----------------------------
@@ -107,7 +113,7 @@ def compute_per_attribute_rmse_for_rows(df_multi, row_indexer):
 # -----------------------------
 def plot_rmse_per_loopback_mean(df):
     df_loop = df.groupby(["method_run", "rerun", "loopback"])["mean"].mean().reset_index()
-    plt.figure(figsize=(14, 7))
+    plt.figure(figsize=(16, 8))  # Larger figure
     for method in SAA_METHODS:
         df_m = df_loop[df_loop["method_run"] == method]
         pivot = df_m.pivot_table(index="loopback", columns="rerun", values="mean")
@@ -116,20 +122,21 @@ def plot_rmse_per_loopback_mean(df):
         mean_vals = pivot.mean(axis=1, skipna=True).to_numpy(float)
         min_vals = pivot.min(axis=1, skipna=True).to_numpy(float)
         max_vals = pivot.max(axis=1, skipna=True).to_numpy(float)
-        plt.plot(steps, mean_vals, linewidth=2, label=f"{method} (mean)")
+        plt.plot(steps, mean_vals, linewidth=3, label=f"{method} (mean)")
         plt.fill_between(steps, min_vals, max_vals, alpha=0.2)
-    plt.xlabel("Loopback")
-    plt.ylabel("RMSE")
-    plt.title("SAA RMSE per loopback")
-    plt.legend()
+    plt.xlabel("Loopback", fontsize=AXIS_LABEL_FONTSIZE)
+    plt.ylabel("RMSE", fontsize=AXIS_LABEL_FONTSIZE)
+    plt.title("SAA RMSE per loopback", fontsize=TITLE_FONTSIZE, pad=20)
+    plt.legend(fontsize=LEGEND_FONTSIZE, title_fontsize=LEGEND_TITLE_FONTSIZE)
+    plt.tick_params(axis='both', which='major', labelsize=TICK_FONTSIZE)
     plt.grid(True, axis="y")
     plt.tight_layout()
-    plt.savefig("saa_rmse_per_loopback.png", dpi=300)
+    plt.savefig("saa_rmse_per_loopback.png", dpi=300, bbox_inches='tight')
     plt.show()
 
 def plot_target_per_loopback_mean(df):
     df_loop = df.groupby(["method_run", "rerun", "loopback"])["target_n_syn"].mean().reset_index()
-    plt.figure(figsize=(14, 7))
+    plt.figure(figsize=(16, 8))  # Larger figure
     for method in SAA_METHODS:
         df_m = df_loop[df_loop["method_run"] == method]
         pivot = df_m.pivot_table(index="loopback", columns="rerun", values="target_n_syn")
@@ -138,19 +145,20 @@ def plot_target_per_loopback_mean(df):
         mean_vals = pivot.mean(axis=1, skipna=True).to_numpy(float)
         min_vals = pivot.min(axis=1, skipna=True).to_numpy(float)
         max_vals = pivot.max(axis=1, skipna=True).to_numpy(float)
-        plt.plot(steps, mean_vals, linewidth=2, label=f"{method} (mean)")
+        plt.plot(steps, mean_vals, linewidth=3, label=f"{method} (mean)")
         plt.fill_between(steps, min_vals, max_vals, alpha=0.2)
-    plt.xlabel("Loopback (1–15)")
-    plt.ylabel("Target number of synthetic agents (avg over 5 attributes)")
-    plt.title("Target synthetic population per loopback (mean + range across reruns)")
-    plt.legend()
+    plt.xlabel("Loopback (1–15)", fontsize=AXIS_LABEL_FONTSIZE)
+    plt.ylabel("Target number of synthetic agents (avg over 5 attributes)", fontsize=AXIS_LABEL_FONTSIZE)
+    plt.title("Target synthetic population per loopback (mean + range across reruns)", fontsize=TITLE_FONTSIZE, pad=20)
+    plt.legend(fontsize=LEGEND_FONTSIZE, title_fontsize=LEGEND_TITLE_FONTSIZE)
+    plt.tick_params(axis='both', which='major', labelsize=TICK_FONTSIZE)
     plt.grid(True, axis="y")
     plt.tight_layout()
-    plt.savefig("saa_target_per_loopback.png", dpi=300)
+    plt.savefig("saa_target_per_loopback.png", dpi=300, bbox_inches='tight')
     plt.show()
 
 def plot_rmse_75_steps(df):
-    plt.figure(figsize=(16, 7))
+    plt.figure(figsize=(18, 8))  # Larger figure
     for method in SAA_METHODS:
         df_m = df[df["method_run"] == method]
         pivot = df_m.pivot_table(index="step", columns="rerun", values="mean")
@@ -159,17 +167,18 @@ def plot_rmse_75_steps(df):
         mean_vals = pivot.mean(axis=1, skipna=True).to_numpy(float)
         min_vals = pivot.min(axis=1, skipna=True).to_numpy(float)
         max_vals = pivot.max(axis=1, skipna=True).to_numpy(float)
-        plt.plot(steps, mean_vals, linewidth=2, label=f"{method} (mean)")
+        plt.plot(steps, mean_vals, linewidth=3, label=f"{method} (mean)")
         plt.fill_between(steps, min_vals, max_vals, alpha=0.18)
     for b in range(5, 75, 5):
         plt.axvline(b + 0.5, linestyle=":", linewidth=0.8)
-    plt.xlabel("Adjustment step (1-75)")
-    plt.ylabel("RMSE")
-    plt.title("SAA RMSE across 75 adjustment steps")
-    plt.legend()
+    plt.xlabel("Adjustment step (1-75)", fontsize=AXIS_LABEL_FONTSIZE)
+    plt.ylabel("RMSE", fontsize=AXIS_LABEL_FONTSIZE)
+    plt.title("SAA RMSE across 75 adjustment steps", fontsize=TITLE_FONTSIZE, pad=20)
+    plt.legend(fontsize=LEGEND_FONTSIZE, title_fontsize=LEGEND_TITLE_FONTSIZE)
+    plt.tick_params(axis='both', which='major', labelsize=TICK_FONTSIZE)
     plt.grid(True, axis="y")
     plt.tight_layout()
-    plt.savefig("saa_rmse_across_75_adjustment_steps.png", dpi=300)
+    plt.savefig("saa_rmse_across_75_adjustment_steps.png", dpi=300, bbox_inches='tight')
     plt.show()
 
 # -----------------------------
@@ -218,7 +227,7 @@ def plot_first_loopback_per_attribute_rmse(df_multi, df):
         #        aggregate mean, min, max over reruns
         step_idx = np.array([1, 2, 3, 4, 5], dtype=int)
 
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(12, 8))  # Larger figure
         for plot_attr in ATTRIBUTES:
             means = []
             mins = []
@@ -240,17 +249,18 @@ def plot_first_loopback_per_attribute_rmse(df_multi, df):
             maxs = np.array(maxs, dtype=float)
 
             # plot mean + min–max band for this attribute line
-            plt.plot(x, means, marker="o", label=plot_attr)
+            plt.plot(x, means, marker="o", label=plot_attr, linewidth=2.5, markersize=7)
             plt.fill_between(x, mins, maxs, alpha=0.2)
 
-        plt.title(f"First loopback adjustment (method: {method})")
-        plt.xlabel("Adjusted attribute")
-        plt.ylabel("RMSE")
-        plt.xticks([1, 2, 3, 4, 5], x_labels)
+        plt.title(f"First loopback adjustment (method: {method})", fontsize=TITLE_FONTSIZE, pad=20)
+        plt.xlabel("Adjusted attribute", fontsize=AXIS_LABEL_FONTSIZE)
+        plt.ylabel("RMSE", fontsize=AXIS_LABEL_FONTSIZE)
+        plt.xticks([1, 2, 3, 4, 5], x_labels, fontsize=TICK_FONTSIZE)
+        plt.yticks(fontsize=TICK_FONTSIZE)
         plt.grid(True, axis="y")
-        plt.legend(title="Attributes")
+        plt.legend(title="Attributes", fontsize=LEGEND_FONTSIZE, title_fontsize=LEGEND_TITLE_FONTSIZE)
         plt.tight_layout()
-        plt.savefig(f"first_loopback_adjustment_{method}.png", dpi=300)
+        plt.savefig(f"first_loopback_adjustment_{method}.png", dpi=300, bbox_inches='tight')
         plt.show()
 
 # -----------------------------
@@ -266,40 +276,42 @@ def _zoom_slice(pivot, start=6, end=15):
 
 def plot_rmse_per_loopback_mean_zoom(df, start=ZOOM_START, end=ZOOM_END):
     df_loop = df.groupby(["method_run", "rerun", "loopback"])["mean"].mean().reset_index()
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(14, 8))  # Larger figure
     for method in SAA_METHODS:
         df_m = df_loop[df_loop["method_run"] == method]
         pivot = df_m.pivot_table(index="loopback", columns="rerun", values="mean")
         pivot = pivot.reindex(np.arange(1, 15 + 1))
         steps, mean_vals, min_vals, max_vals = _zoom_slice(pivot, start, end)
-        plt.plot(steps, mean_vals, linewidth=2, label=f"{method} (mean)")
+        plt.plot(steps, mean_vals, linewidth=3, label=f"{method} (mean)")
         plt.fill_between(steps, min_vals, max_vals, alpha=0.2)
-    plt.xlabel("Loopback")
-    plt.ylabel("RMSE")
-    plt.title("SAA RMSE per loopback")
-    plt.legend()
+    plt.xlabel("Loopback", fontsize=AXIS_LABEL_FONTSIZE)
+    plt.ylabel("RMSE", fontsize=AXIS_LABEL_FONTSIZE)
+    plt.title("SAA RMSE per loopback", fontsize=TITLE_FONTSIZE, pad=20)
+    plt.legend(fontsize=LEGEND_FONTSIZE, title_fontsize=LEGEND_TITLE_FONTSIZE)
+    plt.tick_params(axis='both', which='major', labelsize=TICK_FONTSIZE)
     plt.grid(True, axis="y")
     plt.tight_layout()
-    plt.savefig("saa_rmse_per_loopback_zoom.png", dpi=300)
+    plt.savefig("saa_rmse_per_loopback_zoom.png", dpi=300, bbox_inches='tight')
     plt.show()
 
 def plot_target_per_loopback_mean_zoom(df, start=ZOOM_START, end=ZOOM_END):
     df_loop = df.groupby(["method_run", "rerun", "loopback"])["target_n_syn"].mean().reset_index()
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(14, 8))  # Larger figure
     for method in SAA_METHODS:
         df_m = df_loop[df_loop["method_run"] == method]
         pivot = df_m.pivot_table(index="loopback", columns="rerun", values="target_n_syn")
         pivot = pivot.reindex(np.arange(1, 15 + 1))
         steps, mean_vals, min_vals, max_vals = _zoom_slice(pivot, start, end)
-        plt.plot(steps, mean_vals, linewidth=2, label=f"{method} (mean)")
+        plt.plot(steps, mean_vals, linewidth=3, label=f"{method} (mean)")
         plt.fill_between(steps, min_vals, max_vals, alpha=0.2)
-    plt.xlabel("Loopback")
-    plt.ylabel("Target number of synthetic agents")
-    plt.title("Target synthetic population per loopback")
-    plt.legend()
+    plt.xlabel("Loopback", fontsize=AXIS_LABEL_FONTSIZE)
+    plt.ylabel("Target number of synthetic agents", fontsize=AXIS_LABEL_FONTSIZE)
+    plt.title("Target synthetic population per loopback", fontsize=TITLE_FONTSIZE, pad=20)
+    plt.legend(fontsize=LEGEND_FONTSIZE, title_fontsize=LEGEND_TITLE_FONTSIZE)
+    plt.tick_params(axis='both', which='major', labelsize=TICK_FONTSIZE)
     plt.grid(True, axis="y")
     plt.tight_layout()
-    plt.savefig("zoom_saa_target_per_loopback.png", dpi=300)
+    plt.savefig("zoom_saa_target_per_loopback.png", dpi=300, bbox_inches='tight')
     plt.show()
 
 # -----------------------------

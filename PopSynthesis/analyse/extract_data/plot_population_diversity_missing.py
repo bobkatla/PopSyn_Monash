@@ -8,6 +8,12 @@ from pathlib import Path
 csv_path = r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\IO\output\runs\combined_fin_missing_percen.csv"
 out_png = "missing_combinations_boxplot.png"
 
+# Font size settings for better readability
+TITLE_FONTSIZE = 20
+AXIS_LABEL_FONTSIZE = 18
+LEGEND_FONTSIZE = 16
+LEGEND_TITLE_FONTSIZE = 16
+TICK_FONTSIZE = 14
 method_map = {
     "saa_BN_pool":       "SAA_BN_pool",
     "saa_seed_addzero":  "SAA_seed_addzero",
@@ -53,7 +59,7 @@ df = df.rename(columns=method_map)
 df = df[ordered_cols]
 
 # --- Plot ---
-plt.figure(figsize=(11, 6))
+plt.figure(figsize=(13, 8))  # Larger figure for better readability
 box = df.boxplot(grid=False, patch_artist=True, return_type='dict')
 
 # Color each box
@@ -63,17 +69,18 @@ for patch, col in zip(box['boxes'], ordered_cols):
 # Overlay mean markers
 means = df.mean()
 positions = np.arange(1, len(ordered_cols) + 1)
-plt.scatter(positions, means, color="black", marker="o", zorder=3, label="Mean")
+plt.scatter(positions, means, color="black", marker="o", zorder=3, label="Mean", s=50)
 
-plt.ylabel("Missing % of valid combinations from seed data")
-plt.title("Comparison of methods across 10 reruns")
-plt.xticks(rotation=30)
-plt.legend()
+plt.ylabel("Missing % of valid combinations from seed data", fontsize=AXIS_LABEL_FONTSIZE)
+plt.title("Comparison of methods across 10 reruns", fontsize=TITLE_FONTSIZE, pad=20)
+plt.xticks(rotation=30, fontsize=TICK_FONTSIZE)
+plt.yticks(fontsize=TICK_FONTSIZE)
+plt.legend(fontsize=LEGEND_FONTSIZE)
 
 # Save and show
 Path(out_png).parent.mkdir(parents=True, exist_ok=True)
 plt.tight_layout()
-plt.savefig(out_png, dpi=300)
+plt.savefig(out_png, dpi=300, bbox_inches='tight')
 plt.show()
 
 # --- Print exact means ---
