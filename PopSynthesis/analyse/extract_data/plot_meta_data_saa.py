@@ -126,7 +126,7 @@ def plot_rmse_per_loopback_mean(df):
         plt.fill_between(steps, min_vals, max_vals, alpha=0.2)
     plt.xlabel("Loopback", fontsize=AXIS_LABEL_FONTSIZE)
     plt.ylabel("RMSE", fontsize=AXIS_LABEL_FONTSIZE)
-    plt.title("SAA RMSE per loopback", fontsize=TITLE_FONTSIZE, pad=20)
+    # plt.title("SAA RMSE per loopback", fontsize=TITLE_FONTSIZE, pad=20)
     plt.legend(fontsize=LEGEND_FONTSIZE, title_fontsize=LEGEND_TITLE_FONTSIZE)
     plt.tick_params(axis='both', which='major', labelsize=TICK_FONTSIZE)
     plt.grid(True, axis="y")
