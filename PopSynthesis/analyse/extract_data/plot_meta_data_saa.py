@@ -13,11 +13,11 @@ ZOOM_START = 6
 ZOOM_END = 15
 
 # Font size settings for better readability
-TITLE_FONTSIZE = 20
-AXIS_LABEL_FONTSIZE = 18
-LEGEND_FONTSIZE = 20
-LEGEND_TITLE_FONTSIZE = 16
-TICK_FONTSIZE = 16
+TITLE_FONTSIZE = 24
+AXIS_LABEL_FONTSIZE = 24
+LEGEND_FONTSIZE = 26
+LEGEND_TITLE_FONTSIZE = 18
+TICK_FONTSIZE = 22
 # -----------------------------
 # Helpers
 # -----------------------------
@@ -122,7 +122,7 @@ def plot_rmse_per_loopback_mean(df):
         mean_vals = pivot.mean(axis=1, skipna=True).to_numpy(float)
         min_vals = pivot.min(axis=1, skipna=True).to_numpy(float)
         max_vals = pivot.max(axis=1, skipna=True).to_numpy(float)
-        plt.plot(steps, mean_vals, linewidth=3, label=f"{method} (mean)")
+        plt.plot(steps, mean_vals, linewidth=3, label=f"{method}")
         plt.fill_between(steps, min_vals, max_vals, alpha=0.2)
     plt.xlabel("Loopback", fontsize=AXIS_LABEL_FONTSIZE)
     plt.ylabel("RMSE", fontsize=AXIS_LABEL_FONTSIZE)
@@ -145,11 +145,11 @@ def plot_target_per_loopback_mean(df):
         mean_vals = pivot.mean(axis=1, skipna=True).to_numpy(float)
         min_vals = pivot.min(axis=1, skipna=True).to_numpy(float)
         max_vals = pivot.max(axis=1, skipna=True).to_numpy(float)
-        plt.plot(steps, mean_vals, linewidth=3, label=f"{method} (mean)")
+        plt.plot(steps, mean_vals, linewidth=3, label=f"{method}")
         plt.fill_between(steps, min_vals, max_vals, alpha=0.2)
-    plt.xlabel("Loopback (1–15)", fontsize=AXIS_LABEL_FONTSIZE)
-    plt.ylabel("Target number of synthetic agents (avg over 5 attributes)", fontsize=AXIS_LABEL_FONTSIZE)
-    plt.title("Target synthetic population per loopback (mean + range across reruns)", fontsize=TITLE_FONTSIZE, pad=20)
+    plt.xlabel("Loopback", fontsize=AXIS_LABEL_FONTSIZE)
+    plt.ylabel("Target number of synthetic agents", fontsize=AXIS_LABEL_FONTSIZE)
+    # plt.title("Target synthetic population per loopback", fontsize=TITLE_FONTSIZE, pad=20)
     plt.legend(fontsize=LEGEND_FONTSIZE, title_fontsize=LEGEND_TITLE_FONTSIZE)
     plt.tick_params(axis='both', which='major', labelsize=TICK_FONTSIZE)
     plt.grid(True, axis="y")
@@ -167,7 +167,7 @@ def plot_rmse_75_steps(df):
         mean_vals = pivot.mean(axis=1, skipna=True).to_numpy(float)
         min_vals = pivot.min(axis=1, skipna=True).to_numpy(float)
         max_vals = pivot.max(axis=1, skipna=True).to_numpy(float)
-        plt.plot(steps, mean_vals, linewidth=3, label=f"{method} (mean)")
+        plt.plot(steps, mean_vals, linewidth=3, label=f"{method}")
         plt.fill_between(steps, min_vals, max_vals, alpha=0.18)
     for b in range(5, 75, 5):
         plt.axvline(b + 0.5, linestyle=":", linewidth=0.8)
@@ -189,7 +189,7 @@ def plot_first_loopback_per_attribute_rmse(df_multi, df):
     For loopback == 1 only:
       - X-axis = attribute being adjusted at each step (actual 'adjusted_att' order for loopback 1)
       - For each method: 5 lines (one per attribute), each is mean across 10 reruns,
-        shaded with min–max across reruns at each step.
+        shaded with min-max across reruns at each step.
     """
     # Identify loopback 1 rows
     mask_first = (df["loopback"] == 1)
@@ -252,13 +252,13 @@ def plot_first_loopback_per_attribute_rmse(df_multi, df):
             plt.plot(x, means, marker="o", label=plot_attr, linewidth=2.5, markersize=7)
             plt.fill_between(x, mins, maxs, alpha=0.2)
 
-        plt.title(f"First loopback adjustment (method: {method})", fontsize=TITLE_FONTSIZE, pad=20)
+        # plt.title(f"First loopback adjustment (method: {method})", fontsize=TITLE_FONTSIZE, pad=20)
         plt.xlabel("Adjusted attribute", fontsize=AXIS_LABEL_FONTSIZE)
         plt.ylabel("RMSE", fontsize=AXIS_LABEL_FONTSIZE)
         plt.xticks([1, 2, 3, 4, 5], x_labels, fontsize=TICK_FONTSIZE)
         plt.yticks(fontsize=TICK_FONTSIZE)
         plt.grid(True, axis="y")
-        plt.legend(title="Attributes", fontsize=LEGEND_FONTSIZE, title_fontsize=LEGEND_TITLE_FONTSIZE)
+        plt.legend(fontsize=LEGEND_FONTSIZE, title_fontsize=LEGEND_TITLE_FONTSIZE, ncol=2)
         plt.tight_layout()
         plt.savefig(f"first_loopback_adjustment_{method}.png", dpi=300, bbox_inches='tight')
         plt.show()
@@ -282,12 +282,12 @@ def plot_rmse_per_loopback_mean_zoom(df, start=ZOOM_START, end=ZOOM_END):
         pivot = df_m.pivot_table(index="loopback", columns="rerun", values="mean")
         pivot = pivot.reindex(np.arange(1, 15 + 1))
         steps, mean_vals, min_vals, max_vals = _zoom_slice(pivot, start, end)
-        plt.plot(steps, mean_vals, linewidth=3, label=f"{method} (mean)")
+        plt.plot(steps, mean_vals, linewidth=3, label=f"{method}")
         plt.fill_between(steps, min_vals, max_vals, alpha=0.2)
     plt.xlabel("Loopback", fontsize=AXIS_LABEL_FONTSIZE)
     plt.ylabel("RMSE", fontsize=AXIS_LABEL_FONTSIZE)
-    plt.title("SAA RMSE per loopback", fontsize=TITLE_FONTSIZE, pad=20)
-    plt.legend(fontsize=LEGEND_FONTSIZE, title_fontsize=LEGEND_TITLE_FONTSIZE)
+    # plt.title("SAA RMSE per loopback (zoom)", fontsize=TITLE_FONTSIZE, pad=20)
+    # plt.legend(fontsize=LEGEND_FONTSIZE, title_fontsize=LEGEND_TITLE_FONTSIZE)
     plt.tick_params(axis='both', which='major', labelsize=TICK_FONTSIZE)
     plt.grid(True, axis="y")
     plt.tight_layout()
@@ -302,12 +302,12 @@ def plot_target_per_loopback_mean_zoom(df, start=ZOOM_START, end=ZOOM_END):
         pivot = df_m.pivot_table(index="loopback", columns="rerun", values="target_n_syn")
         pivot = pivot.reindex(np.arange(1, 15 + 1))
         steps, mean_vals, min_vals, max_vals = _zoom_slice(pivot, start, end)
-        plt.plot(steps, mean_vals, linewidth=3, label=f"{method} (mean)")
+        plt.plot(steps, mean_vals, linewidth=3, label=f"{method}")
         plt.fill_between(steps, min_vals, max_vals, alpha=0.2)
     plt.xlabel("Loopback", fontsize=AXIS_LABEL_FONTSIZE)
     plt.ylabel("Target number of synthetic agents", fontsize=AXIS_LABEL_FONTSIZE)
-    plt.title("Target synthetic population per loopback", fontsize=TITLE_FONTSIZE, pad=20)
-    plt.legend(fontsize=LEGEND_FONTSIZE, title_fontsize=LEGEND_TITLE_FONTSIZE)
+    # plt.title("Target synthetic population per loopback (zoom)", fontsize=TITLE_FONTSIZE, pad=20)
+    # plt.legend(fontsize=LEGEND_FONTSIZE, title_fontsize=LEGEND_TITLE_FONTSIZE)
     plt.tick_params(axis='both', which='major', labelsize=TICK_FONTSIZE)
     plt.grid(True, axis="y")
     plt.tight_layout()

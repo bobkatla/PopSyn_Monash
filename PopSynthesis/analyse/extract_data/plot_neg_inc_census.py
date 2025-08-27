@@ -16,9 +16,9 @@ method_map = {
 
 # Font size settings
 TITLE_FONTSIZE = 20
-AXIS_LABEL_FONTSIZE = 18
-TICK_FONTSIZE = 14
-LEGEND_FONTSIZE = 14
+AXIS_LABEL_FONTSIZE = 20
+TICK_FONTSIZE = 18
+LEGEND_FONTSIZE = 18
 
 key_methods = ["saa_BN_pool", "saa_seed_addzero", "ipf_bn"]
 
