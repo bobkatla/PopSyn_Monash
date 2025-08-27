@@ -40,11 +40,11 @@ BUFFER_FAC   = 0.010     # fallback tiny circle radius as fraction of data range
 AREA_BUFFER_FAC = 0.2   # outward polygon scale (e.g., 0.02 = +2%)
 
 # Font size settings for better readability
-TITLE_FONTSIZE = 20
-AXIS_LABEL_FONTSIZE = 18
-LEGEND_FONTSIZE = 16
-LEGEND_TITLE_FONTSIZE = 16
-TICK_FONTSIZE = 14
+TITLE_FONTSIZE = 22
+AXIS_LABEL_FONTSIZE = 20
+LEGEND_FONTSIZE = 22
+LEGEND_TITLE_FONTSIZE = 18
+TICK_FONTSIZE = 18
 
 PALETTE = [
     "#1f77b4","#ff7f0e","#2ca02c","#d62728","#674586",
@@ -179,7 +179,7 @@ def scatter_means_plot(method_means: pd.DataFrame, title: str, colors: dict):
     # legend without duplicates
     handles, labels = ax.get_legend_handles_labels()
     uniq = dict(zip(labels, handles))
-    ax.legend(uniq.values(), uniq.keys(), title="Method", loc="best", frameon=True,
+    ax.legend(uniq.values(), uniq.keys(), loc="center", frameon=True,
               fontsize=LEGEND_FONTSIZE, title_fontsize=LEGEND_TITLE_FONTSIZE)
     ax.set_xlabel("RMSE (avg across attributes)", fontsize=AXIS_LABEL_FONTSIZE)
     ax.set_ylabel("JSD (avg across attributes)", fontsize=AXIS_LABEL_FONTSIZE)
@@ -237,7 +237,7 @@ def area_zoom_plot(per_run_xy: pd.DataFrame, method_filter, title: str, colors: 
     # Legend without duplicates
     handles, labels = ax.get_legend_handles_labels()
     uniq = dict(zip(labels, handles))
-    ax.legend(uniq.values(), uniq.keys(), title="Method", loc="best", frameon=True,
+    ax.legend(uniq.values(), uniq.keys(), loc="center", frameon=True,
               fontsize=LEGEND_FONTSIZE, title_fontsize=LEGEND_TITLE_FONTSIZE)
 
     ax.set_xlabel("RMSE (avg across attributes)", fontsize=AXIS_LABEL_FONTSIZE)
