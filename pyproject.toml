@@ -9,10 +9,16 @@ dependencies = [
     "pandas>=2.0",
     "polars==1.12.0",
     "geopandas>=0.14",
+    # pyproj 3.6.x has no CPython 3.13 wheels; GeoPandas needs this at runtime.
+    # Keep Python 3.9 support through GeoPandas' compatible transitive release.
+    "pyproj>=3.7.0; python_version >= '3.10'",
     "numpy>=1.26",
+    # NumPy 1.26 and SciPy 1.13 predate CPython 3.13 wheels.
+    "numpy>=2.1.0; python_version >= '3.13'",
     "pgmpy>=0.1.25",
     "scikit-learn>=1.4",
     "scipy>=1.12",
+    "scipy>=1.14.1; python_version >= '3.13'",
     "ipfn>=1.4.4",
     "torch>=2.7.0",
     "pyyaml>=6.0.2",
@@ -29,7 +35,9 @@ psim = "PopSynthesis.cli.main:cli"
 
 [tool.uv.sources]
 torch = [
-  { index = "pytorch-cpu" },
+  # PyTorch's CPU index does not publish macOS ARM wheels. Let macOS resolve
+  # torch from PyPI, which provides native Apple Silicon wheels.
+  { index = "pytorch-cpu", marker = "sys_platform != 'darwin'" },
 ]
 
 [[tool.uv.index]]
@@ -40,4 +48,3 @@ explicit = true
 [build-system]
 build-backend = "flit_core.buildapi"
 requires = ["flit_core >=3.2,<4"]
-
