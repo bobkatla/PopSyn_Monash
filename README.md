@@ -1,99 +1,197 @@
-# Population Synthesis
+# PopSynthesis
 
-Population Synthesis is a modular framework for generating synthetic populations using various statistical and machine learning methods. It is designed for flexibility, reproducibility, and extensibility, supporting multiple synthesis algorithms and comprehensive benchmarking.
+PopSynthesis is a research codebase for generating and evaluating spatial synthetic populations. The currently integrated command-line workflows are:
 
-## Project Structure
+- **IPU** for linked household/person synthesis through the external [`synthpop`](https://github.com/bobkatla/synthpop) package.
+- **SAA** (Sequential Attribute Adjustment), the main implementation in this repository, for synthesising household or person records from zonal one-way marginals and a record pool.
 
-- **PopSynthesis/**: Main package containing all core modules.
-  - **cli/**: Command-line interface (CLI) for running synthesis tasks via `click`.
-  - **DataProcessor/**: Classes and utilities for processing raw and intermediate data, including `DataProcessorGeneric` for unified data handling.
-  - **Methods/**: Implementation of synthesis methods (e.g., IPU, IPSF/SAA, BN, CSP, GAN, RL, naive, IPF). Each method is in its own subfolder.
-  - **Benchmark/**: Tools and scripts for comparing synthetic results to census or ground truth data.
-  - **Generator_data/**: Scripts and notebooks for generating and preparing input data.
-  - **Analyse/**: Jupyter notebooks for analysis and visualization of results.
-  - **tests/**: Unit and integration tests for methods and utilities.
+The repository also contains experimental or legacy implementations of IPF, Bayesian networks, CSP, GAN, RL, and naive sampling. These are useful research references, but they are not currently connected as working CLI methods.
+
+For a code-oriented map of the repository and a detailed SAA execution trace, see [`context.md`](context.md).
+
+## Current execution flow
+
+The installed command is `psim`. A synthesis run starts at `PopSynthesis/cli/main.py`, reads a list of runs from YAML, resolves input paths relative to that YAML file, and creates this output layout:
+
+```text
+<output-path>/
+├── run_times.csv
+└── <output_name>/
+    └── reruns_<n>/
+        ├── <synthetic population CSV>
+        └── meta/                    # optional SAA intermediate output
+```
+
+Run a configuration with:
+
+```bash
+mkdir -p IO/output
+psim synthesize --runs-yml IO/configs/test.yml --output-path IO/output
+```
+
+`IO/configs/runs.yml` contains full SAA experiment configurations, while `IO/configs/test.yml` contains a smaller example. The referenced processed data are intentionally not tracked as ordinary Git files, so supply or generate those files before running the examples.
 
 ## Installation
 
-Requirements are managed in `pyproject.toml`. Main dependencies include:
-- Python >= 3.9
-- pandas, polars, numpy, geopandas, scikit-learn, scipy, torch, click, pyyaml, pulp, pgmpy, ipfn, pyarrow
+Python 3.9 or newer is declared in `pyproject.toml`. The project uses a Git dependency, so Git must also be available.
 
-Install with:
+With `uv`:
 
-```powershell
-pip install .
-```
-
-Or, for development:
-
-```powershell
-pip install -e .
-```
-
-The project uses uv so it can be installed on another machine for CLI run only
 ```bash
-uv pip install git+https://github.com/bobkatla/PopSyn_Monash.git
+uv sync
+uv run psim --help
 ```
-or to upgrade (for new developments) with
+
+Or with `pip`:
+
 ```bash
-uv pip install --upgrade git+https://github.com/bobkatla/PopSyn_Monash.git
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e .
+psim --help
 ```
 
-## Usage
+The dependency set includes pandas, Polars, NumPy, PuLP/CBC, SciPy, scikit-learn, pgmpy, PyTorch, GeoPandas, and PyArrow. The `uv` configuration directs PyTorch to the CPU wheel index; a compatible wheel must exist for the host Python/platform combination.
 
-### Command Line Interface (CLI)
+## SAA inputs
 
-The main entry point is the `psim` command (see `PopSynthesis/cli/main.py`). Example:
+SAA consumes two CSV files:
 
-```powershell
-psim synthesize --runs-yml IO/configs/runs.yml --output-path IO/output/
+1. **Marginals**: a CSV with a two-row header. The first header level is the attribute and the second is its state. It must contain the configured zone column (normally `zone_id`) and, with the current loader, a `sample_geog` column that is dropped before synthesis. Counts should be non-negative integers, and every controlled attribute should imply the same population total in each zone.
+2. **Pool**: one complete candidate record per row. It must contain every `considered_atts` column. `serialno` and `sample_geog` are dropped when present. Duplicate records are condensed and used as sampling weights.
+
+The default household controls are:
+
+```text
+hhsize, hhinc, totalvehs, dwelltype, owndwell
 ```
 
-- `--runs-yml`: Path to a YAML file specifying synthesis runs and parameters.
-- `--output-path`: Directory for output files.
+The default person controls are:
 
-### Programmatic Usage
+```text
+age, sex, persinc, anywork
+```
 
-You can also use the main classes and methods in your own scripts. For example, to run the IPU method:
+Person output can additionally retain `nolicence` and `relationship` as uncontrolled attributes.
+
+### SAA YAML example
+
+```yaml
+- method: saa
+  level: hh
+  hh_marg_file: ../processed_data/small/hh_marginals_small.csv
+  hh_sample_file: ../processed_data/full/HH_pool.csv
+  zone_field: zone_id
+
+  considered_atts:
+    - hhsize
+    - hhinc
+    - totalvehs
+    - dwelltype
+    - owndwell
+  ordered_to_adjust_atts:
+    - hhsize
+    - totalvehs
+    - hhinc
+    - dwelltype
+    - owndwell
+  last_adjustment_order:
+    - hhsize
+    - totalvehs
+    - hhinc
+    - dwelltype
+    - owndwell
+
+  max_run_time: 10
+  extra_rm_frac: 0.3
+  randomly_add_last:
+    - hhinc
+  include_zero_cell_values: false
+  output_each_step: true
+  add_name_for_step_output: test
+
+  output_name: saa_small
+  hh_syn_name: hh_syn_saa.csv
+  reruns: 2
+```
+
+Despite its name, `max_run_time` is a maximum **number of SAA passes**, not a wall-clock duration. SAA is stochastic and the current CLI does not expose a random seed.
+
+## What SAA currently does
+
+For each pass, SAA:
+
+1. Initialises a population that exactly matches the first controlled attribute in every zone by weighted sampling from the pool.
+2. Adjusts each later attribute zone-by-zone. A PuLP integer program redistributes counts while preserving combinations of attributes already adjusted and respecting combinations available in the pool.
+3. Expands adjusted counts back into full records by weighted conditional sampling from the pool.
+4. Unless it is the last pass, optionally removes a random fraction and then removes oversupplied records. The retained records are accumulated and the remaining marginal deficit becomes the target for the next pass.
+5. Concatenates records retained across all passes and writes the requested CSV.
+
+Current features include household and person-level runs, configurable control/output attributes, dynamic attribute ordering, a forced final order, optional zero-cell handling, multiple reruns, intermediate step CSVs, and runtime reporting. See `context.md` for exact semantics and known limitations.
+
+## Programmatic SAA use
 
 ```python
-from PopSynthesis.Methods.IPU.run import run_ipu
-run_ipu(hh_marg_file, p_marg_file, hh_sample_file, p_sample_file, output_path, hh_syn_name, pp_syn_name, stats_name)
+from pathlib import Path
+from PopSynthesis.Methods.IPSF.run import run_saa
+
+run_saa(
+    marg_file=Path("hh_marginals.csv"),
+    pool_file=Path("HH_pool.csv"),
+    zone_field="zone_id",
+    output_file=Path("output/hh_syn_saa.csv"),
+    considered_atts=["hhsize", "hhinc", "totalvehs", "dwelltype", "owndwell"],
+    ordered_to_adjust_atts=["hhsize", "totalvehs", "hhinc", "dwelltype", "owndwell"],
+    max_run_time=10,
+    extra_rm_frac=0.3,
+)
 ```
 
-Or to process data:
+The output directory must already exist when calling `run_saa` directly.
 
-```python
-from PopSynthesis.DataProcessor.DataProcessor import DataProcessorGeneric
-processor = DataProcessorGeneric(raw_data_dir, processed_data_dir, output_dir)
-processor.process_all_seed()
+## IPU
+
+IPU delegates loading and synthesis to `synthpop.zone_synthesizer` and writes household, person, and statistics CSVs. Its YAML configuration requires household/person marginals and linked household/person sample files. See the commented examples in `IO/configs/runs.yml` and `PopSynthesis/Methods/IPU/run.py`.
+
+## Repository map
+
+```text
+PopSynthesis/
+├── cli/                  # psim command and YAML orchestration
+├── Methods/
+│   ├── IPSF/SAA/         # active SAA implementation
+│   ├── IPSF/utils/       # ILP, condensation, and residual-marginal helpers
+│   ├── IPU/              # active IPU wrapper
+│   └── BN, CSP, GAN, ... # experimental and legacy methods
+├── Benchmark/            # census/full-population comparison helpers
+├── DataProcessor/        # seed-processing research code
+├── Generator_data/       # data-generation scripts and notebooks
+├── analyse/              # metric extraction, plots, and notebooks
+└── tests/                # current tests and small fixtures
 ```
 
-## Data and Configuration
+## Testing and current caveats
 
-- Input data and configuration files are in `IO/configs/` and `PopSynthesis/DataProcessor/data/`.
-- Output and processed data are in `IO/output/` and `PopSynthesis/DataProcessor/output/`.
+Run the tests after installing development dependencies and fetching Git LFS data:
 
-## Testing
-
-Tests are in `PopSynthesis/tests/` and can be run with your preferred test runner (e.g., pytest):
-
-```powershell
-pytest PopSynthesis/tests/
+```bash
+pytest -q
 ```
 
-## Notebooks
+Important current caveats:
 
-Analysis and visualization notebooks are in `PopSynthesis/Analyse/` and `PopSynthesis/DataProcessor/utils/`.
+- Several tracked CSV fixtures are stored through Git LFS. A checkout containing pointer text instead of CSV content cannot run those tests.
+- The existing SAA tests execute functions at module import time and mostly print results; coverage and assertions are limited.
+- IPF, BN, and WGAN are listed in the CLI dispatcher but are not implemented there. Their current branches also fail to raise the constructed `NotImplementedError`.
+- Some standalone research scripts contain machine-specific Windows paths and are not portable entry points. Prefer `psim synthesize` or `PopSynthesis.Methods.IPSF.run.run_saa`.
+- SAA zero-cell support is partial, and ILP slack means later attributes are best-effort when no exact pool-supported adjustment exists.
 
-## Extending
+## Batch execution
 
-- Add new synthesis methods in `PopSynthesis/Methods/`.
-- Utilities and shared code go in `PopSynthesis/DataProcessor/utils/`.
-- Benchmarking tools are in `PopSynthesis/Benchmark/`.
-- Add tests in `PopSynthesis/tests/`.
+`job_saa.slurm` is the current Slurm example. It activates a `psim` Conda environment and runs:
 
----
+```bash
+psim synthesize -runs runs.yml -o out/
+```
 
-For more details, see the code and docstrings in each module. Contributions and suggestions are welcome!
+Adjust the environment name, paths, resources, and configuration filename for the target cluster.
