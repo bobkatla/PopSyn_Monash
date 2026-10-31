@@ -2,7 +2,12 @@ import pandas as pd
 from pgmpy.estimators import HillClimbSearch, BayesianEstimator
 from pgmpy.factors.discrete.CPD import TabularCPD
 from pgmpy.sampling import BayesianModelSampling
-from pgmpy.models import BayesianNetwork
+try:
+    # pgmpy >= 1.0 renamed the discrete model class and makes the former
+    # BayesianNetwork constructor raise an ImportError.
+    from pgmpy.models import DiscreteBayesianNetwork as BayesianNetworkModel
+except ImportError:  # pragma: no cover - compatibility with older pgmpy
+    from pgmpy.models import BayesianNetwork as BayesianNetworkModel
 import numpy as np
 import networkx as nx
 import pylab as plt
@@ -10,6 +15,17 @@ from itertools import chain
 from PopSynthesis.Benchmark.legacy.checker import total_RMSE_flat, update_SRMSE
 
 data_location = "../../../Generator_data/data/data_processed_here/"
+
+# pgmpy 1.0 replaced the former *Score class-style names (for example,
+# ``bicscore``) with short score identifiers. Keep aliases so existing
+# notebooks and callers remain compatible with both naming conventions.
+LEGACY_SCORING_METHOD_ALIASES = {
+    "k2score": "k2",
+    "bdeuscore": "bdeu",
+    "bdsscore": "bds",
+    "bicscore": "bic-d",
+    "aicscore": "aic-d",
+}
 
 
 def convert_to_prob(d1_arr):
@@ -53,14 +69,18 @@ def learn_struct_BN_score(
     state_names=None,
     show_struct=False,
     method=HillClimbSearch,
-    scoring_method="bicscore",
+    scoring_method="bic-d",
 ):
     learn_df = df
     if "_weight" in df:
         learn_df = df.drop(columns=["_weight"])
     est = method(learn_df, state_names=state_names)
+    if isinstance(scoring_method, str):
+        scoring_method = LEGACY_SCORING_METHOD_ALIASES.get(
+            scoring_method.lower(), scoring_method
+        )
     best_DAG = est.estimate(scoring_method=scoring_method)
-    model = BayesianNetwork(best_DAG)
+    model = BayesianNetworkModel(best_DAG)
     if show_struct:
         nx.draw_circular(model, with_labels=True, node_size=2000, font_size=12)
         plt.show()
