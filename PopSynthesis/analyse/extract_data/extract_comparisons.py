@@ -115,8 +115,15 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
             # consider special case for saa
             if config_run["method"] == "saa" and handle_meta_data:
                 saa_meta_path = result_path / "meta"
-                meta_results_pd = extract_saa_runs_meta(saa_meta_path, config_run["max_run_time"], 
-                                                      config_run["ordered_to_adjust_atts"], census_pd)
+                meta_results_pd = extract_saa_runs_meta(
+                    saa_meta_path,
+                    config_run["max_run_time"],
+                    config_run["ordered_to_adjust_atts"],
+                    census_pd,
+                    stochastic_mode=config_run.get(
+                        "stochastic_mode", "count_native"
+                    ),
+                )
                 meta_results_pd["rerun"] = run
                 extra_results.append(meta_results_pd)
         
@@ -166,7 +173,41 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
     return pl.concat(results_main_rmse), pl.concat(results_main_jsd), pd.concat(results_main_meta), pd.concat(results_main_missing_percen, axis=1), neg_inc_for_this_config
 
 
-def extract_saa_runs_meta(meta_path: Path, n_adjust: int, adjusted_atts: List[str], census_pd: pd.DataFrame) -> pd.DataFrame:
+def extract_saa_runs_meta(
+    meta_path: Path,
+    n_adjust: int,
+    adjusted_atts: List[str],
+    census_pd: pd.DataFrame,
+    stochastic_mode: str = "count_native",
+) -> pd.DataFrame:
+    if stochastic_mode == "count_native_ilp":
+        adjustment_path = meta_path / "direct_count_adjustments.csv"
+        loopback_path = meta_path / "direct_count_loopbacks.csv"
+        if not adjustment_path.exists() or not loopback_path.exists():
+            raise FileNotFoundError(
+                "Direct-count diagnostics require both "
+                "direct_count_adjustments.csv and direct_count_loopbacks.csv"
+            )
+        adjustments = pd.read_csv(adjustment_path)
+        loopbacks = pd.read_csv(loopback_path)
+        result = adjustments.set_index(["pass", "adjustment_index"])
+        result = result.join(
+            loopbacks.set_index("pass")[[
+                "kept_after_pruning",
+                "residual_population",
+                "cumulative_retained_population",
+            ]],
+            on="pass",
+        )
+        result.index = [
+            f"run_{pass_index}_adjusted_{adjustment_index}"
+            for pass_index, adjustment_index in result.index
+        ]
+        result.columns = pd.MultiIndex.from_tuples(
+            [(str(column), "") for column in result.columns]
+        )
+        return result
+
     metrics_path = meta_path / "adjustment_metrics.csv"
     if metrics_path.exists():
         metrics = pd.read_csv(metrics_path)

@@ -8,7 +8,7 @@ This is a fast code-reading guide for future agents. It describes the current `m
 - The package entry point is `psim = PopSynthesis.cli.main:cli` (`pyproject.toml`).
 - `psim synthesize` currently has two real execution paths: IPU and SAA.
 - SAA means **Sequential Attribute Adjustment**. It generates independent household-level or person-level records from zonal one-way marginals plus a complete-record pool.
-- SAA is stochastic. Its default `count_native` backend keeps unique complete records with integer counts through each pass and loop-back; `legacy_exact` retains the older row backend for comparisons.
+- SAA defaults to stochastic `count_native`, which keeps unique complete records with integer counts through each pass and loop-back; `legacy_exact` retains the older row backend for comparisons. `count_native_ilp` uses sampling-free progressive adjustment within each pass while retaining stochastic loop-backs.
 - Within one pass, the first attribute is matched directly. Each later attribute is adjusted per zone using a PuLP integer program that preserves distributions fixed earlier in that pass where the pool supports the required combinations.
 - IPF, BN, WGAN, CSP, GAN, RL, and naive implementations exist as experiments/legacy code. The CLI's `ipf`, `bn`, and `wgan` branches do not execute them.
 - Processed/raw datasets and outputs are ignored. Several committed test CSVs are Git LFS objects and may appear as pointer files when LFS content is unavailable.
@@ -157,7 +157,7 @@ The loop ends when residual agent count reaches zero or `max_run_time` passes ar
 | `last_adjustment_order` | Prefix order forced on final pass; omitted controls follow randomly. |
 | `randomly_add_last` | On 25% of middle passes, listed attributes move to the end. |
 | `include_zero_cell_values` | Experimental support for states/combinations absent from pool. |
-| `stochastic_mode` | `count_native` (default) or the former row-based `legacy_exact` backend. |
+| `stochastic_mode` | `count_native` (default), row-based `legacy_exact`, or progressive `count_native_ilp`. |
 | `output_each_step` | Writes compact adjustment metrics and cumulative full-population snapshots after each pass. |
 | `add_name_for_step_output` | Retained for call compatibility; per-attribute population files are no longer written. |
 | `meta_output_dir` | Intermediate destination; CLI uses each rerun's `meta/`. |

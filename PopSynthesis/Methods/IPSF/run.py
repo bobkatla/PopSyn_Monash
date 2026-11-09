@@ -46,7 +46,9 @@ def run_saa(
         include_zero_cell_values: bool = False,
         randomly_add_last: Optional[List[str]] = None,
         meta_output_dir: Path = None,
-        stochastic_mode: Literal["count_native", "legacy_exact"] = "count_native",
+        stochastic_mode: Literal[
+            "count_native", "legacy_exact", "count_native_ilp"
+        ] = "count_native",
         ) -> None:
     considered_atts = list(
         CONSIDERED_ATTS_HH if considered_atts is None else considered_atts

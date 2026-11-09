@@ -120,9 +120,12 @@ Despite its name, `max_run_time` is a maximum **number of SAA passes**, not a wa
 
 ## What SAA currently does
 
-SAA provides two stochastic backends. `count_native` is the default and keeps
-unique complete records with integer counts internally. `legacy_exact` retains
-the former row-based implementation for compatibility comparisons.
+SAA provides three backends. `count_native` is the default and keeps unique
+complete records with integer counts internally. `legacy_exact` retains the
+former row-based implementation for compatibility comparisons.
+`count_native_ilp` introduces attributes progressively with a sampling-free,
+two-stage direct-count ILP. Its optional loop-backs still use stochastic
+count-level retention, so "sampling-free" applies to each adjustment pass.
 
 For each pass, SAA:
 
@@ -154,9 +157,17 @@ run_saa(
     ordered_to_adjust_atts=["hhsize", "totalvehs", "hhinc", "dwelltype", "owndwell"],
     max_run_time=10,
     extra_rm_frac=0.3,
-    stochastic_mode="count_native",  # or "legacy_exact"
+    stochastic_mode="count_native",  # also "legacy_exact" or "count_native_ilp"
 )
 ```
+
+`count_native_ilp` currently supports one zone and requires
+`considered_atts == ordered_to_adjust_atts`. It supports the existing
+`max_run_time`, `extra_rm_frac`, `last_adjustment_order`, and
+`randomly_add_last` loop-back settings, but does not support
+`include_zero_cell_values=True`. Within each pass it copies the first marginal
+directly, solves every later attribute with lexicographic Census-then-pool
+objectives, and never conditionally samples complete records.
 
 The output directory must already exist when calling `run_saa` directly.
 

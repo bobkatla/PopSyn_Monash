@@ -1,7 +1,8 @@
 import polars as pl
-from pulp import LpProblem, LpVariable, lpSum, LpStatus, LpMinimize, PULP_CBC_CMD
+from pulp import LpProblem, LpSolveStatus, lpSum, LpMinimize
 from typing import Tuple, Dict, List
 from PopSynthesis.Methods.IPSF.const import count_field
+from PopSynthesis.Methods.IPSF.SAA.operations.cbc_solver import create_cbc_solver
 from math import sqrt
 
 # Define a small epsilon value
@@ -79,7 +80,7 @@ def _ILP_solving_adjustment(
 
     # Initialize adjustment variables for each cell with a non-null value
     adjustments = {
-        (i, j): LpVariable(
+        (i, j): problem.add_variable(
             f"A_{i}_{j}", lowBound=-count_table[r_idx[i], j], cat="Integer"
         )
         for i in rows
@@ -89,20 +90,20 @@ def _ILP_solving_adjustment(
 
     # Initialize slack variables for each column to allow deviations from target adjustments
     slack_pos = {
-        j: LpVariable(f"slack_pos_{j}", lowBound=0, cat="Continuous") for j in columns
+        j: problem.add_variable(f"slack_pos_{j}", lowBound=0, cat="Continuous") for j in columns
     }
     slack_neg = {
-        j: LpVariable(f"slack_neg_{j}", lowBound=0, cat="Continuous") for j in columns
+        j: problem.add_variable(f"slack_neg_{j}", lowBound=0, cat="Continuous") for j in columns
     }
 
     # Initialize deviation variables and activation indicators for each cell with a non-null value
     deviations = {
-        (i, j): LpVariable(f"rel_dev_{i}_{j}", lowBound=0, cat="Continuous")
+        (i, j): problem.add_variable(f"rel_dev_{i}_{j}", lowBound=0, cat="Continuous")
         for (i, j) in adjustments
     }
     # Binary activation variables to encourage spreading adjustments
     activations = {
-        (i, j): LpVariable(f"act_{i}_{j}", cat="Binary") for (i, j) in adjustments
+        (i, j): problem.add_variable(f"act_{i}_{j}", cat="Binary") for (i, j) in adjustments
     }
 
     # Objective: Minimize the sum of deviations, slack, and activation penalties
@@ -156,11 +157,11 @@ def _ILP_solving_adjustment(
         problem += deviations[(i, j)] <= activations[(i, j)] * LARGE_M  # Large M constraint
 
     # Solve the ILP
-    problem.solve(PULP_CBC_CMD(msg=False))
+    solve_stats = problem.solve(create_cbc_solver(reproducible=False))
 
     adjustment_remaining = {}
     # Check the solution status
-    if LpStatus[problem.status] == "Optimal":
+    if solve_stats.status == LpSolveStatus.Optimal:
         # Apply adjustments to count_table based on the solution
         for (i, j), var in adjustments.items():
             ori_count_table = ori_count_table.with_columns(

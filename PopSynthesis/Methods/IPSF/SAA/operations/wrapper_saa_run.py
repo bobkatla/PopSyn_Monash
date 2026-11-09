@@ -1,6 +1,7 @@
 """Main place to run SAA for households synthesis"""
 
 
+import json
 import pandas as pd
 from PopSynthesis.Methods.IPSF.const import (
     data_dir,
@@ -32,6 +33,7 @@ from PopSynthesis.Methods.IPSF.SAA.operations.count_tables import (
     sample_without_replacement_counts,
 )
 from PopSynthesis.Methods.IPSF.SAA.operations.shared_vars import zero_cell_scope
+from PopSynthesis.Methods.IPSF.SAA.direct_count_saa import run_direct_count_pass
 
 
 def get_test_pp() -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -146,18 +148,39 @@ def saa_run(
     include_zero_cell_values: bool = False,
     randomly_add_last: Optional[List[str]] = None,
     meta_output_dir: Path = output_dir,
-    stochastic_mode: Literal["count_native", "legacy_exact"] = "count_native",
+    stochastic_mode: Literal[
+        "count_native", "legacy_exact", "count_native_ilp"
+    ] = "count_native",
 ) -> Tuple[pl.DataFrame, List[int]]:
-    """Run SAA using compressed counts by default or the legacy row backend."""
-    if stochastic_mode not in {"count_native", "legacy_exact"}:
+    """Run one of the complete-record, legacy, or direct-count SAA modes."""
+    if stochastic_mode not in {
+        "count_native",
+        "legacy_exact",
+        "count_native_ilp",
+    }:
         raise ValueError(
-            "stochastic_mode must be 'count_native' or 'legacy_exact'"
+            "stochastic_mode must be 'count_native', 'legacy_exact', or "
+            "'count_native_ilp'"
         )
     if considered_atts is None or ordered_to_adjust_atts is None:
         raise ValueError("considered_atts and ordered_to_adjust_atts are required")
     ordered = list(ordered_to_adjust_atts)
     final_order = list(last_adjustment_order or [])
     random_last = list(randomly_add_last or [])
+    if stochastic_mode == "count_native_ilp":
+        return _saa_run_count_native_ilp(
+            targeted_marg,
+            count_pool,
+            considered_atts,
+            ordered,
+            final_order,
+            max_run_time,
+            extra_rm_frac,
+            output_each_step,
+            include_zero_cell_values,
+            random_last,
+            meta_output_dir,
+        )
     with zero_cell_scope():
         if stochastic_mode == "legacy_exact":
             return _saa_run_legacy(
@@ -370,6 +393,188 @@ def _saa_run_count_native(
     if output_each_step:
         _write_diagnostics(meta_output_dir, metrics, snapshots)
     final = expand_counts(final_count.select(considered_atts + [zone_field, count_field]))
+    return final, target_sizes
+
+
+def _validate_direct_mode_inputs(
+    targeted_marg,
+    count_pool,
+    considered_atts,
+    ordered_to_adjust_atts,
+    last_adjustment_order,
+    max_run_time,
+    extra_rm_frac,
+    include_zero_cell_values,
+    randomly_add_last,
+):
+    errors = []
+    if not ordered_to_adjust_atts:
+        errors.append("ordered_to_adjust_atts must not be empty")
+    if considered_atts != ordered_to_adjust_atts:
+        errors.append(
+            "considered_atts must exactly equal ordered_to_adjust_atts"
+        )
+    if len(targeted_marg) != 1 or not targeted_marg.index.is_unique:
+        errors.append("exactly one Census zone is required")
+    if not isinstance(max_run_time, int) or isinstance(max_run_time, bool) or max_run_time < 1:
+        errors.append("max_run_time must be a positive integer")
+    if not 0 <= extra_rm_frac <= 1:
+        errors.append("extra_rm_frac must be between 0 and 1")
+    if include_zero_cell_values:
+        errors.append("include_zero_cell_values=True is unsupported")
+    if len(set(ordered_to_adjust_atts)) != len(ordered_to_adjust_atts):
+        errors.append("ordered_to_adjust_atts must not contain duplicates")
+    marginal_attributes = set(targeted_marg.columns.get_level_values(0)) - {
+        zone_field
+    }
+    if marginal_attributes != set(ordered_to_adjust_atts):
+        errors.append(
+            "marginals must contain exactly the controlled attributes"
+        )
+    if not set(last_adjustment_order) <= set(ordered_to_adjust_atts):
+        errors.append("last_adjustment_order must contain only controlled attributes")
+    if not set(randomly_add_last) <= set(ordered_to_adjust_atts):
+        errors.append("randomly_add_last must contain only controlled attributes")
+    missing_pool = (
+        set(considered_atts) | {count_field}
+    ) - set(count_pool.columns)
+    if missing_pool:
+        errors.append(f"pool is missing columns {sorted(missing_pool)}")
+    if errors:
+        raise ValueError("Invalid count_native_ilp configuration: " + "; ".join(errors))
+
+
+def _write_direct_diagnostics(meta_output_dir, adjustments, loopbacks):
+    meta_output_dir.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(adjustments).to_csv(
+        meta_output_dir / "direct_count_adjustments.csv", index=False
+    )
+    pd.DataFrame(loopbacks).to_csv(
+        meta_output_dir / "direct_count_loopbacks.csv", index=False
+    )
+
+
+def _saa_run_count_native_ilp(
+    targeted_marg,
+    count_pool,
+    considered_atts,
+    ordered_to_adjust_atts,
+    last_adjustment_order,
+    max_run_time,
+    extra_rm_frac,
+    output_each_step,
+    include_zero_cell_values,
+    randomly_add_last,
+    meta_output_dir,
+):
+    """Run progressive direct-count passes with existing count loop-backs."""
+
+    _validate_direct_mode_inputs(
+        targeted_marg,
+        count_pool,
+        considered_atts,
+        ordered_to_adjust_atts,
+        last_adjustment_order,
+        max_run_time,
+        extra_rm_frac,
+        include_zero_cell_values,
+        randomly_add_last,
+    )
+    pool_keys = [column for column in count_pool.columns if column != count_field]
+    count_pool = count_pool.with_columns(
+        [pl.col(attribute).cast(pl.String) for attribute in considered_atts]
+    ).sort(pool_keys)
+    original_marg = targeted_marg.copy()
+    current_marg = targeted_marg.copy()
+    residual_size = int(
+        current_marg[ordered_to_adjust_atts[0]].iloc[0].sum()
+    )
+    retained_populations = []
+    target_sizes = []
+    adjustments = []
+    loopbacks = []
+    current_order = list(ordered_to_adjust_atts)
+
+    pass_index = 0
+    while pass_index < max_run_time and residual_size > 0:
+        pass_order = _order_for_pass(
+            current_order,
+            last_adjustment_order,
+            current_marg.columns,
+            pass_index,
+            max_run_time,
+            randomly_add_last,
+        )
+        current_order = pass_order
+        target_sizes.append(residual_size)
+        pass_result = run_direct_count_pass(
+            current_marg,
+            count_pool,
+            pass_order,
+            pass_index=pass_index,
+        )
+        pass_population = _zone_as_string(pass_result.population)
+        if population_size(pass_population) != residual_size:
+            raise AssertionError(
+                "Direct-count pass population does not match residual target"
+            )
+        adjustments.extend(pass_result.adjustments)
+
+        pass_index += 1
+        is_final_allowed_pass = pass_index == max_run_time
+        requested_retention = residual_size
+        kept_size = residual_size
+        next_residual_size = 0
+        if is_final_allowed_pass:
+            retained_populations.append(pass_population)
+        else:
+            requested_retention = round(residual_size * (1 - extra_rm_frac))
+            kept, next_marg = _err_check_count_population(
+                pass_population,
+                current_marg,
+                extra_rm_frac,
+                [],
+            )
+            kept_size = population_size(kept)
+            if kept_size > 0:
+                retained_populations.append(_zone_as_string(kept))
+            next_residual_size = residual_size - kept_size
+            current_marg = next_marg
+            residual_size = next_residual_size
+
+        loopbacks.append(
+            {
+                "mode": "count_native_ilp",
+                "pass": pass_index - 1,
+                "pass_order_json": json.dumps(pass_order),
+                "pass_target_population": target_sizes[-1],
+                "generated_population": population_size(pass_population),
+                "requested_retention_population": requested_retention,
+                "kept_after_pruning": kept_size,
+                "residual_population": next_residual_size,
+                "cumulative_retained_population": sum(
+                    population_size(population)
+                    for population in retained_populations
+                ),
+                "terminated_after_pass": is_final_allowed_pass
+                or next_residual_size == 0,
+            }
+        )
+
+    final_count = concat_counts(retained_populations)
+    final_marg = counts_to_marginals(final_count, considered_atts)
+    expected = original_marg.copy()
+    expected.index = expected.index.astype(str)
+    final_marg = final_marg.reindex(
+        index=expected.index, columns=expected.columns, fill_value=0
+    )
+    if not final_marg.astype(int).equals(expected.astype(int)):
+        raise AssertionError("Final direct-count population does not match marginals")
+    if output_each_step:
+        _write_direct_diagnostics(meta_output_dir, adjustments, loopbacks)
+    final = expand_counts(
+        final_count.select(considered_atts + [zone_field, count_field])
+    )
     return final, target_sizes
 
 
