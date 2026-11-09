@@ -167,6 +167,32 @@ def extract_general_from_resulted_syn(yaml_path: Path, output_path: Path, level:
 
 
 def extract_saa_runs_meta(meta_path: Path, n_adjust: int, adjusted_atts: List[str], census_pd: pd.DataFrame) -> pd.DataFrame:
+    metrics_path = meta_path / "adjustment_metrics.csv"
+    if metrics_path.exists():
+        metrics = pd.read_csv(metrics_path)
+        index_columns = ["pass", "adjustment_index"]
+        wide = metrics.pivot_table(
+            index=index_columns,
+            columns=["evaluated_attribute", "evaluated_state"],
+            values="rmse",
+            aggfunc="first",
+        )
+        metadata = metrics.groupby(index_columns, sort=False).agg(
+            mean=("mean_rmse", "first"),
+            adjusted_att=("adjusted_attribute", "first"),
+            target_n_syn=("target_n_syn", "first"),
+            ilp_error=("ilp_error", "first"),
+        )
+        metadata.columns = pd.MultiIndex.from_tuples(
+            [(column, "") for column in metadata.columns]
+        )
+        result = pd.concat([wide, metadata], axis=1)
+        result.index = [
+            f"run_{pass_index}_adjusted_{adjustment_index}"
+            for pass_index, adjustment_index in result.index
+        ]
+        return result
+
     # So what we need to do here is actually combine the kept and adjusted to have the population at each step
     rmse_results = []
     

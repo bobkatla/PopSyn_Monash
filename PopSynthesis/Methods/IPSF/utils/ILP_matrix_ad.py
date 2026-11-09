@@ -10,12 +10,17 @@ LARGE_M = 1e6  # Large M value for binary activation variables
 
 
 def convert_to_required_ILP_format(
-    syn_count: pl.DataFrame, att: str, adjusted_atts: List[str]
+    syn_count: pl.DataFrame,
+    att: str,
+    adjusted_atts: List[str],
+    maintain_order: bool = False,
 ) -> pl.DataFrame:
     """Convert the disagg data to the required format for ILP"""
     # group by and pivot the syn to have adjusted_atts as index and states in att as columns
     assert count_field in syn_count.columns
-    gb_syn = syn_count.group_by(pl.col(adjusted_atts + [att])).agg(
+    gb_syn = syn_count.group_by(
+        pl.col(adjusted_atts + [att]), maintain_order=maintain_order
+    ).agg(
         pl.sum(count_field).alias(count_field)
     )
     ILP_formatted_syn = gb_syn.pivot(att, index=adjusted_atts, values=count_field)

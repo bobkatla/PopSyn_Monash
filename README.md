@@ -107,6 +107,7 @@ Person output can additionally retain `nolicence` and `relationship` as uncontro
   randomly_add_last:
     - hhinc
   include_zero_cell_values: false
+  stochastic_mode: count_native
   output_each_step: true
   add_name_for_step_output: test
 
@@ -119,15 +120,24 @@ Despite its name, `max_run_time` is a maximum **number of SAA passes**, not a wa
 
 ## What SAA currently does
 
+SAA provides two stochastic backends. `count_native` is the default and keeps
+unique complete records with integer counts internally. `legacy_exact` retains
+the former row-based implementation for compatibility comparisons.
+
 For each pass, SAA:
 
 1. Initialises a population that exactly matches the first controlled attribute in every zone by weighted sampling from the pool.
 2. Adjusts each later attribute zone-by-zone. A PuLP integer program redistributes counts while preserving combinations of attributes already adjusted and respecting combinations available in the pool.
-3. Expands adjusted counts back into full records by weighted conditional sampling from the pool.
-4. Unless it is the last pass, optionally removes a random fraction and then removes oversupplied records. The retained records are accumulated and the remaining marginal deficit becomes the target for the next pass.
-5. Concatenates records retained across all passes and writes the requested CSV.
+3. Completes adjusted partial counts by weighted conditional sampling from the pool while retaining unique complete-record counts.
+4. Unless it is the last pass, removes a random fraction without replacement at count level and then removes oversupplied counts. The retained counts are accumulated and the remaining marginal deficit becomes the target for the next pass.
+5. Expands records once at the final CSV boundary.
 
-Current features include household and person-level runs, configurable control/output attributes, dynamic attribute ordering, a forced final order, optional zero-cell handling, multiple reruns, intermediate step CSVs, and runtime reporting. See `context.md` for exact semantics and known limitations.
+When `output_each_step` is enabled, SAA writes a compact
+`meta/adjustment_metrics.csv` and one cumulative
+`meta/loopback_population_<pass>.csv` per completed pass. It no longer writes a
+full population after every attribute adjustment.
+
+Current features include household and person-level runs, configurable control/output attributes, dynamic attribute ordering, a forced final order, optional zero-cell handling, multiple reruns, compact adjustment metrics, loop-back snapshots, and runtime reporting. See `context.md` for exact semantics and known limitations.
 
 ## Programmatic SAA use
 
@@ -144,6 +154,7 @@ run_saa(
     ordered_to_adjust_atts=["hhsize", "totalvehs", "hhinc", "dwelltype", "owndwell"],
     max_run_time=10,
     extra_rm_frac=0.3,
+    stochastic_mode="count_native",  # or "legacy_exact"
 )
 ```
 

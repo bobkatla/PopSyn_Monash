@@ -15,10 +15,23 @@ from PopSynthesis.Methods.IPSF.utils.synthetic_checked_census import (
     convert_full_to_marg_count,
 )
 from PopSynthesis.Methods.IPSF.SAA.SAA import SAA
+from PopSynthesis.Methods.IPSF.utils.condensed import condense_df
 import polars as pl
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 import random
+import numpy as np
 from pathlib import Path
+from typing import Literal
+from PopSynthesis.Methods.IPSF.const import count_field
+from PopSynthesis.Methods.IPSF.SAA.operations.count_tables import (
+    concat_counts,
+    counts_to_marginals,
+    expand_counts,
+    population_size,
+    prune_oversupplied_counts,
+    sample_without_replacement_counts,
+)
+from PopSynthesis.Methods.IPSF.SAA.operations.shared_vars import zero_cell_scope
 
 
 def get_test_pp() -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -89,8 +102,9 @@ def err_check_against_marg(
 
 
 def process_shuffle_order(
-    orginal_order: List[str], shuffle_order: List[str], idx_atts_states: pd.MultiIndex, check_run_time: str, randomly_add_last: List[str] = []
+    orginal_order: List[str], shuffle_order: List[str], idx_atts_states: pd.MultiIndex, check_run_time: str, randomly_add_last: Optional[List[str]] = None
 ) -> List[str]:
+    randomly_add_last = [] if randomly_add_last is None else randomly_add_last
     if check_run_time == "first":
         # First run, change the order from most states to least states
         flatten_idx = idx_atts_states.to_frame(index=False, name=["att", "state"])
@@ -122,81 +136,328 @@ def process_shuffle_order(
 def saa_run(
     targeted_marg: pd.DataFrame,
     count_pool: pl.DataFrame,
-    considered_atts=List[str],
-    ordered_to_adjust_atts=List[str],
-    last_adjustment_order: List[str] = [],
+    considered_atts: Optional[List[str]] = None,
+    ordered_to_adjust_atts: Optional[List[str]] = None,
+    last_adjustment_order: Optional[List[str]] = None,
     max_run_time: int = 30,
     extra_rm_frac: float = 0,
     output_each_step: bool = False,
     add_name_for_step_output: str = "",
     include_zero_cell_values: bool = False,
-    randomly_add_last: List[str] = [],
+    randomly_add_last: Optional[List[str]] = None,
     meta_output_dir: Path = output_dir,
-) -> Tuple[pd.DataFrame, List[int]]:
+    stochastic_mode: Literal["count_native", "legacy_exact"] = "count_native",
+) -> Tuple[pl.DataFrame, List[int]]:
+    """Run SAA using compressed counts by default or the legacy row backend."""
+    if stochastic_mode not in {"count_native", "legacy_exact"}:
+        raise ValueError(
+            "stochastic_mode must be 'count_native' or 'legacy_exact'"
+        )
+    if considered_atts is None or ordered_to_adjust_atts is None:
+        raise ValueError("considered_atts and ordered_to_adjust_atts are required")
+    ordered = list(ordered_to_adjust_atts)
+    final_order = list(last_adjustment_order or [])
+    random_last = list(randomly_add_last or [])
+    with zero_cell_scope():
+        if stochastic_mode == "legacy_exact":
+            return _saa_run_legacy(
+                targeted_marg,
+                count_pool,
+                considered_atts,
+                ordered,
+                final_order,
+                max_run_time,
+                extra_rm_frac,
+                output_each_step,
+                include_zero_cell_values,
+                random_last,
+                meta_output_dir,
+            )
+        return _saa_run_count_native(
+            targeted_marg,
+            count_pool,
+            considered_atts,
+            ordered,
+            final_order,
+            max_run_time,
+            extra_rm_frac,
+            output_each_step,
+            include_zero_cell_values,
+            random_last,
+            meta_output_dir,
+        )
+
+
+def _validate_run_inputs(targeted_marg, considered_atts, ordered_to_adjust_atts):
     assert set(ordered_to_adjust_atts) <= set(considered_atts)
     atts_in_marg = set(targeted_marg.columns.get_level_values(0)) - {zone_field}
     assert set(ordered_to_adjust_atts) <= atts_in_marg
     assert zone_field in targeted_marg.index.name
+    return atts_in_marg
 
+
+def _order_for_pass(
+    ordered_atts, final_order, marg_columns, pass_index, max_passes, random_last
+):
+    marker = str(pass_index)
+    if pass_index == 0:
+        marker = "first"
+    if pass_index == max_passes - 1:
+        marker = "last"
+    return process_shuffle_order(
+        ordered_atts,
+        final_order,
+        marg_columns,
+        check_run_time=marker,
+        randomly_add_last=random_last,
+    )
+
+
+def _metric_rows(
+    population_count,
+    original_marg,
+    pass_index,
+    adjustment_index,
+    adjusted_attribute,
+    target_size,
+    zone_errors,
+):
+    attributes = list(dict.fromkeys(original_marg.columns.get_level_values(0)))
+    synthetic = counts_to_marginals(population_count, attributes)
+    target = original_marg.copy()
+    target.index = target.index.astype(str)
+    synthetic = synthetic.reindex(index=target.index, columns=target.columns, fill_value=0)
+    differences = target.astype(float) - synthetic.astype(float)
+    rmses = np.sqrt((differences ** 2).mean(axis=0))
+    mean_rmse = float(rmses.mean())
+    ilp_error = float(sum(zone_errors.values())) if zone_errors else 0.0
+    return [
+        {
+            "pass": pass_index,
+            "adjustment_index": adjustment_index,
+            "adjusted_attribute": adjusted_attribute,
+            "target_n_syn": target_size,
+            "evaluated_attribute": attribute,
+            "evaluated_state": state,
+            "rmse": float(value),
+            "mean_rmse": mean_rmse,
+            "ilp_error": ilp_error,
+        }
+        for (attribute, state), value in rmses.items()
+    ]
+
+
+def _write_diagnostics(meta_output_dir, metrics, snapshots):
+    meta_output_dir.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(metrics).to_csv(
+        meta_output_dir / "adjustment_metrics.csv", index=False
+    )
+    for pass_index, population in snapshots:
+        expand_counts(population).write_csv(
+            meta_output_dir / f"loopback_population_{pass_index}.csv"
+        )
+
+
+def _zone_as_string(population):
+    return population.with_columns(pl.col(zone_field).cast(pl.String))
+
+
+def _err_check_count_population(
+    population, marg, extra_rm_frac, excluded_atts
+):
+    assert 0 <= extra_rm_frac <= 1
+    retain_n = round(population_size(population) * (1 - extra_rm_frac))
+    remaining = sample_without_replacement_counts(population, retain_n)
+    adjusted_attributes = [
+        attribute
+        for attribute in dict.fromkeys(marg.columns.get_level_values(0))
+        if attribute not in excluded_atts
+    ]
+    created_marg = counts_to_marginals(remaining, adjusted_attributes)
+    converted_marg = marg.drop(
+        marg.columns[marg.columns.get_level_values(0).isin(excluded_atts)], axis=1
+    )
+    diff_marg = get_diff_marg(converted_marg, created_marg)
+    kept = prune_oversupplied_counts(remaining, diff_marg)
+    kept_marg = counts_to_marginals(kept, adjusted_attributes)
+    new_diff = get_diff_marg(converted_marg, kept_marg)
+    assert not (new_diff < 0).any(axis=None)
+    new_diff.index = new_diff.index.astype(int)
+    new_diff.index.name = zone_field
+    return kept, new_diff
+
+
+def _saa_run_count_native(
+    targeted_marg,
+    count_pool,
+    considered_atts,
+    ordered_to_adjust_atts,
+    last_adjustment_order,
+    max_run_time,
+    extra_rm_frac,
+    output_each_step,
+    include_zero_cell_values,
+    randomly_add_last,
+    meta_output_dir,
+):
+    pool_keys = [column for column in count_pool.columns if column != count_field]
+    count_pool = count_pool.sort(pool_keys)
+    atts_in_marg = _validate_run_inputs(
+        targeted_marg, considered_atts, ordered_to_adjust_atts
+    )
     excluded_atts = list(set(considered_atts) - set(ordered_to_adjust_atts))
-    print(f"These atts are synthesized but not adjusted: {excluded_atts}")
+    original_marg = targeted_marg.copy()
+    residual_size = int(targeted_marg.sum().sum() / len(atts_in_marg))
+    retained_populations = []
+    target_sizes = []
+    metrics = []
+    snapshots = []
+    current_order = list(ordered_to_adjust_atts)
 
-    n_run_time = 0
-    # init with the total HH we want
-    n_removed_err = targeted_marg.sum().sum() / len(atts_in_marg)
-    chosen_syn = []
-    err_rm = []
-    while n_run_time < max_run_time and n_removed_err > 0:
-        check_run_time = str(n_run_time)
-        if n_run_time == 0:
-            check_run_time = "first"
-        if n_run_time == max_run_time - 1:
-            check_run_time = "last" # priortise last so the wanted order would be performed
-        # to randomly shuffle for each adjustment or not
-        ordered_to_adjust_atts = process_shuffle_order(
-            ordered_to_adjust_atts, last_adjustment_order, targeted_marg.columns, check_run_time=check_run_time, randomly_add_last=randomly_add_last
+    pass_index = 0
+    while pass_index < max_run_time and residual_size > 0:
+        pass_order = _order_for_pass(
+            current_order,
+            last_adjustment_order,
+            targeted_marg.columns,
+            pass_index,
+            max_run_time,
+            randomly_add_last,
         )
-        err_rm.append(n_removed_err)
-        print(
-            f"For run {n_run_time}, order is: {ordered_to_adjust_atts}, aim for {n_removed_err} agents"
-        )
-        saa = SAA(targeted_marg, considered_atts, ordered_to_adjust_atts, count_pool)
-        ### Actual running to get the synthetic pop
-        final_syn_pop = saa.run(
-            extra_name=f"_{add_name_for_step_output}_{n_run_time}", 
-            output_each_step=output_each_step, 
-            include_zero_cell_values=include_zero_cell_values,
-            output_dir=meta_output_dir
-        )
-        assert len(final_syn_pop) == n_removed_err
-        ###
+        current_order = pass_order
+        target_sizes.append(residual_size)
+        saa = SAA(targeted_marg, considered_atts, pass_order, count_pool)
+        pass_population, steps = saa.run_count(include_zero_cell_values)
+        assert population_size(pass_population) == residual_size
 
-        n_run_time += 1
-        # append to the chosen
-        if n_run_time == max_run_time:
-            # not adjusting anymore, last run
-            final_syn_pop = final_syn_pop.with_columns(pl.col(zone_field).cast(pl.String))
-            chosen_syn.append(final_syn_pop)
-        else:
-            to_check_syn = final_syn_pop.to_pandas()
-            kept_syn, new_marg = err_check_against_marg(to_check_syn, targeted_marg, extra_rm_frac, excluded_atts)
-            if len(kept_syn) > 0:
-                # continue with adjusting for missing
-                chosen = pl.from_pandas(kept_syn)
-                chosen = chosen.with_columns(pl.col(zone_field).cast(pl.String))
-                chosen_syn.append(chosen)
-            else:
-                chosen_syn.append(None)
-            # Update for next run
-            n_removed_err = len(final_syn_pop) - len(kept_syn)
-            targeted_marg = new_marg
-    
-    if output_each_step:
-        for i, df in enumerate(chosen_syn):
-            if df is not None:
-                df.write_csv(
-                    meta_output_dir / f"kept_syn_run_{i}.csv"
+        if output_each_step:
+            for adjustment_index, attribute, step_population, zone_errors in steps:
+                cumulative = concat_counts(
+                    retained_populations + [_zone_as_string(step_population)]
                 )
+                metrics.extend(
+                    _metric_rows(
+                        cumulative,
+                        original_marg,
+                        pass_index,
+                        adjustment_index,
+                        attribute,
+                        population_size(step_population),
+                        zone_errors,
+                    )
+                )
+            snapshots.append(
+                (
+                    pass_index,
+                    concat_counts(
+                        retained_populations + [_zone_as_string(pass_population)]
+                    ),
+                )
+            )
 
-    final_syn_hh = pl.concat([df.select(considered_atts+[zone_field]) for df in chosen_syn if df is not None])
-    return final_syn_hh, err_rm
+        pass_index += 1
+        if pass_index == max_run_time:
+            retained_populations.append(_zone_as_string(pass_population))
+        else:
+            kept, targeted_marg = _err_check_count_population(
+                pass_population, targeted_marg, extra_rm_frac, excluded_atts
+            )
+            if population_size(kept) > 0:
+                retained_populations.append(kept)
+            residual_size = population_size(pass_population) - population_size(kept)
+
+    final_count = concat_counts(retained_populations)
+    if output_each_step:
+        _write_diagnostics(meta_output_dir, metrics, snapshots)
+    final = expand_counts(final_count.select(considered_atts + [zone_field, count_field]))
+    return final, target_sizes
+
+
+def _saa_run_legacy(
+    targeted_marg,
+    count_pool,
+    considered_atts,
+    ordered_to_adjust_atts,
+    last_adjustment_order,
+    max_run_time,
+    extra_rm_frac,
+    output_each_step,
+    include_zero_cell_values,
+    randomly_add_last,
+    meta_output_dir,
+):
+    atts_in_marg = _validate_run_inputs(
+        targeted_marg, considered_atts, ordered_to_adjust_atts
+    )
+    excluded_atts = list(set(considered_atts) - set(ordered_to_adjust_atts))
+    original_marg = targeted_marg.copy()
+    residual_size = int(targeted_marg.sum().sum() / len(atts_in_marg))
+    retained_counts = []
+    target_sizes = []
+    metrics = []
+    snapshots = []
+    pass_index = 0
+    current_order = list(ordered_to_adjust_atts)
+
+    while pass_index < max_run_time and residual_size > 0:
+        pass_order = _order_for_pass(
+            current_order,
+            last_adjustment_order,
+            targeted_marg.columns,
+            pass_index,
+            max_run_time,
+            randomly_add_last,
+        )
+        current_order = pass_order
+        target_sizes.append(residual_size)
+        saa = SAA(targeted_marg, considered_atts, pass_order, count_pool)
+        pass_population, steps = saa.run_with_steps(include_zero_cell_values)
+        assert len(pass_population) == residual_size
+
+        if output_each_step:
+            for adjustment_index, attribute, step_population, zone_errors in steps:
+                step_count = _zone_as_string(condense_df(step_population))
+                cumulative = concat_counts(retained_counts + [step_count])
+                metrics.extend(
+                    _metric_rows(
+                        cumulative,
+                        original_marg,
+                        pass_index,
+                        adjustment_index,
+                        attribute,
+                        len(step_population),
+                        zone_errors,
+                    )
+                )
+            snapshots.append(
+                (
+                    pass_index,
+                    concat_counts(
+                        retained_counts
+                        + [_zone_as_string(condense_df(pass_population))]
+                    ),
+                )
+            )
+
+        pass_index += 1
+        if pass_index == max_run_time:
+            retained_counts.append(_zone_as_string(condense_df(pass_population)))
+        else:
+            kept, targeted_marg = err_check_against_marg(
+                pass_population.to_pandas(),
+                targeted_marg,
+                extra_rm_frac,
+                excluded_atts,
+            )
+            if len(kept) > 0:
+                kept_pl = pl.from_pandas(kept).with_columns(
+                    pl.col(zone_field).cast(pl.String)
+                )
+                retained_counts.append(condense_df(kept_pl))
+            residual_size = len(pass_population) - len(kept)
+
+    if output_each_step:
+        _write_diagnostics(meta_output_dir, metrics, snapshots)
+    final_count = concat_counts(retained_counts)
+    final = expand_counts(final_count.select(considered_atts + [zone_field, count_field]))
+    return final, target_sizes

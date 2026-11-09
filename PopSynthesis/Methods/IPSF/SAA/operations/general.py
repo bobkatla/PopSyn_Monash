@@ -8,6 +8,13 @@ from typing import List, Union, Tuple, Dict
 from PopSynthesis.Methods.IPSF.const import count_field, zone_field
 from PopSynthesis.Methods.IPSF.SAA.operations.compare_census import calculate_states_diff
 from PopSynthesis.Methods.IPSF.SAA.operations.ILP_zone_ad import ILP_zone_adjustment
+from PopSynthesis.Methods.IPSF.SAA.operations.ILP_zone_ad import ILP_zone_adjustment_count
+from PopSynthesis.Methods.IPSF.SAA.operations.count_tables import (
+    aggregate_counts,
+    concat_counts,
+    population_size,
+    weighted_sample_counts,
+)
 from PopSynthesis.Methods.IPSF.utils.condensed import condense_df
 import sys
 from PopSynthesis.Methods.IPSF.SAA.operations.shared_vars import update_zero_cells
@@ -54,7 +61,7 @@ def init_syn_pop_saa(
     att: str, marginal_data: pl.DataFrame, pool: pl.DataFrame
 ) -> pl.DataFrame:
     assert zone_field in marginal_data
-    states = list(pool[att].unique())
+    states = list(pool[att].unique(maintain_order=True))
     assert set(states + [zone_field]) <= set(marginal_data.columns)
 
     zero_cells_cases = set(marginal_data.columns) - set(states + [zone_field])
@@ -110,7 +117,7 @@ def adjust_atts_state_match_census(
             sys.stdout.flush()
             sub_syn_pop = curr_syn_pop.filter(pl.col(zone_field) == zid)
             if not sub_syn_pop.is_empty():
-                condensed_syn = condense_df(sub_syn_pop)
+                condensed_syn = condense_df(sub_syn_pop, maintain_order=True)
                 zone_adjusted_syn_pop, err_remain = ILP_zone_adjustment(
                     att, condensed_syn, zone_marg, pool_count, adjusted_atts, include_value=include_value
                 )
@@ -123,3 +130,90 @@ def adjust_atts_state_match_census(
         assert len(updated_syn_pop) == len(curr_syn_pop)
 
     return updated_syn_pop
+
+
+def init_syn_pop_saa_count(
+    att: str, marginal_data: pl.DataFrame, pool: pl.DataFrame
+) -> pl.DataFrame:
+    """Initialize SAA as unique complete pool records with zone counts."""
+    states = list(pool[att].unique(maintain_order=True))
+    zero_cell_states = set(marginal_data.columns) - set(states + [zone_field])
+    for state in zero_cell_states:
+        update_zero_cells(att, state)
+    states.extend(zero_cell_states)
+
+    populations = []
+    for state in states:
+        sub_pool = pool.filter(pl.col(att) == state)
+        if sub_pool.is_empty():
+            sub_pool = pool
+        for zone in marginal_data[zone_field]:
+            census_value = int(
+                marginal_data.filter(pl.col(zone_field) == zone)
+                .select(state)
+                .item()
+            )
+            sampled = weighted_sample_counts(sub_pool, census_value).with_columns(
+                pl.lit(zone).alias(zone_field)
+            )
+            populations.append(sampled)
+    return concat_counts(populations)
+
+
+def calculate_states_diff_count(
+    att: str, population: pl.DataFrame, sub_census: pl.DataFrame
+) -> pl.DataFrame:
+    synthetic = (
+        population.group_by([zone_field, att], maintain_order=True)
+        .agg(pl.col(count_field).sum())
+        .pivot(att, index=zone_field, values=count_field)
+    )
+    census_pd = sub_census.to_pandas().set_index(zone_field).fillna(0)
+    synthetic_pd = synthetic.to_pandas().set_index(zone_field).fillna(0)
+    synthetic_pd = synthetic_pd.reindex(
+        index=census_pd.index, columns=census_pd.columns, fill_value=0
+    )
+    result = census_pd - synthetic_pd
+    assert not result.isna().any().any()
+    return pl.from_pandas(result.reset_index())
+
+
+def adjust_atts_state_match_census_count(
+    att: str,
+    curr_syn_pop: Union[None, pl.DataFrame],
+    census_data_by_att: pl.DataFrame,
+    adjusted_atts: List[str],
+    pool_count: pl.DataFrame,
+    include_value: bool = False,
+) -> Tuple[pl.DataFrame, Dict[str, int]]:
+    """Count-native attribute adjustment across all zones."""
+    if curr_syn_pop is None:
+        return init_syn_pop_saa_count(att, census_data_by_att, pool_count), {}
+
+    states_diff = calculate_states_diff_count(
+        att, curr_syn_pop, census_data_by_att
+    )
+    assert (
+        states_diff.select(pl.exclude(zone_field)).sum_horizontal() == 0
+    ).all()
+    adjusted_zones = []
+    errors = {}
+    for zone_marg in states_diff.iter_rows(named=True):
+        zone = zone_marg.pop(zone_field)
+        zone_population = curr_syn_pop.filter(pl.col(zone_field) == zone)
+        if zone_population.is_empty():
+            continue
+        adjusted, error = ILP_zone_adjustment_count(
+            att,
+            zone_population,
+            zone_marg,
+            pool_count,
+            adjusted_atts,
+            include_value,
+        )
+        errors[str(zone)] = error
+        assert population_size(adjusted) == population_size(zone_population)
+        adjusted_zones.append(adjusted)
+    result = concat_counts(adjusted_zones)
+    assert population_size(result) == population_size(curr_syn_pop)
+    return result, errors

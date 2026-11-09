@@ -10,6 +10,11 @@ from PopSynthesis.Methods.IPSF.utils.ILP_matrix_ad import (
 from PopSynthesis.Methods.IPSF.utils.condensed import explode_df
 from PopSynthesis.Generator_data.generate_combine_census.utils import TRS
 from PopSynthesis.Methods.IPSF.SAA.operations.shared_vars import update_zero_cells, get_zero_cells_all
+from PopSynthesis.Methods.IPSF.SAA.operations.count_tables import (
+    aggregate_counts,
+    population_size,
+    weighted_sample_counts,
+)
 from typing import List, Dict, Tuple
 
 
@@ -19,17 +24,22 @@ def convert_to_ILP_inputs(
     adjusted_atts: List[str],
     pool_count: pl.DataFrame,
     check_cross_pool: bool = True,
+    maintain_order: bool = False,
 ) -> pl.DataFrame:
     """Convert the syn and pool to the required format for ILP"""
     # group by and pivot the syn to have adjusted_atts as index and states in att as columns
     assert count_field in syn_count.columns
-    converted_syn = convert_to_required_ILP_format(syn_count, att, adjusted_atts)
+    converted_syn = convert_to_required_ILP_format(
+        syn_count, att, adjusted_atts, maintain_order=maintain_order
+    )
     if not check_cross_pool:
         return converted_syn
     converted_syn = converted_syn.fill_null(-1)
 
     # repeat the same for pool, maybe there can be faster as we want to check only whether it is feasible or not
-    converted_pool = convert_to_required_ILP_format(pool_count, att, adjusted_atts)
+    converted_pool = convert_to_required_ILP_format(
+        pool_count, att, adjusted_atts, maintain_order=maintain_order
+    )
     converted_pool = converted_pool.with_columns(
         pl.when(pl.col(pl.Int32).is_not_null())
         .then(pl.lit(0))
@@ -63,7 +73,7 @@ def process_pool_to_sample_count(
     if len(not_considered_atts) == 0:
         return pool
     pool = pool.with_columns(pl.concat_list(not_considered_atts).alias(other_atts_col))
-    gb_pool = pool.group_by(considered_atts).agg(
+    gb_pool = pool.group_by(considered_atts, maintain_order=True).agg(
         pl.col(other_atts_col), pl.col(count_field).alias(weights_col)
     )
     return gb_pool
@@ -233,7 +243,11 @@ def ILP_zone_adjustment(
     zone = curr_count_syn[zone_field].unique()[0]
     # convert current syn to the ILP_required format, considered pool as well for finding feasible solution
     converted_syn = convert_to_ILP_inputs(
-        curr_count_syn, att, adjusted_atts, count_pool
+        curr_count_syn,
+        att,
+        adjusted_atts,
+        count_pool,
+        maintain_order=True,
     )
     # Solve using ILP
     # Adding the id col here, as we need to reference the rows
@@ -264,3 +278,104 @@ def ILP_zone_adjustment(
     resulted_syn = sample_count_syn_to_full(updated_syn_count, count_pool, include_value)
     resulted_syn = resulted_syn.with_columns(pl.lit(zone).alias(zone_field))
     return resulted_syn, err_score
+
+
+def sample_partial_to_complete_counts(
+    syn_count: pl.DataFrame, pool: pl.DataFrame, include_value: bool = False
+) -> pl.DataFrame:
+    """Complete partial adjusted records from the pool without expanding agents."""
+    partial_attributes = [col for col in syn_count.columns if col != count_field]
+    pool_attributes = [col for col in pool.columns if col != count_field]
+    missing_attributes = [col for col in pool_attributes if col not in partial_attributes]
+    expected_sum = population_size(syn_count)
+
+    supported: list[tuple[dict, pl.DataFrame]] = []
+    unsupported: list[dict] = []
+    for row in syn_count.iter_rows(named=True):
+        condition = pl.lit(True)
+        for attribute in partial_attributes:
+            condition &= pl.col(attribute) == row[attribute]
+        eligible = pool.filter(condition)
+        if eligible.is_empty():
+            unsupported.append(row)
+        else:
+            supported.append((row, eligible))
+
+    if unsupported and (not include_value or missing_attributes):
+        missing_total = sum(int(row[count_field]) for row in unsupported)
+        if not supported:
+            return aggregate_counts(weighted_sample_counts(pool, expected_sum))
+        supported_counts = np.array(
+            [int(row[count_field]) for row, _ in supported], dtype=np.int64
+        )
+        additions = TRS(
+            list(supported_counts / supported_counts.sum() * missing_total),
+            missing_total,
+        )
+        supported = [
+            ({**row, count_field: int(row[count_field]) + int(addition)}, eligible)
+            for (row, eligible), addition in zip(supported, additions)
+        ]
+        unsupported = []
+
+    completed: list[pl.DataFrame] = []
+    for row, eligible in supported:
+        completed.append(weighted_sample_counts(eligible, int(row[count_field])))
+
+    if unsupported:
+        # This is the existing include-zero-values behavior on the final adjustment.
+        completed.append(pl.DataFrame(unsupported).select(pool_attributes + [count_field]))
+
+    if not completed:
+        return pool.head(0)
+    result = aggregate_counts(pl.concat(completed), pool_attributes)
+    assert population_size(result) == expected_sum
+    return result
+
+
+def ILP_zone_adjustment_count(
+    att: str,
+    curr_count_syn: pl.DataFrame,
+    diff_zone_census: Dict[str, int],
+    count_pool: pl.DataFrame,
+    adjusted_atts: List[str],
+    include_value: bool = False,
+) -> Tuple[pl.DataFrame, int]:
+    """Apply the unchanged zone ILP and return complete record counts."""
+    assert len(curr_count_syn[zone_field].unique()) == 1
+    zone = curr_count_syn[zone_field].unique()[0]
+    without_zone = curr_count_syn.drop(zone_field)
+    converted_syn = convert_to_ILP_inputs(
+        without_zone,
+        att,
+        adjusted_atts,
+        count_pool,
+        maintain_order=True,
+    )
+    row_id = "row_id"
+    converted_syn = converted_syn.with_row_index(row_id)
+    previous = converted_syn[adjusted_atts + [row_id]]
+    count_table = converted_syn[
+        [col for col in converted_syn.columns if col not in adjusted_atts]
+    ]
+
+    zero_cells = set(diff_zone_census) - set(count_table.columns)
+    if zero_cells:
+        for zero_cell in zero_cells:
+            update_zero_cells(att, zero_cell)
+        count_table = count_table.with_columns(
+            [pl.lit(0).cast(pl.Int32).alias(state) for state in zero_cells]
+        )
+
+    adjusted_results, err_score = update_count_tables(
+        count_table, diff_zone_census, row_id, deviation_type="absolute"
+    )
+    updated_syn = previous.join(adjusted_results, on=row_id).drop(row_id)
+    updated_syn_count = convert_back_to_syn_count(
+        updated_syn, att, adjusted_atts
+    ).filter(pl.col(count_field) > 0)
+    assert population_size(updated_syn_count) == population_size(curr_count_syn)
+    result = sample_partial_to_complete_counts(
+        updated_syn_count, count_pool, include_value
+    ).with_columns(pl.lit(zone).alias(zone_field))
+    return aggregate_counts(result), err_score

@@ -8,7 +8,7 @@ This is a fast code-reading guide for future agents. It describes the current `m
 - The package entry point is `psim = PopSynthesis.cli.main:cli` (`pyproject.toml`).
 - `psim synthesize` currently has two real execution paths: IPU and SAA.
 - SAA means **Sequential Attribute Adjustment**. It generates independent household-level or person-level records from zonal one-way marginals plus a complete-record pool.
-- SAA is stochastic. It repeatedly builds a population for residual marginals, retains only records that do not oversupply any controlled cell, and synthesises the remaining deficit.
+- SAA is stochastic. Its default `count_native` backend keeps unique complete records with integer counts through each pass and loop-back; `legacy_exact` retains the older row backend for comparisons.
 - Within one pass, the first attribute is matched directly. Each later attribute is adjusted per zone using a PuLP integer program that preserves distributions fixed earlier in that pass where the pool supports the required combinations.
 - IPF, BN, WGAN, CSP, GAN, RL, and naive implementations exist as experiments/legacy code. The CLI's `ipf`, `bn`, and `wgan` branches do not execute them.
 - Processed/raw datasets and outputs are ignored. Several committed test CSVs are Git LFS objects and may appear as pointer files when LFS content is unavailable.
@@ -123,7 +123,7 @@ For each later attribute:
    - each column targets its census difference;
    - positive/negative continuous slack permits best-effort solutions;
    - absolute changes are minimised; `spread_penalty` exists but SAA leaves it at zero.
-5. The matrix is unpivoted and expanded to complete records by weighted conditional sampling from the pool.
+5. The matrix is unpivoted and conditionally sampled to counts of complete pool records. The default backend does not expand households here.
 
 The ILP remaining-error score is collected per zone but not exposed or used. Later attributes can retain error when pool support is inadequate, though total zone population stays fixed.
 
@@ -141,7 +141,7 @@ After a full pass, unless it is the final allowed pass:
 6. Append retained records to `chosen_syn`.
 7. Replace the target with the non-negative residual marginal and synthesise only that missing population next.
 
-The loop ends when residual agent count reaches zero or `max_run_time` passes are reached. On the final allowed pass, the entire generated residual population is appended without pruning, even if ILP residual error remains. Final output concatenates retained pieces and selects `considered_atts + [zone_id]`.
+The loop ends when residual agent count reaches zero or `max_run_time` passes are reached. On the final allowed pass, the entire generated residual population is appended without pruning, even if ILP residual error remains. Final output concatenates retained counts and expands once to `considered_atts + [zone_id]`.
 
 `err_rm`, returned by `saa_run`, stores the **number of agents targeted at the start of each pass**, not a statistical error.
 
@@ -157,29 +157,29 @@ The loop ends when residual agent count reaches zero or `max_run_time` passes ar
 | `last_adjustment_order` | Prefix order forced on final pass; omitted controls follow randomly. |
 | `randomly_add_last` | On 25% of middle passes, listed attributes move to the end. |
 | `include_zero_cell_values` | Experimental support for states/combinations absent from pool. |
-| `output_each_step` | Writes every within-pass attribute result and each retained subset. |
-| `add_name_for_step_output` | Added to step filename to distinguish experiments. |
+| `stochastic_mode` | `count_native` (default) or the former row-based `legacy_exact` backend. |
+| `output_each_step` | Writes compact adjustment metrics and cumulative full-population snapshots after each pass. |
+| `add_name_for_step_output` | Retained for call compatibility; per-attribute population files are no longer written. |
 | `meta_output_dir` | Intermediate destination; CLI uses each rerun's `meta/`. |
 | `reruns` | CLI repeats a YAML run independently and records elapsed seconds. |
 | Condensed pool | Duplicate records are grouped and empirical frequency is kept as weight. |
 | Soft feasibility | ILP slack prevents hard infeasibility when pool support is insufficient. |
 
-Intermediate output naming:
+Diagnostic output naming when `output_each_step` is enabled:
 
 ```text
 meta/
-├── step_adjusted_<attribute-index>_<attribute>_<extra-name>_<pass>.csv
-└── kept_syn_run_<pass>.csv
+├── adjustment_metrics.csv
+└── loopback_population_<pass>.csv
 ```
 
-`extract_saa_runs_meta` reconstructs cumulative intermediate populations and calculates per-attribute RMSE. It expects files for all configured passes and may fail after early convergence or when a kept file is absent.
+`extract_saa_runs_meta` reads compact per-adjustment metrics directly and retains a fallback for historical `step_adjusted_*`/`kept_syn_run_*` output directories.
 
 ## Zero-cell behavior
 
 A zero cell here is a census-required state or adjusted combination missing from the pool.
 
-- Missing state labels are stored in a module-global dictionary in `operations/shared_vars.py`.
-- It is never reset between runs in one Python process, so reruns can influence later zero-cell matching.
+- Missing state labels are stored in a run-scoped context shared by the passes of one `saa_run` and reset between calls/reruns.
 - With `include_zero_cell_values=False`, missing mass is redistributed over pool-supported rows using proportional allocation plus TRS integer rounding. If nothing joins, a random weighted pool sample is used.
 - With `include_zero_cell_values=True`, missing values are directly appended only on the last attribute adjustment. Earlier adjustments print that only last-adjustment support exists and fall back to redistribution/cross-match logic.
 - Treat the feature as experimental, not a guarantee that all structural zeros are represented consistently.
@@ -202,17 +202,16 @@ Final SAA CSV characteristics:
 2. **Custom zone names are not end-to-end.** Core functions expect `zone_id`.
 3. **`sample_geog` is effectively required in SAA marginals.** The wrapper indexes the matching column before dropping it.
 4. **No reproducibility control.** NumPy and Python `random` are used without a seed.
-5. **Mutable list defaults.** Multiple SAA functions use `[]`, and ordering mutates lists in place.
-6. **Global zero-cell state leaks across calls/reruns.**
-7. **ILP fitting is best-effort.** Slack is always available, zone error is discarded, and the last pass has no final no-oversupply check.
-8. **`max_run_time=0` is unsafe.** No pieces are generated, so final concatenation fails.
-9. **Totals must be consistent.** Counts are inferred using division and compared with integer row counts; inconsistent attribute totals fail or create wrong targets.
-10. **Direct-call directories are not created.** CLI creates rerun/meta directories; `run_saa` does not create `output_file.parent`.
-11. **Standalone runners are stale.** They contain local Windows paths and sometimes inconsistent pool variables.
-12. **Data processor is incomplete/non-portable.** It processes in its constructor, census methods are placeholders, constants use Windows paths, and `const_process.py` imports absent `Methods.connect_HH_PP` code.
-13. **Tests are weak/environment-sensitive.** Test modules invoke tests at import time, mostly print instead of assert, and fixtures require Git LFS content.
-14. **macOS ARM `uv sync` may fail with the current lock.** The locked CPU PyTorch build lacks a matching macOS ARM wheel for locally selected Python 3.13.
-15. **Extra marginal attributes can break first-pass ordering.** The initial state-count sort is not filtered to configured controls.
+5. **Backend seed streams differ.** `count_native` and `legacy_exact` are repeatable within a backend after callers seed Python/NumPy, but identical seeds need not produce the same realization across backends.
+6. **ILP fitting is best-effort.** Slack is always available and the last pass has no final no-oversupply check; zone error is now exposed in adjustment metrics.
+7. **`max_run_time=0` is unsafe.** No pieces are generated, so final concatenation fails.
+8. **Totals must be consistent.** Counts are inferred using division and compared with integer row counts; inconsistent attribute totals fail or create wrong targets.
+9. **Direct-call directories are not created.** CLI creates rerun/meta directories; `run_saa` does not create `output_file.parent`.
+10. **Standalone runners are stale.** They contain local Windows paths and sometimes inconsistent pool variables.
+11. **Data processor is incomplete/non-portable.** It processes in its constructor, census methods are placeholders, constants use Windows paths, and `const_process.py` imports absent `Methods.connect_HH_PP` code.
+12. **Most older tests remain weak/environment-sensitive.** Some invoke tests at import time, mostly print instead of assert, and fixtures require Git LFS content; the count-native tests use inline non-LFS fixtures.
+13. **macOS ARM `uv sync` may fail with the current lock.** The locked CPU PyTorch build lacks a matching macOS ARM wheel for locally selected Python 3.13.
+14. **Extra marginal attributes can break first-pass ordering.** The initial state-count sort is not filtered to configured controls.
 
 ## Repository layout and maturity
 
@@ -247,10 +246,10 @@ cli/main.py
   -> IPSF/utils/synthetic_checked_census.py  (between passes)
 ```
 
-High-value improvements: validate YAML/inputs; raise for unsupported methods; thread zone naming throughout; replace mutable defaults; add a seed; make zero-cell state local; expose ILP errors and validate final marginals; add deterministic assertion-based tests and non-LFS fixtures; tolerate early convergence in analysis; isolate stale research drivers.
+Remaining high-value improvements: validate YAML/inputs; raise for unsupported methods; thread zone naming throughout; add an explicit seed; validate final marginals; tolerate early convergence in historical-output analysis; isolate stale research drivers.
 
 ## Verification status for this documentation update
 
 - All tracked Python files passed `python -m compileall -q PopSynthesis` in the inspected checkout.
-- Tests were not executable: system Python lacked dependencies; `uv` selected Python 3.13 on macOS ARM and could not install locked `torch==2.7.1+cpu`; tracked test CSVs were LFS pointer text and `git-lfs` was unavailable.
-- No claim here is based on a successful full synthesis run; execution was derived by tracing current source and configs.
+- The inline, non-LFS count-native suite passes through `uv run python -m unittest PopSynthesis.tests.IPSF.SAA.test_count_tables`.
+- The existing ILP state script passes. The older `test_operations.py` remains blocked because its committed CSV fixture is an unresolved Git LFS pointer in this checkout.

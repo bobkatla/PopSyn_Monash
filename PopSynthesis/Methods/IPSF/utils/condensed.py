@@ -7,7 +7,11 @@ from PopSynthesis.Methods.IPSF.const import count_field
 from typing import Union
 
 
-def condense_df(df: Union[pl.DataFrame, pd.DataFrame], id_col: Union[None, str]= None) -> pl.DataFrame:
+def condense_df(
+    df: Union[pl.DataFrame, pd.DataFrame],
+    id_col: Union[None, str] = None,
+    maintain_order: bool = False,
+) -> pl.DataFrame:
     """Convert the disaggregated data into a condensed format."""
     if isinstance(df, pd.DataFrame):
         df = pl.from_pandas(df)
@@ -17,7 +21,7 @@ def condense_df(df: Union[pl.DataFrame, pd.DataFrame], id_col: Union[None, str]=
         assert id_col in df.columns
         expr = pl.exclude(id_col)
         to_agg.append(pl.col(id_col))
-    return df.group_by(expr).agg(*to_agg)
+    return df.group_by(expr, maintain_order=maintain_order).agg(*to_agg)
 
 
 def explode_df(df: pl.DataFrame, id_col: Union[str, None]=None, weight_col: Union[str, None] = None) -> pl.DataFrame:

@@ -12,8 +12,9 @@ from PopSynthesis.Methods.IPSF.const import output_dir
 from PopSynthesis.Methods.IPSF.SAA.operations.general import (
     process_raw_ipu_marg,
     adjust_atts_state_match_census,
+    adjust_atts_state_match_census_count,
 )
-from typing import List
+from typing import List, Tuple
 from pathlib import Path
 
 
@@ -25,8 +26,8 @@ class SAA:
         ordered_to_adjust_atts: List[str],
         count_pool: pl.DataFrame,
     ) -> None:
-        self.ordered_atts_to_adjust = ordered_to_adjust_atts
-        self.considered_atts = considered_atts
+        self.ordered_atts_to_adjust = list(ordered_to_adjust_atts)
+        self.considered_atts = list(considered_atts)
         self.pool = count_pool
         self.init_required_inputs(marginal_raw)
 
@@ -36,10 +37,13 @@ class SAA:
         )
         self.segmented_marg = converted_segment_marg
 
-    def run(self, output_each_step: bool = False, extra_name: str = "", include_zero_cell_values: bool = False, output_dir: Path = output_dir) -> pl.DataFrame:
-        # Output the synthetic population, the main point
+    def run_with_steps(
+        self, include_zero_cell_values: bool = False
+    ) -> Tuple[pl.DataFrame, List[Tuple[int, str, pl.DataFrame, dict]]]:
+        """Run the legacy row backend while retaining in-memory step results."""
         curr_syn_pop = None
         adjusted_atts = []
+        steps = []
         for i, att in enumerate(self.ordered_atts_to_adjust):
             sub_census = self.segmented_marg[att].reset_index()
             sub_census = pl.from_pandas(sub_census)
@@ -47,8 +51,40 @@ class SAA:
                 att, curr_syn_pop, sub_census, adjusted_atts, self.pool, include_value=include_zero_cell_values
             )
             adjusted_atts.append(att)
-            if output_each_step:
-                curr_syn_pop.write_csv(
-                    output_dir / f"step_adjusted_{i}_{att}{extra_name}.csv"
-                )
-        return curr_syn_pop
+            steps.append((i, att, curr_syn_pop, {}))
+        return curr_syn_pop, steps
+
+    def run_count(
+        self, include_zero_cell_values: bool = False
+    ) -> Tuple[pl.DataFrame, List[Tuple[int, str, pl.DataFrame, dict]]]:
+        """Run one SAA pass with a complete-record count table throughout."""
+        curr_syn_pop = None
+        adjusted_atts = []
+        steps = []
+        for index, attribute in enumerate(self.ordered_atts_to_adjust):
+            sub_census = pl.from_pandas(
+                self.segmented_marg[attribute].reset_index()
+            )
+            curr_syn_pop, zone_errors = adjust_atts_state_match_census_count(
+                attribute,
+                curr_syn_pop,
+                sub_census,
+                adjusted_atts,
+                self.pool,
+                include_value=include_zero_cell_values,
+            )
+            adjusted_atts.append(attribute)
+            steps.append((index, attribute, curr_syn_pop, zone_errors))
+        return curr_syn_pop, steps
+
+    def run(
+        self,
+        output_each_step: bool = False,
+        extra_name: str = "",
+        include_zero_cell_values: bool = False,
+        output_dir: Path = output_dir,
+    ) -> pl.DataFrame:
+        # output_each_step is retained for API compatibility; diagnostics are now
+        # written by the loop-back wrapper rather than at each adjustment.
+        result, _ = self.run_with_steps(include_zero_cell_values)
+        return result

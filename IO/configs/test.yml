@@ -29,6 +29,7 @@
   output_each_step: True
   add_name_for_step_output: "test"
   include_zero_cell_values: False
+  stochastic_mode: count_native
   output_name: "saa_small"
   hh_syn_name: "hh_syn_saa.csv"
   reruns: 2

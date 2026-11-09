@@ -82,6 +82,7 @@ def synthesize(runs_yml, output_path):
                     add_name_for_step_output=run_info["add_name_for_step_output"],
                     include_zero_cell_values=run_info["include_zero_cell_values"],
                     randomly_add_last=run_info.get("randomly_add_last", []),
+                    stochastic_mode=run_info.get("stochastic_mode", "count_native"),
                     meta_output_dir=meta_output_dir
                 )
             elif method == "ipf":

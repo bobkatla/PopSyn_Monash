@@ -8,7 +8,7 @@ from PopSynthesis.Methods.IPSF.SAA.operations.wrapper_saa_run import saa_run
 from PopSynthesis.Methods.IPSF.utils.condensed import condense_df
 import pandas as pd
 from pathlib import Path
-from typing import Tuple, List
+from typing import Tuple, List, Literal, Optional
 
 
 def process_data_from_files(marg_file: Path, pool_file: Path, zone_field: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -36,19 +36,28 @@ def run_saa(
         pool_file: Path,
         zone_field: str,
         output_file: Path,
-        considered_atts: List[str] = CONSIDERED_ATTS_HH,
-        ordered_to_adjust_atts: List[str] = SAA_ODERED_ATTS_HH,
+        considered_atts: Optional[List[str]] = None,
+        ordered_to_adjust_atts: Optional[List[str]] = None,
         max_run_time: int = 15,
         extra_rm_frac: float = 0.3,
-        last_adjustment_order: List[str] = [],
+        last_adjustment_order: Optional[List[str]] = None,
         output_each_step: bool = False,
         add_name_for_step_output: str = "",
         include_zero_cell_values: bool = False,
-        randomly_add_last: List[str] = [],
+        randomly_add_last: Optional[List[str]] = None,
         meta_output_dir: Path = None,
+        stochastic_mode: Literal["count_native", "legacy_exact"] = "count_native",
         ) -> None:
+    considered_atts = list(
+        CONSIDERED_ATTS_HH if considered_atts is None else considered_atts
+    )
+    ordered_to_adjust_atts = list(
+        SAA_ODERED_ATTS_HH
+        if ordered_to_adjust_atts is None
+        else ordered_to_adjust_atts
+    )
     marg, pool = process_data_from_files(marg_file, pool_file, zone_field)
-    condensed_pool = condense_df(pool.astype(str))
+    condensed_pool = condense_df(pool.astype(str), maintain_order=True)
 
     # saa run
     final_syn_hh, _ = saa_run(
@@ -58,12 +67,13 @@ def run_saa(
         ordered_to_adjust_atts=ordered_to_adjust_atts,
         max_run_time=max_run_time,
         extra_rm_frac=extra_rm_frac,
-        last_adjustment_order=last_adjustment_order,
+        last_adjustment_order=last_adjustment_order or [],
         output_each_step=output_each_step,
         add_name_for_step_output=add_name_for_step_output,
         include_zero_cell_values=include_zero_cell_values,
-        randomly_add_last=randomly_add_last,
+        randomly_add_last=randomly_add_last or [],
         meta_output_dir=meta_output_dir if meta_output_dir is not None else output_file.parent / "meta",
+        stochastic_mode=stochastic_mode,
     )
 
     final_syn_hh.write_csv(output_file)
