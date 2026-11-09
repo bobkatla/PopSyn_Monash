@@ -13,9 +13,19 @@ from typing import Tuple, List
 
 def process_data_from_files(marg_file: Path, pool_file: Path, zone_field: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     marg = pd.read_csv(marg_file, header=[0, 1])
-    marg = marg.drop(
-        columns=marg.columns[marg.columns.get_level_values(0) == "sample_geog"][0]
-    ).set_index(marg.columns[marg.columns.get_level_values(0) == zone_field][0])
+    sample_geog_columns = marg.columns[
+        marg.columns.get_level_values(0) == "sample_geog"
+    ]
+    if len(sample_geog_columns) > 0:
+        marg = marg.drop(columns=sample_geog_columns)
+
+    zone_columns = marg.columns[marg.columns.get_level_values(0) == zone_field]
+    if len(zone_columns) != 1:
+        raise ValueError(
+            f"Expected exactly one zone column named {zone_field!r}; "
+            f"found {len(zone_columns)}."
+        )
+    marg = marg.set_index(zone_columns[0])
     pool = pd.read_csv(pool_file)
     pool = pool.drop(columns=["serialno", "sample_geog"], errors="ignore")
     return marg, pool
