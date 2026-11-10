@@ -184,7 +184,10 @@ def run_direct_count_pass(
     elif count_pool is not None:
         raise ValueError("A pool must not be supplied when direct_reference_mode='all_zero'")
     first_attribute = order[0]
-    if direct_reference_mode == "pool":
+    if (
+        direct_reference_mode == "pool"
+        and zero_cell_policy != "relax_empty_rows_columns"
+    ):
         assert count_pool is not None
         _validate_first_attribute_support(
             zone, first_attribute, targets[first_attribute], count_pool

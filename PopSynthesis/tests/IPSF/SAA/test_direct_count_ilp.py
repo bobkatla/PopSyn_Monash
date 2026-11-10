@@ -749,6 +749,61 @@ class ZeroCellPolicyTests(DirectCountFixture):
         )
         self.assertEqual(population_size(result.population), 1)
 
+    def test_hhinc_first_active_row_relaxation_initializes_unsupported_state(self):
+        marginal = pd.DataFrame(
+            [[2, 1, 1, 2]],
+            index=pd.Index([101], name="zone_id"),
+            columns=pd.MultiIndex.from_tuples(
+                [
+                    ("hhinc", "Negative income"),
+                    ("hhinc", "Nil income"),
+                    ("hhsize", "1"),
+                    ("hhsize", "2"),
+                ]
+            ),
+        )
+        pool = pl.DataFrame(
+            {
+                "hhinc": ["Nil income", "Nil income"],
+                "hhsize": ["1", "2"],
+                "count": [1, 1],
+            }
+        )
+
+        relaxed = run_direct_count_pass(
+            marginal,
+            pool,
+            ["hhinc", "hhsize"],
+            pass_index=0,
+            solver_mode="two_stage",
+            adjustment_backend="min_cost_flow",
+            zero_cell_policy="relax_empty_rows_columns",
+        )
+        negative_income = relaxed.population.filter(
+            pl.col("hhinc") == "Negative income"
+        )["count"].sum()
+        self.assertEqual(negative_income, 2)
+        self.assertEqual(relaxed.adjustments[0]["unsupported_column_count"], 1)
+
+        for policy in (
+            "seed_only",
+            "unrestricted",
+            "relax_empty_rows_global_columns",
+        ):
+            with self.subTest(policy=policy), self.assertRaisesRegex(
+                ValueError,
+                "attribute='hhinc'.*category='Negative income'.*target=2",
+            ):
+                run_direct_count_pass(
+                    marginal,
+                    pool,
+                    ["hhinc", "hhsize"],
+                    pass_index=0,
+                    solver_mode="two_stage",
+                    adjustment_backend="min_cost_flow",
+                    zero_cell_policy=policy,
+                )
+
     def test_restricted_policy_requires_two_stage(self):
         with self.assertRaisesRegex(ValueError, "require.*two-stage"):
             run_direct_count_pass(
