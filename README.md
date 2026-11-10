@@ -193,6 +193,13 @@ zone processes; keep CBC at one thread per worker. The weighted-seed full-run
 config uses exact min-cost flow with four zone workers; CBC remains available
 as the reference backend and in the separate benchmark harness.
 
+`zero_cell_policy` defaults to `unrestricted`. Set it to `seed_only` to permit
+only positive-weight pool cells, or `relax_empty_rows_columns` to additionally
+open completely unsupported active rows and positive-target columns. Restricted
+policies require `direct_solver_mode: two_stage`; both CBC and min-cost flow
+implement the same support mask and lexicographic slack objective. See
+`IO/configs/direct_count_zero_cell_policies.yml` for matched experiments.
+
 The file-level `run_saa` wrapper creates the output file's parent directory.
 
 ## IPU

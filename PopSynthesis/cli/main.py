@@ -92,6 +92,9 @@ def synthesize(runs_yml, output_path):
                     direct_adjustment_backend=run_info.get(
                         "direct_adjustment_backend", "cbc"
                     ),
+                    zero_cell_policy=run_info.get(
+                        "zero_cell_policy", "unrestricted"
+                    ),
                     zone_workers=run_info.get("zone_workers", 1),
                     meta_output_dir=meta_output_dir
                 )

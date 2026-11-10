@@ -26,6 +26,11 @@ from PopSynthesis.Methods.IPSF.SAA.operations.count_tables import aggregate_coun
 INTEGER_TOLERANCE = 1e-6
 OBJECTIVE_TOLERANCE = 1e-7
 PoolLookup = dict[tuple[str, ...], Fraction]
+ZERO_CELL_POLICIES = {
+    "unrestricted",
+    "seed_only",
+    "relax_empty_rows_columns",
+}
 
 
 @dataclass(frozen=True)
@@ -41,6 +46,9 @@ class DirectAdjustmentInput:
     references: tuple[tuple[Fraction, ...], ...]
     unsupported_rows: tuple[tuple[str, ...], ...]
     unsupported_columns: tuple[str, ...]
+    zero_cell_policy: str
+    permitted_cells: tuple[tuple[bool, ...], ...]
+    relaxed_cell_count: int
 
 
 @dataclass(frozen=True)
@@ -56,9 +64,15 @@ def prepare_direct_adjustment(
     target_counts: Mapping[str, int],
     *,
     pool_lookup: PoolLookup | None = None,
+    zero_cell_policy: str = "unrestricted",
 ) -> DirectAdjustmentInput:
     """Build the complete prior-row by current-state pool contingency."""
 
+    if zero_cell_policy not in ZERO_CELL_POLICIES:
+        raise ValueError(
+            "zero_cell_policy must be 'unrestricted', 'seed_only', or "
+            "'relax_empty_rows_columns'"
+        )
     required = {zone_field, count_field}
     if not required <= set(partial_counts.columns):
         raise ValueError(f"Partial counts must contain {sorted(required)}")
@@ -130,6 +144,44 @@ def prepare_direct_adjustment(
         for column_index, state in enumerate(states)
         if sum(row[column_index] for row in pool_rows) == 0
     )
+    unsupported_row_indices = {
+        index for index, row in enumerate(pool_rows) if sum(row) == 0
+    }
+    unsupported_column_indices = {
+        index
+        for index in range(len(states))
+        if sum(row[index] for row in pool_rows) == 0
+    }
+    if zero_cell_policy == "seed_only" and unsupported_row_indices:
+        row_index = min(unsupported_row_indices)
+        raise ValueError(
+            "zero_cell_policy='seed_only' found a positive row without pool "
+            f"support: zone={zones[0]!s}, attribute={attribute!r}, "
+            f"row={row_keys[row_index]!r}, row_total={row_totals[row_index]}"
+        )
+
+    permitted_rows: list[tuple[bool, ...]] = []
+    relaxed_cell_count = 0
+    for row_index, pool_row in enumerate(pool_rows):
+        permitted_row: list[bool] = []
+        for column_index, pool_value in enumerate(pool_row):
+            if zero_cell_policy == "unrestricted":
+                permitted = True
+            elif zero_cell_policy == "seed_only":
+                permitted = pool_value > 0
+            else:
+                permitted = (
+                    pool_value > 0
+                    or row_index in unsupported_row_indices
+                    or (
+                        targets[column_index] > 0
+                        and column_index in unsupported_column_indices
+                    )
+                )
+                if permitted and pool_value == 0:
+                    relaxed_cell_count += 1
+            permitted_row.append(permitted)
+        permitted_rows.append(tuple(permitted_row))
     return DirectAdjustmentInput(
         zone=str(zones[0]),
         attribute=attribute,
@@ -142,6 +194,9 @@ def prepare_direct_adjustment(
         references=tuple(reference_rows),
         unsupported_rows=tuple(unsupported_rows),
         unsupported_columns=unsupported_columns,
+        zero_cell_policy=zero_cell_policy,
+        permitted_cells=tuple(permitted_rows),
+        relaxed_cell_count=relaxed_cell_count,
     )
 
 
@@ -217,6 +272,7 @@ def _base_variables(
         )
         for row_index in range(len(data.row_keys))
         for column_index in column_indices
+        if data.permitted_cells[row_index][column_index]
     }
 
 
@@ -226,6 +282,7 @@ def _add_row_constraints(problem, variables, data, column_indices):
             lpSum(
                 variables[(row_index, column_index)]
                 for column_index in column_indices
+                if (row_index, column_index) in variables
             )
             == row_total,
             f"row_{row_index}",
@@ -245,6 +302,7 @@ def _add_soft_column_constraints(
             lpSum(
                 variables[(row_index, column_index)]
                 for row_index in range(len(data.row_keys))
+                if (row_index, column_index) in variables
             )
             == data.target_counts[column_index]
             + slack_positive[column_index]
@@ -262,6 +320,8 @@ def solve_direct_adjustment(
 
     if solver_mode not in {"single_stage", "two_stage"}:
         raise ValueError("solver_mode must be 'single_stage' or 'two_stage'")
+    if solver_mode == "single_stage" and data.zero_cell_policy != "unrestricted":
+        raise ValueError("Restricted zero-cell policies require two-stage solving")
     started = time.perf_counter()
     active_columns = [
         index for index, target in enumerate(data.target_counts) if target > 0
@@ -327,6 +387,7 @@ def solve_direct_adjustment(
         )
         for row_index in range(len(data.row_keys))
         for column_index in model_columns
+        if (row_index, column_index) in stage2_y
     }
     _add_row_constraints(stage2, stage2_y, data, model_columns)
     stage2_slack_positive = {}
@@ -365,6 +426,7 @@ def solve_direct_adjustment(
                 lpSum(
                     stage2_y[(row_index, column_index)]
                     for row_index in range(len(data.row_keys))
+                    if (row_index, column_index) in stage2_y
                 )
                 == target,
                 f"column_{column_index}",
@@ -456,14 +518,23 @@ def solve_direct_adjustment(
         for column_index, pool_value in enumerate(pool_row)
         if pool_value == 0 and values[(row_index, column_index)] > 0
     )
+    permitted_cell_count = sum(
+        permitted for row in data.permitted_cells for permitted in row
+    )
     diagnostic = {
         "mode": "count_native_ilp",
         "adjustment_backend": "cbc",
         "solver_mode": solver_mode,
         "zone": data.zone,
         "active_attribute": data.attribute,
+        "zero_cell_policy": data.zero_cell_policy,
         "prior_row_count": len(data.row_keys),
         "ilp_cell_count": len(data.row_keys) * len(data.states),
+        "permitted_cell_count": permitted_cell_count,
+        "prohibited_cell_count": (
+            len(data.row_keys) * len(data.states) - permitted_cell_count
+        ),
+        "relaxed_cell_count": data.relaxed_cell_count,
         "active_column_count": len(active_columns),
         "eliminated_zero_target_columns": (
             len(data.states) - len(active_columns)
@@ -502,6 +573,7 @@ def solve_direct_adjustment(
         "unsupported_row_count": len(data.unsupported_rows),
         "unsupported_column_count": len(data.unsupported_columns),
         "ordinary_zero_cells_made_positive": ordinary_zero_positive,
+        "seed_zero_cells_made_positive": ordinary_zero_positive,
         "solver_runtime_seconds": time.perf_counter() - started,
         "pulp_version": pulp.__version__,
         "solver_version": stage2_stats.solver_version,

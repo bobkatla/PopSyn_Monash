@@ -81,6 +81,9 @@ def _build_result(
         for column_index, pool_value in enumerate(pool_row)
         if pool_value == 0 and values[(row_index, column_index)] > 0
     )
+    permitted_cell_count = sum(
+        permitted for row in data.permitted_cells for permitted in row
+    )
     active_columns = sum(target > 0 for target in data.target_counts)
     marginal_l1_error = sum(
         abs(achieved[state] - target)
@@ -99,8 +102,14 @@ def _build_result(
         ),
         "zone": data.zone,
         "active_attribute": data.attribute,
+        "zero_cell_policy": data.zero_cell_policy,
         "prior_row_count": len(data.row_keys),
         "ilp_cell_count": len(data.row_keys) * len(data.states),
+        "permitted_cell_count": permitted_cell_count,
+        "prohibited_cell_count": (
+            len(data.row_keys) * len(data.states) - permitted_cell_count
+        ),
+        "relaxed_cell_count": data.relaxed_cell_count,
         "active_column_count": active_columns,
         "eliminated_zero_target_columns": (
             0
@@ -137,6 +146,7 @@ def _build_result(
         "unsupported_row_count": len(data.unsupported_rows),
         "unsupported_column_count": len(data.unsupported_columns),
         "ordinary_zero_cells_made_positive": ordinary_zero_positive,
+        "seed_zero_cells_made_positive": ordinary_zero_positive,
         "solver_runtime_seconds": time.perf_counter() - started,
         "flow_solve_seconds": solve_seconds,
         "flow_node_count": node_count,
@@ -158,6 +168,8 @@ def solve_direct_adjustment_flow(
 
     if solver_mode not in {"single_stage", "two_stage"}:
         raise ValueError("solver_mode must be 'single_stage' or 'two_stage'")
+    if solver_mode == "single_stage" and data.zero_cell_policy != "unrestricted":
+        raise ValueError("Restricted zero-cell policies require two-stage solving")
     started = time.perf_counter()
     row_count = len(data.row_keys)
     column_count = len(data.states)
@@ -205,9 +217,7 @@ def solve_direct_adjustment_flow(
     )
     total_supply = sum(data.row_totals)
     target_total = sum(data.target_counts)
-    stage1_objective = (
-        abs(total_supply - target_total) if solver_mode == "two_stage" else 0
-    )
+    stage1_objective = 0
     stage1_solve_seconds = 0.0
     stage1_node_count = 0
     stage1_arc_count = 0
@@ -222,40 +232,45 @@ def solve_direct_adjustment_flow(
             )
         for row_index, supply in enumerate(data.row_totals):
             for column_index in model_columns:
+                if not data.permitted_cells[row_index][column_index]:
+                    continue
                 stage1_graph.add_edge(
                     ("row", row_index),
                     ("column", column_index),
                     capacity=supply,
                     weight=0,
                 )
-        balance_demand = total_supply - target_total
-        if balance_demand:
-            stage1_graph.add_node("balance", demand=balance_demand)
-            if balance_demand > 0:
-                for column_index in model_columns:
-                    stage1_graph.add_edge(
-                        ("column", column_index),
-                        "balance",
-                        capacity=stage1_objective,
-                        weight=1,
-                    )
-            else:
-                for column_index in model_columns:
-                    stage1_graph.add_edge(
-                        "balance",
-                        ("column", column_index),
-                        capacity=data.target_counts[column_index],
-                        weight=1,
-                    )
+        stage1_graph.add_node(
+            "slack", demand=total_supply - target_total
+        )
+        for column_index in model_columns:
+            stage1_graph.add_edge(
+                ("column", column_index),
+                "slack",
+                capacity=total_supply,
+                weight=1,
+            )
+            if data.target_counts[column_index] > 0:
+                stage1_graph.add_edge(
+                    "slack",
+                    ("column", column_index),
+                    capacity=data.target_counts[column_index],
+                    weight=1,
+                )
         stage1_node_count = stage1_graph.number_of_nodes()
         stage1_arc_count = stage1_graph.number_of_edges()
         stage1_started = time.perf_counter()
         stage1_cost, _ = nx.network_simplex(stage1_graph)
         stage1_solve_seconds = time.perf_counter() - stage1_started
-        if stage1_cost != stage1_objective:
+        stage1_objective = int(stage1_cost)
+        total_difference = total_supply - target_total
+        if (
+            stage1_objective < abs(total_difference)
+            or (stage1_objective - total_difference) % 2
+        ):
             raise RuntimeError(
-                f"Flow Stage 1 for {data.attribute!r} returned objective "
-                f"{stage1_cost}, expected {stage1_objective}"
+                f"Flow Stage 1 for {data.attribute!r} returned invalid slack "
+                f"objective {stage1_objective}"
             )
 
     graph = nx.MultiDiGraph()
@@ -266,32 +281,40 @@ def solve_direct_adjustment_flow(
             ("column", column_index),
             demand=data.target_counts[column_index],
         )
-    balance_demand = total_supply - target_total
-    if solver_mode == "two_stage" and balance_demand:
-        graph.add_node("balance", demand=balance_demand)
-        if balance_demand > 0:
+    over_supply = 0
+    under_supply = 0
+    if solver_mode == "two_stage":
+        total_difference = total_supply - target_total
+        over_supply = (stage1_objective + total_difference) // 2
+        under_supply = (stage1_objective - total_difference) // 2
+        if over_supply:
+            graph.add_node("over_supply", demand=over_supply)
             for column_index in model_columns:
                 graph.add_edge(
                     ("column", column_index),
-                    "balance",
-                    capacity=stage1_objective,
+                    "over_supply",
+                    capacity=over_supply,
                     weight=0,
                 )
-        else:
+        if under_supply:
+            graph.add_node("under_supply", demand=-under_supply)
             for column_index in model_columns:
-                graph.add_edge(
-                    "balance",
-                    ("column", column_index),
-                    capacity=data.target_counts[column_index],
-                    weight=0,
-                )
+                if data.target_counts[column_index] > 0:
+                    graph.add_edge(
+                        "under_supply",
+                        ("column", column_index),
+                        capacity=data.target_counts[column_index],
+                        weight=0,
+                    )
 
     edge_keys: dict[tuple[int, int], list[int]] = {}
     for row_index, row_total in enumerate(data.row_totals):
         for column_index in model_columns:
+            if not data.permitted_cells[row_index][column_index]:
+                continue
             column_capacity = data.target_counts[column_index]
-            if solver_mode == "two_stage" and balance_demand > 0:
-                column_capacity += stage1_objective
+            if solver_mode == "two_stage":
+                column_capacity += over_supply
             capacity = min(row_total, column_capacity)
             keys = []
             for piece_capacity, cost in _cell_pieces(

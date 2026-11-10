@@ -277,6 +277,9 @@ def run_saa(
         direct_adjustment_backend: Literal[
             "cbc", "min_cost_flow"
         ] = "cbc",
+        zero_cell_policy: Literal[
+            "unrestricted", "seed_only", "relax_empty_rows_columns"
+        ] = "unrestricted",
         zone_workers: int = 1,
         ) -> None:
     considered_atts = list(
@@ -290,6 +293,19 @@ def run_saa(
     marg, pool = process_data_from_files(marg_file, pool_file, zone_field)
     if not isinstance(zone_workers, int) or isinstance(zone_workers, bool) or zone_workers < 1:
         raise ValueError("zone_workers must be a positive integer")
+    if zero_cell_policy not in {
+        "unrestricted",
+        "seed_only",
+        "relax_empty_rows_columns",
+    }:
+        raise ValueError(
+            "zero_cell_policy must be 'unrestricted', 'seed_only', or "
+            "'relax_empty_rows_columns'"
+        )
+    if stochastic_mode != "count_native_ilp" and zero_cell_policy != "unrestricted":
+        raise ValueError("zero_cell_policy is only configurable in direct-count mode")
+    if direct_solver_mode == "single_stage" and zero_cell_policy != "unrestricted":
+        raise ValueError("Restricted zero-cell policies require two-stage solving")
     if stochastic_mode == "count_native_ilp":
         condensed_pool = _prepare_direct_pool(
             pool, considered_atts, pool_count_column
@@ -318,6 +334,7 @@ def run_saa(
         "output_format": output_format,
         "direct_solver_mode": direct_solver_mode,
         "direct_adjustment_backend": direct_adjustment_backend,
+        "zero_cell_policy": zero_cell_policy,
     }
 
     if stochastic_mode == "count_native_ilp" and len(marg) > 1:
@@ -340,6 +357,7 @@ def run_saa(
             "output_format": output_format,
             "direct_solver_mode": direct_solver_mode,
             "direct_adjustment_backend": direct_adjustment_backend,
+            "zero_cell_policy": zero_cell_policy,
         }
         _prepare_zone_artifact_directory(
             artifact_dir, marg_file, pool_file, checkpoint_settings

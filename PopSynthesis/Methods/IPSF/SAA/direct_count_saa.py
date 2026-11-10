@@ -15,6 +15,7 @@ from PopSynthesis.Methods.IPSF.const import count_field, zone_field
 from PopSynthesis.Methods.IPSF.SAA.operations.count_tables import population_size
 from PopSynthesis.Methods.IPSF.SAA.operations.direct_count_ilp import (
     PoolLookup,
+    ZERO_CELL_POLICIES,
     build_pool_lookup,
     prepare_direct_adjustment,
     solve_direct_adjustment,
@@ -105,6 +106,28 @@ def _validate_pool(count_pool: pl.DataFrame, attributes: Sequence[str]) -> None:
         raise ValueError("Pool attributes cannot contain nulls")
 
 
+def _validate_first_attribute_support(
+    zone: str,
+    attribute: str,
+    targets: dict[str, int],
+    count_pool: pl.DataFrame,
+) -> None:
+    support = {
+        str(row[attribute]): row[count_field]
+        for row in count_pool.group_by(attribute).agg(
+            pl.col(count_field).sum()
+        ).iter_rows(named=True)
+    }
+    for state, target in targets.items():
+        pool_support = support.get(state, 0)
+        if target > 0 and pool_support <= 0:
+            raise ValueError(
+                "Positive first-attribute Census target has no pool support: "
+                f"zone={zone}, attribute={attribute!r}, category={state!r}, "
+                f"target={target}, pool_support={pool_support}"
+            )
+
+
 def run_direct_count_pass(
     residual_marginals: pd.DataFrame,
     count_pool: pl.DataFrame,
@@ -113,6 +136,9 @@ def run_direct_count_pass(
     pass_index: int,
     solver_mode: Literal["single_stage", "two_stage"] = "single_stage",
     adjustment_backend: Literal["cbc", "min_cost_flow"] = "cbc",
+    zero_cell_policy: Literal[
+        "unrestricted", "seed_only", "relax_empty_rows_columns"
+    ] = "unrestricted",
     conditional_cache: dict[
         tuple[tuple[str, ...], str], PoolLookup
     ] | None = None,
@@ -124,6 +150,13 @@ def run_direct_count_pass(
         raise ValueError(
             "adjustment_backend must be 'cbc' or 'min_cost_flow'"
         )
+    if zero_cell_policy not in ZERO_CELL_POLICIES:
+        raise ValueError(
+            "zero_cell_policy must be 'unrestricted', 'seed_only', or "
+            "'relax_empty_rows_columns'"
+        )
+    if solver_mode == "single_stage" and zero_cell_policy != "unrestricted":
+        raise ValueError("Restricted zero-cell policies require two-stage solving")
     if conditional_cache is None:
         conditional_cache = {}
     zone, targets = _targets_by_attribute(
@@ -133,6 +166,9 @@ def run_direct_count_pass(
     )
     _validate_pool(count_pool, order)
     first_attribute = order[0]
+    _validate_first_attribute_support(
+        zone, first_attribute, targets[first_attribute], count_pool
+    )
     first_rows = [
         {
             zone_field: zone,
@@ -155,9 +191,13 @@ def run_direct_count_pass(
             "pass": pass_index,
             "adjustment_index": 0,
             "active_attribute": first_attribute,
+            "zero_cell_policy": zero_cell_policy,
             "pass_target_population": target_population,
             "prior_row_count": 0,
             "ilp_cell_count": 0,
+            "permitted_cell_count": 0,
+            "prohibited_cell_count": 0,
+            "relaxed_cell_count": 0,
             "stage1_status": "NotRun",
             "stage1_objective": None,
             "stage1_solver_gap": None,
@@ -188,6 +228,7 @@ def run_direct_count_pass(
                 and count_pool.filter(pl.col(first_attribute) == state).is_empty()
             ),
             "ordinary_zero_cells_made_positive": 0,
+            "seed_zero_cells_made_positive": 0,
             "solver_runtime_seconds": 0.0,
             "pulp_version": None,
             "solver_version": None,
@@ -208,6 +249,7 @@ def run_direct_count_pass(
             attribute,
             targets[attribute],
             pool_lookup=conditional_cache[cache_key],
+            zero_cell_policy=zero_cell_policy,
         )
         if adjustment_backend == "min_cost_flow":
             solved = solve_direct_adjustment_flow(

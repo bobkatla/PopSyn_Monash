@@ -32,7 +32,7 @@ def _load_census(path: Path) -> pd.DataFrame:
 
 
 def _validate_output(
-    path: Path, expected: pd.DataFrame
+    path: Path, expected: pd.DataFrame, require_exact_marginals: bool
 ) -> tuple[pl.DataFrame, pd.DataFrame]:
     population = pl.read_csv(
         path,
@@ -57,9 +57,10 @@ def _validate_output(
     actual = counts_to_marginals(population, ATTRIBUTES).reindex(
         index=expected.index, columns=expected.columns, fill_value=0
     )
-    pd.testing.assert_frame_equal(
-        actual.astype(int), expected.astype(int), check_names=False
-    )
+    if require_exact_marginals:
+        pd.testing.assert_frame_equal(
+            actual.astype(int), expected.astype(int), check_names=False
+        )
     return population.sort(EXPECTED_COLUMNS[:-1]), actual.astype(int)
 
 
@@ -163,12 +164,14 @@ def verify(
     seed_file: Path,
     weight_column: str,
     report_dir: Path,
+    require_exact_marginals: bool = True,
 ) -> None:
     expected = _load_census(census_file)
     validated = [
         _validate_output(
             output_root / f"reruns_{rerun}" / "household_counts.csv",
             expected,
+            require_exact_marginals,
         )
         for rerun in range(3)
     ]
@@ -210,10 +213,20 @@ def verify(
     full_tv = metrics_frame.loc[
         metrics_frame["scope"] == "full", "total_variation_from_seed"
     ].tolist()
-    print(
-        "Verified 3 identical compressed outputs across "
-        f"{len(expected)} zones and all controlled marginals."
-    )
+    marginal_l1 = [
+        int((actual - expected.astype(int)).abs().to_numpy().sum())
+        for actual in actual_marginals
+    ]
+    if require_exact_marginals:
+        print(
+            "Verified 3 identical compressed outputs across "
+            f"{len(expected)} zones and all controlled marginals."
+        )
+    else:
+        print(
+            "Verified 3 identical compressed outputs across "
+            f"{len(expected)} zones; marginal L1 errors: {marginal_l1}."
+        )
     print(
         f"Weighted-seed joint reports written to {report_dir}; "
         f"full-joint total variation: {full_tv}."
@@ -241,6 +254,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--weight-column", default="_weight")
     parser.add_argument(
+        "--allow-marginal-mismatch",
+        action="store_true",
+        help="Report soft Census mismatches instead of requiring exact marginals.",
+    )
+    parser.add_argument(
         "--report-dir",
         type=Path,
         default=None,
@@ -257,4 +275,5 @@ if __name__ == "__main__":
         arguments.seed_file,
         arguments.weight_column,
         arguments.report_dir or arguments.output_root / "verification",
+        require_exact_marginals=not arguments.allow_marginal_mismatch,
     )

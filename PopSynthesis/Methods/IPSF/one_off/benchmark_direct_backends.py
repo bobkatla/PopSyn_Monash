@@ -45,6 +45,7 @@ def benchmark_zone(
     pool: pl.DataFrame,
     flow_repeats: int,
     solver_mode: str = "single_stage",
+    zero_cell_policy: str = "unrestricted",
 ) -> list[dict[str, object]]:
     zone, targets = _targets_by_attribute(zone_marginal, ATTRIBUTES)
     current = _initial_counts(zone, targets)
@@ -63,6 +64,7 @@ def benchmark_zone(
             attribute,
             targets[attribute],
             pool_lookup=cache[cache_key],
+            zero_cell_policy=zero_cell_policy,
         )
         prepare_seconds = perf_counter() - prepare_started
 
@@ -111,6 +113,7 @@ def benchmark_zone(
             "active_columns": sum(value > 0 for value in prepared.target_counts),
             "unsupported_rows": len(prepared.unsupported_rows),
             "solver_mode": solver_mode,
+            "zero_cell_policy": zero_cell_policy,
             "stage1_objective": cbc.diagnostic["stage1_objective"],
             "objective_fraction": cbc.diagnostic["stage2_objective_fraction"],
         }
@@ -140,6 +143,7 @@ def benchmark_zone(
                 pass_index=0,
                 solver_mode=solver_mode,
                 adjustment_backend="min_cost_flow",
+                zero_cell_policy=zero_cell_policy,
                 conditional_cache={},
             ).population
         )
@@ -169,6 +173,15 @@ def parse_args() -> argparse.Namespace:
         "--solver-mode",
         choices=["single_stage", "two_stage"],
         default="single_stage",
+    )
+    parser.add_argument(
+        "--zero-cell-policy",
+        choices=[
+            "unrestricted",
+            "seed_only",
+            "relax_empty_rows_columns",
+        ],
+        default="unrestricted",
     )
     parser.add_argument(
         "--marginals",
@@ -205,6 +218,7 @@ if __name__ == "__main__":
                 pool,
                 arguments.flow_repeats,
                 arguments.solver_mode,
+                arguments.zero_cell_policy,
             )
         )
     arguments.output.parent.mkdir(parents=True, exist_ok=True)

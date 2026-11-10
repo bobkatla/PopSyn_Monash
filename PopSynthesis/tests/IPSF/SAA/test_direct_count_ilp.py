@@ -406,6 +406,201 @@ class DirectCountILPTests(DirectCountFixture):
         self.assertEqual(len(result.adjustments), 3)
 
 
+class ZeroCellPolicyTests(DirectCountFixture):
+    def test_unrestricted_default_matches_explicit_policy(self):
+        partial = pl.DataFrame(
+            {"zone_id": ["101", "101"], "a": ["x", "y"], "count": [3, 2]}
+        )
+        default = prepare_direct_adjustment(
+            partial, self.pool(), "b", {"m": 2, "n": 3}
+        )
+        explicit = prepare_direct_adjustment(
+            partial,
+            self.pool(),
+            "b",
+            {"m": 2, "n": 3},
+            zero_cell_policy="unrestricted",
+        )
+        self.assertEqual(default.permitted_cells, explicit.permitted_cells)
+        default_result = solve_direct_adjustment_flow(
+            default, solver_mode="two_stage"
+        )
+        explicit_result = solve_direct_adjustment_flow(
+            explicit, solver_mode="two_stage"
+        )
+        self.assertTrue(default_result.counts.equals(explicit_result.counts))
+
+    def test_seed_only_prohibits_zero_cells_and_accepts_fractional_support(self):
+        partial = pl.DataFrame(
+            {"zone_id": ["101", "101"], "a": ["x", "y"], "count": [3, 2]}
+        )
+        pool = pl.DataFrame(
+            {"a": ["x", "y"], "b": ["m", "n"], "count": [0.1, 0.2]}
+        )
+        prepared = prepare_direct_adjustment(
+            partial,
+            pool,
+            "b",
+            {"m": 2, "n": 3},
+            zero_cell_policy="seed_only",
+        )
+        self.assertEqual(prepared.permitted_cells, ((True, False), (False, True)))
+
+        cbc = solve_direct_adjustment(prepared, solver_mode="two_stage")
+        flow = solve_direct_adjustment_flow(prepared, solver_mode="two_stage")
+        self.assertEqual(cbc.diagnostic["stage1_objective"], 2)
+        self.assertEqual(flow.diagnostic["stage1_objective"], 2)
+        self.assertEqual(flow.diagnostic["seed_zero_cells_made_positive"], 0)
+        self.assertEqual(flow.diagnostic["permitted_cell_count"], 2)
+        self.assertEqual(flow.diagnostic["prohibited_cell_count"], 2)
+        self.assertEqual(
+            cbc.diagnostic["stage2_objective_fraction"],
+            flow.diagnostic["stage2_objective_fraction"],
+        )
+        produced = set(zip(flow.counts["a"], flow.counts["b"]))
+        self.assertEqual(produced, {("x", "m"), ("y", "n")})
+
+    def test_seed_only_rejects_unsupported_positive_row(self):
+        partial = pl.DataFrame(
+            {"zone_id": ["101"], "a": ["missing"], "count": [2]}
+        )
+        with self.assertRaisesRegex(ValueError, "positive row without pool support"):
+            prepare_direct_adjustment(
+                partial,
+                self.pool(),
+                "b",
+                {"m": 1, "n": 1},
+                zero_cell_policy="seed_only",
+            )
+
+    def test_relax_policy_opens_unsupported_row(self):
+        partial = pl.DataFrame(
+            {"zone_id": ["101"], "a": ["missing"], "count": [2]}
+        )
+        prepared = prepare_direct_adjustment(
+            partial,
+            self.pool(),
+            "b",
+            {"m": 1, "n": 1},
+            zero_cell_policy="relax_empty_rows_columns",
+        )
+        self.assertEqual(prepared.permitted_cells, ((True, True),))
+        self.assertEqual(prepared.relaxed_cell_count, 2)
+        result = solve_direct_adjustment_flow(prepared, solver_mode="two_stage")
+        self.assertEqual(result.diagnostic["stage1_objective"], 0)
+        self.assertEqual(result.diagnostic["seed_zero_cells_made_positive"], 2)
+
+    def test_relax_policy_opens_unsupported_column_only(self):
+        partial = pl.DataFrame(
+            {"zone_id": ["101", "101"], "a": ["x", "y"], "count": [3, 2]}
+        )
+        pool = pl.DataFrame(
+            {"a": ["x", "y"], "b": ["m", "m"], "count": [1, 1]}
+        )
+        prepared = prepare_direct_adjustment(
+            partial,
+            pool,
+            "b",
+            {"m": 2, "n": 3, "zero": 0},
+            zero_cell_policy="relax_empty_rows_columns",
+        )
+        self.assertEqual(
+            prepared.permitted_cells,
+            ((True, True, False), (True, True, False)),
+        )
+        self.assertEqual(prepared.relaxed_cell_count, 2)
+        result = solve_direct_adjustment_flow(prepared, solver_mode="two_stage")
+        self.assertEqual(result.diagnostic["stage1_objective"], 0)
+        self.assertEqual(
+            result.counts.filter(pl.col("b") == "zero").height, 0
+        )
+
+    def test_missing_first_attribute_support_and_zero_target_exemption(self):
+        marginal = pd.DataFrame(
+            [[1, 0, 1, 0]],
+            index=pd.Index([101], name="zone_id"),
+            columns=pd.MultiIndex.from_tuples(
+                [("a", "missing"), ("a", "x"), ("b", "m"), ("b", "n")]
+            ),
+        )
+        with self.assertRaisesRegex(
+            ValueError, "zone=101.*attribute='a'.*category='missing'.*target=1"
+        ):
+            run_direct_count_pass(
+                marginal,
+                self.pool(),
+                ["a", "b"],
+                pass_index=0,
+                solver_mode="two_stage",
+                adjustment_backend="min_cost_flow",
+                zero_cell_policy="seed_only",
+            )
+
+        marginal.loc[101, ("a", "missing")] = 0
+        marginal.loc[101, ("a", "x")] = 1
+        result = run_direct_count_pass(
+            marginal,
+            self.pool(),
+            ["a", "b"],
+            pass_index=0,
+            solver_mode="two_stage",
+            adjustment_backend="min_cost_flow",
+            zero_cell_policy="seed_only",
+        )
+        self.assertEqual(population_size(result.population), 1)
+
+    def test_restricted_policy_requires_two_stage(self):
+        with self.assertRaisesRegex(ValueError, "require.*two-stage"):
+            run_direct_count_pass(
+                self.marginal(),
+                self.pool(),
+                ["a", "b"],
+                pass_index=0,
+                zero_cell_policy="seed_only",
+            )
+
+    def test_seed_only_preserves_full_support_across_multiple_attributes(self):
+        marginal = pd.DataFrame(
+            [[2, 2, 2, 2, 2, 2]],
+            index=pd.Index([101], name="zone_id"),
+            columns=pd.MultiIndex.from_tuples(
+                [
+                    ("a", "x"), ("a", "y"),
+                    ("b", "m"), ("b", "n"),
+                    ("c", "u"), ("c", "v"),
+                ]
+            ),
+        )
+        pool = pl.DataFrame(
+            {
+                "a": ["x", "x", "y", "y"],
+                "b": ["m", "n", "m", "n"],
+                "c": ["u", "v", "v", "u"],
+                "count": [0.1, 0.2, 0.3, 0.4],
+            }
+        )
+        result = run_direct_count_pass(
+            marginal,
+            pool,
+            ["a", "b", "c"],
+            pass_index=0,
+            solver_mode="two_stage",
+            adjustment_backend="min_cost_flow",
+            zero_cell_policy="seed_only",
+        )
+        supported = set(zip(pool["a"], pool["b"], pool["c"]))
+        generated = set(
+            zip(
+                result.population["a"],
+                result.population["b"],
+                result.population["c"],
+            )
+        )
+        self.assertTrue(generated <= supported)
+        self.assertTrue(result.population["count"].dtype.is_integer())
+        self.assertTrue((result.population["count"] > 0).all())
+
+
 class DirectCountLoopbackTests(DirectCountFixture):
     def setUp(self):
         random.seed(73)
@@ -445,6 +640,32 @@ class DirectCountLoopbackTests(DirectCountFixture):
         result, targets = self.run_mode(max_run_time=3, extra_rm_frac=1)
         self.assertEqual(targets, [5, 5, 5])
         self.assertEqual(len(result), 5)
+
+    def test_seed_only_support_is_reapplied_across_loopbacks(self):
+        pool = pl.DataFrame(
+            {
+                "a": ["x", "x", "y", "y"],
+                "b": ["m", "n", "m", "n"],
+                "count": [1, 1, 1, 1],
+            }
+        )
+        result, targets = saa_run(
+            self.marginal(),
+            pool,
+            considered_atts=["a", "b"],
+            ordered_to_adjust_atts=["a", "b"],
+            last_adjustment_order=["a", "b"],
+            stochastic_mode="count_native_ilp",
+            direct_solver_mode="two_stage",
+            direct_adjustment_backend="min_cost_flow",
+            zero_cell_policy="seed_only",
+            max_run_time=3,
+            extra_rm_frac=0.4,
+        )
+        self.assertGreaterEqual(len(targets), 2)
+        supported = set(zip(pool["a"], pool["b"]))
+        self.assertTrue(set(zip(result["a"], result["b"])))
+        self.assertTrue(set(zip(result["a"], result["b"])) <= supported)
 
     def test_compact_direct_diagnostics_cover_passes(self):
         with tempfile.TemporaryDirectory() as temp_dir:

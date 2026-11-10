@@ -157,6 +157,9 @@ def saa_run(
     direct_adjustment_backend: Literal[
         "cbc", "min_cost_flow"
     ] = "cbc",
+    zero_cell_policy: Literal[
+        "unrestricted", "seed_only", "relax_empty_rows_columns"
+    ] = "unrestricted",
     direct_pool_cache: dict | None = None,
     direct_diagnostics_output: bool = False,
 ) -> Tuple[pl.DataFrame, List[int]]:
@@ -184,6 +187,19 @@ def saa_run(
         raise ValueError(
             "direct_adjustment_backend must be 'cbc' or 'min_cost_flow'"
         )
+    if zero_cell_policy not in {
+        "unrestricted",
+        "seed_only",
+        "relax_empty_rows_columns",
+    }:
+        raise ValueError(
+            "zero_cell_policy must be 'unrestricted', 'seed_only', or "
+            "'relax_empty_rows_columns'"
+        )
+    if stochastic_mode != "count_native_ilp" and zero_cell_policy != "unrestricted":
+        raise ValueError("zero_cell_policy is only configurable in direct-count mode")
+    if direct_solver_mode == "single_stage" and zero_cell_policy != "unrestricted":
+        raise ValueError("Restricted zero-cell policies require two-stage solving")
     ordered = list(ordered_to_adjust_atts)
     final_order = list(last_adjustment_order or [])
     random_last = list(randomly_add_last or [])
@@ -203,6 +219,7 @@ def saa_run(
             output_format,
             direct_solver_mode,
             direct_adjustment_backend,
+            zero_cell_policy,
             direct_pool_cache,
             direct_diagnostics_output,
         )
@@ -517,6 +534,7 @@ def _saa_run_count_native_ilp(
     output_format,
     direct_solver_mode,
     direct_adjustment_backend,
+    zero_cell_policy,
     direct_pool_cache,
     direct_diagnostics_output,
 ):
@@ -571,6 +589,7 @@ def _saa_run_count_native_ilp(
             pass_index=pass_index,
             solver_mode=direct_solver_mode,
             adjustment_backend=direct_adjustment_backend,
+            zero_cell_policy=zero_cell_policy,
             conditional_cache=direct_pool_cache,
         )
         pass_population = _zone_as_string(pass_result.population)

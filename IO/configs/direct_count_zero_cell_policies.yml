@@ -1,0 +1,36 @@
+- &weighted_seed_base
+  method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, totalvehs, dwelltype, owndwell, hhinc]
+  ordered_to_adjust_atts: [hhsize, totalvehs, dwelltype, owndwell, hhinc]
+  last_adjustment_order: [hhsize, totalvehs, dwelltype, owndwell, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: zero_cells_unrestricted
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: zero_cells_unrestricted
+  hh_syn_name: household_counts.csv
+  reruns: 3
+
+- <<: *weighted_seed_base
+  zero_cell_policy: seed_only
+  add_name_for_step_output: zero_cells_seed_only
+  output_name: zero_cells_seed_only
+
+- <<: *weighted_seed_base
+  zero_cell_policy: relax_empty_rows_columns
+  add_name_for_step_output: zero_cells_relax_empty_rows_columns
+  output_name: zero_cells_relax_empty_rows_columns
