@@ -169,7 +169,31 @@ run_saa(
 directly, solves every later attribute with lexicographic Census-then-pool
 objectives, and never conditionally samples complete records.
 
-The output directory must already exist when calling `run_saa` directly.
+The file-level runner batches multi-zone direct-count jobs as independent
+one-zone solves. Set `output_format: counts` to write compressed population
+rows with a `count` column, and set `pool_count_column` to use an existing
+positive numeric pool weight (including fractional survey weights) instead of
+counting source rows. See `IO/configs/direct_count_weighted_seed_full.yml` for
+the 691-zone weighted-seed experiment.
+
+Multi-zone count runs write resumable per-zone CSVs under each rerun's
+`zone_artifacts/` directory. The final CSV is assembled by streaming those
+files after all zones complete, so completed zones are not retained in memory
+and an interrupted rerun resumes from validated checkpoints.
+
+Direct mode defaults to `direct_solver_mode: single_stage`: validated equal
+totals and dense cells permit exact Census column constraints in the
+pool-deviation solve, so the zero-slack solve is skipped. Set
+`direct_solver_mode: two_stage` to retain the diagnostic slack solve for future
+constraint variants.
+
+`direct_adjustment_backend` selects `cbc` (reference/default) or the exact
+`min_cost_flow` transportation solver. `zone_workers` controls independent
+zone processes; keep CBC at one thread per worker. The weighted-seed full-run
+config uses exact min-cost flow with four zone workers; CBC remains available
+as the reference backend and in the separate benchmark harness.
+
+The file-level `run_saa` wrapper creates the output file's parent directory.
 
 ## IPU
 

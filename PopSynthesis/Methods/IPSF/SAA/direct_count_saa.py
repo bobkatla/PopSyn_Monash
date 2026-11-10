@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
+from math import isfinite
 from numbers import Real
-from typing import Sequence
+from typing import Literal, Sequence
 
 import pandas as pd
 import polars as pl
@@ -13,8 +14,13 @@ import polars as pl
 from PopSynthesis.Methods.IPSF.const import count_field, zone_field
 from PopSynthesis.Methods.IPSF.SAA.operations.count_tables import population_size
 from PopSynthesis.Methods.IPSF.SAA.operations.direct_count_ilp import (
+    PoolLookup,
+    build_pool_lookup,
     prepare_direct_adjustment,
     solve_direct_adjustment,
+)
+from PopSynthesis.Methods.IPSF.SAA.operations.direct_count_flow import (
+    solve_direct_adjustment_flow,
 )
 
 
@@ -82,8 +88,14 @@ def _validate_pool(count_pool: pl.DataFrame, attributes: Sequence[str]) -> None:
     if count_pool.is_empty():
         raise ValueError("Pool cannot be empty")
     counts = count_pool[count_field]
-    if not counts.dtype.is_integer() or (counts <= 0).any():
-        raise ValueError("Pool counts must be positive integers")
+    if not counts.dtype.is_numeric():
+        raise ValueError("Pool counts must be numeric")
+    invalid_counts = any(
+        value is None or not isfinite(float(value)) or value <= 0
+        for value in counts
+    )
+    if invalid_counts:
+        raise ValueError("Pool counts must be finite and positive")
     if count_pool.select(
         pl.any_horizontal([pl.col(attribute).is_null() for attribute in attributes]).any()
     ).item():
@@ -96,10 +108,21 @@ def run_direct_count_pass(
     ordered_attributes: Sequence[str],
     *,
     pass_index: int,
+    solver_mode: Literal["single_stage", "two_stage"] = "single_stage",
+    adjustment_backend: Literal["cbc", "min_cost_flow"] = "cbc",
+    conditional_cache: dict[
+        tuple[tuple[str, ...], str], PoolLookup
+    ] | None = None,
 ) -> DirectCountPassResult:
     """Synthesize one complete compressed population without sampling."""
 
     order = list(ordered_attributes)
+    if adjustment_backend not in {"cbc", "min_cost_flow"}:
+        raise ValueError(
+            "adjustment_backend must be 'cbc' or 'min_cost_flow'"
+        )
+    if conditional_cache is None:
+        conditional_cache = {}
     zone, targets = _targets_by_attribute(residual_marginals, order)
     _validate_pool(count_pool, order)
     first_attribute = order[0]
@@ -119,6 +142,8 @@ def run_direct_count_pass(
     adjustments: list[dict[str, object]] = [
         {
             "mode": "count_native_ilp",
+            "adjustment_backend": adjustment_backend,
+            "solver_mode": solver_mode,
             "zone": zone,
             "pass": pass_index,
             "adjustment_index": 0,
@@ -131,6 +156,7 @@ def run_direct_count_pass(
             "stage2_status": "NotRun",
             "stage2_objective": None,
             "stage2_objective_scale": None,
+            "stage2_solver_gap": None,
             "target_counts_json": json.dumps(
                 targets[first_attribute], sort_keys=True
             ),
@@ -155,10 +181,23 @@ def run_direct_count_pass(
     ]
 
     for adjustment_index, attribute in enumerate(order[1:], start=1):
+        prior_attributes = tuple(order[:adjustment_index])
+        cache_key = (prior_attributes, attribute)
+        if cache_key not in conditional_cache:
+            conditional_cache[cache_key] = build_pool_lookup(
+                count_pool, prior_attributes, attribute
+            )
         prepared = prepare_direct_adjustment(
-            current, count_pool, attribute, targets[attribute]
+            current,
+            count_pool,
+            attribute,
+            targets[attribute],
+            pool_lookup=conditional_cache[cache_key],
         )
-        solved = solve_direct_adjustment(prepared)
+        if adjustment_backend == "min_cost_flow":
+            solved = solve_direct_adjustment_flow(prepared)
+        else:
+            solved = solve_direct_adjustment(prepared, solver_mode=solver_mode)
         current = solved.counts
         diagnostic = dict(solved.diagnostic)
         diagnostic.update(

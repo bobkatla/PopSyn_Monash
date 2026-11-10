@@ -4,6 +4,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from decimal import Decimal
 from fractions import Fraction
 from pathlib import Path
 
@@ -20,7 +21,14 @@ from PopSynthesis.Methods.IPSF.SAA.operations.direct_count_ilp import (
     prepare_direct_adjustment,
     solve_direct_adjustment,
 )
+from PopSynthesis.Methods.IPSF.SAA.operations.direct_count_flow import (
+    solve_direct_adjustment_flow,
+)
 from PopSynthesis.Methods.IPSF.SAA.operations.wrapper_saa_run import saa_run
+from PopSynthesis.Methods.IPSF.run import (
+    _prepare_direct_pool,
+    run_saa as run_saa_files,
+)
 from PopSynthesis.Methods.IPSF.const import count_field
 from PopSynthesis.Methods.IPSF.utils.condensed import condense_df
 from PopSynthesis.analyse.extract_data.extract_comparisons import (
@@ -77,26 +85,43 @@ class DirectCountILPTests(DirectCountFixture):
             result.counts.sort(["a", "b"]).equals(expected.sort(["a", "b"]))
         )
         self.assertEqual(result.diagnostic["stage1_objective"], 0)
+        self.assertEqual(
+            result.diagnostic["stage1_status"], "SkippedExactConstraints"
+        )
         self.assertAlmostEqual(result.diagnostic["stage2_objective"], 2.0)
         self.assertEqual(
             result.diagnostic["ordinary_zero_cells_made_positive"], 1
         )
 
-    def test_completely_unsupported_row_is_rejected(self):
+        two_stage = solve_direct_adjustment(prepared, solver_mode="two_stage")
+        self.assertEqual(two_stage.diagnostic["stage1_status"], "Optimal")
+        self.assertEqual(two_stage.diagnostic["solver_mode"], "two_stage")
+        self.assertTrue(two_stage.counts.equals(result.counts))
+
+    def test_completely_unsupported_row_uses_zero_references(self):
         partial = pl.DataFrame(
             {"zone_id": ["101"], "a": ["missing"], "count": [2]}
         )
-        with self.assertRaisesRegex(ValueError, "completely unsupported"):
-            prepare_direct_adjustment(
-                partial, self.pool(), "b", {"m": 1, "n": 1}
-            )
+        prepared = prepare_direct_adjustment(
+            partial, self.pool(), "b", {"m": 1, "n": 1}
+        )
+        self.assertEqual(prepared.references, ((Fraction(0), Fraction(0)),))
+        self.assertEqual(prepared.unsupported_rows, (("missing",),))
+
+        result = solve_direct_adjustment(prepared)
+        self.assertEqual(result.diagnostic["unsupported_row_count"], 1)
+        self.assertEqual(result.diagnostic["stage2_objective"], 2)
+        self.assertEqual(result.counts["count"].sum(), 2)
+        self.assertEqual(
+            set(result.counts["b"].to_list()), {"m", "n"}
+        )
 
     def test_fractional_references_are_not_rounded(self):
         partial = pl.DataFrame(
             {"zone_id": ["101"], "a": ["x"], "count": [5]}
         )
         pool = pl.DataFrame(
-            {"a": ["x", "x"], "b": ["m", "n"], "count": [1, 2]}
+            {"a": ["x", "x"], "b": ["m", "n"], "count": [0.1, 0.2]}
         )
         prepared = prepare_direct_adjustment(
             partial, pool, "b", {"m": 2, "n": 3}
@@ -107,7 +132,8 @@ class DirectCountILPTests(DirectCountFixture):
         )
         result = solve_direct_adjustment(prepared)
         self.assertEqual(result.diagnostic["stage2_status"], "Optimal")
-        self.assertEqual(result.diagnostic["stage2_objective_scale"], 3)
+        self.assertIsNone(result.diagnostic["stage2_objective_scale"])
+        self.assertIn(result.diagnostic["stage2_solver_gap"], (None, 0))
         self.assertAlmostEqual(result.diagnostic["stage2_objective"], 2 / 3)
 
     def test_completely_unsupported_column_can_be_populated(self):
@@ -126,6 +152,91 @@ class DirectCountILPTests(DirectCountFixture):
         self.assertEqual(achieved_n, 3)
         self.assertEqual(result.diagnostic["unsupported_column_count"], 1)
 
+    def test_flow_matches_cbc_exact_objectives(self):
+        cases = [
+            (
+                pl.DataFrame(
+                    {"zone_id": ["101", "101"], "a": ["x", "y"], "count": [3, 2]}
+                ),
+                self.pool(),
+                {"m": 2, "n": 3},
+            ),
+            (
+                pl.DataFrame({"zone_id": ["101"], "a": ["x"], "count": [5]}),
+                pl.DataFrame(
+                    {"a": ["x", "x"], "b": ["m", "n"], "count": [0.1, 0.2]}
+                ),
+                {"m": 2, "n": 3},
+            ),
+            (
+                pl.DataFrame(
+                    {"zone_id": ["101"], "a": ["missing"], "count": [2]}
+                ),
+                self.pool(),
+                {"m": 1, "n": 1},
+            ),
+            (
+                pl.DataFrame(
+                    {"zone_id": ["101", "101"], "a": ["x", "y"], "count": [3, 2]}
+                ),
+                self.pool(),
+                {"m": 5, "n": 0},
+            ),
+        ]
+        for partial, pool, targets in cases:
+            with self.subTest(targets=targets, partial=partial.to_dicts()):
+                prepared = prepare_direct_adjustment(partial, pool, "b", targets)
+                cbc = solve_direct_adjustment(prepared)
+                flow = solve_direct_adjustment_flow(prepared)
+                self.assertEqual(
+                    cbc.diagnostic["stage2_objective_fraction"],
+                    flow.diagnostic["stage2_objective_fraction"],
+                )
+                self.assertEqual(flow.diagnostic["marginal_l1_error"], 0)
+                self.assertTrue(flow.diagnostic["row_totals_preserved"])
+
+    def test_pool_conditionals_are_cached_between_passes(self):
+        marginal = pd.DataFrame(
+            [[2, 2, 2, 2, 2, 2]],
+            index=pd.Index([101], name="zone_id"),
+            columns=pd.MultiIndex.from_tuples(
+                [
+                    ("a", "x"), ("a", "y"),
+                    ("b", "m"), ("b", "n"),
+                    ("c", "u"), ("c", "v"),
+                ]
+            ),
+        )
+        pool = pl.DataFrame(
+            {
+                "a": ["x", "x", "y", "y"],
+                "b": ["m", "n", "m", "n"],
+                "c": ["u", "v", "v", "u"],
+                "count": [1, 1, 1, 1],
+            }
+        )
+        cache = {}
+        first = run_direct_count_pass(
+            marginal,
+            pool,
+            ["a", "b", "c"],
+            pass_index=0,
+            adjustment_backend="min_cost_flow",
+            conditional_cache=cache,
+        )
+        cache_ids = {key: id(value) for key, value in cache.items()}
+        second = run_direct_count_pass(
+            marginal,
+            pool,
+            ["a", "b", "c"],
+            pass_index=0,
+            adjustment_backend="min_cost_flow",
+            conditional_cache=cache,
+        )
+        self.assertEqual(len(cache), 2)
+        self.assertEqual(cache_ids, {key: id(value) for key, value in cache.items()})
+        self.assertTrue(first.population.equals(second.population))
+
     def test_direct_pass_has_progressive_diagnostics(self):
         result = run_direct_count_pass(
             self.marginal(), self.pool(), ["a", "b"], pass_index=0
@@ -134,7 +245,10 @@ class DirectCountILPTests(DirectCountFixture):
         self.assertEqual(result.population.columns, ["zone_id", "a", "b", "count"])
         self.assertEqual(len(result.adjustments), 2)
         self.assertEqual(result.adjustments[0]["stage1_status"], "NotRun")
-        self.assertEqual(result.adjustments[1]["stage1_status"], "Optimal")
+        self.assertEqual(
+            result.adjustments[1]["stage1_status"], "SkippedExactConstraints"
+        )
+        self.assertEqual(result.adjustments[1]["solver_mode"], "single_stage")
 
     def test_three_attribute_direct_propagation(self):
         marginal = pd.DataFrame(
@@ -268,6 +382,121 @@ print(json.dumps(r.to_dicts(), sort_keys=True))
             )
             outputs.append(completed.stdout.strip())
         self.assertEqual(outputs[0], outputs[1])
+
+
+class DirectCountFileRunTests(unittest.TestCase):
+    def test_weighted_pool_aggregates_exact_decimal_weights(self):
+        raw_pool = pd.DataFrame(
+            {"a": ["x", "x"], "b": ["m", "m"], "_weight": [0.1, 0.2]}
+        )
+        prepared = _prepare_direct_pool(raw_pool, ["a", "b"], "_weight")
+        self.assertEqual(prepared.height, 1)
+        self.assertEqual(prepared["count"][0], Decimal("0.3"))
+
+        for invalid in (0, -1, float("inf"), float("nan")):
+            invalid_pool = raw_pool.copy()
+            invalid_pool.loc[0, "_weight"] = invalid
+            with self.assertRaisesRegex(ValueError, "finite|positive"):
+                _prepare_direct_pool(invalid_pool, ["a", "b"], "_weight")
+
+    def test_fractional_weighted_pool_batches_zones_and_writes_counts(self):
+        marginal = pd.DataFrame(
+            [[3, 2, 2, 3], [1, 3, 2, 2]],
+            index=pd.Index([101, 102], name="zone_id"),
+            columns=pd.MultiIndex.from_tuples(
+                [("a", "x"), ("a", "y"), ("b", "m"), ("b", "negative")]
+            ),
+        )
+        raw_pool = pd.DataFrame(
+            {
+                "a": ["x", "x", "y"],
+                "b": ["m", "m", "m"],
+                "_weight": [0.1, 0.2, 0.4],
+                "ignored_id": [1, 2, 3],
+            }
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            marginal_path = directory / "marginal.csv"
+            pool_path = directory / "pool.csv"
+            output_paths = [
+                directory / f"run_{index}" / "counts.csv" for index in range(2)
+            ]
+            marginal.reset_index().to_csv(marginal_path, index=False)
+            raw_pool.to_csv(pool_path, index=False)
+
+            for index, output_path in enumerate(output_paths):
+                run_saa_files(
+                    marg_file=marginal_path,
+                    pool_file=pool_path,
+                    zone_field="zone_id",
+                    output_file=output_path,
+                    considered_atts=["a", "b"],
+                    ordered_to_adjust_atts=["a", "b"],
+                    last_adjustment_order=["a", "b"],
+                    max_run_time=1,
+                    extra_rm_frac=0,
+                    stochastic_mode="count_native_ilp",
+                    pool_count_column="_weight",
+                    output_format="counts",
+                    direct_adjustment_backend="min_cost_flow",
+                    zone_workers=index + 1,
+                )
+
+            first = pl.read_csv(output_paths[0])
+            second = pl.read_csv(output_paths[1])
+            self.assertTrue(first.equals(second))
+            self.assertEqual(first.columns, ["zone_id", "a", "b", "count"])
+            self.assertEqual(first["zone_id"].n_unique(), 2)
+            self.assertTrue(first["count"].dtype.is_integer())
+            self.assertTrue((first["count"] > 0).all())
+            self.assertFalse(first.select(["zone_id", "a", "b"]).is_duplicated().any())
+
+            actual = counts_to_marginals(
+                first.with_columns(pl.col("zone_id").cast(pl.String)), ["a", "b"]
+            )
+            expected = marginal.copy()
+            expected.index = expected.index.astype(str)
+            actual = actual.reindex(
+                index=expected.index, columns=expected.columns, fill_value=0
+            )
+            pd.testing.assert_frame_equal(
+                actual.astype(int), expected.astype(int), check_names=False
+            )
+
+    def test_failed_zone_does_not_publish_partial_output(self):
+        marginal = pd.DataFrame(
+            [[2, 0, 2, 0], [0, 2, 1, 0]],
+            index=pd.Index([101, 102], name="zone_id"),
+            columns=pd.MultiIndex.from_tuples(
+                [("a", "x"), ("a", "y"), ("b", "m"), ("b", "n")]
+            ),
+        )
+        raw_pool = pd.DataFrame({"a": ["x"], "b": ["m"], "_weight": [1.5]})
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            marginal_path = directory / "marginal.csv"
+            pool_path = directory / "pool.csv"
+            output_path = directory / "counts.csv"
+            marginal.reset_index().to_csv(marginal_path, index=False)
+            raw_pool.to_csv(pool_path, index=False)
+
+            with self.assertRaisesRegex(ValueError, "inconsistent"):
+                run_saa_files(
+                    marg_file=marginal_path,
+                    pool_file=pool_path,
+                    zone_field="zone_id",
+                    output_file=output_path,
+                    considered_atts=["a", "b"],
+                    ordered_to_adjust_atts=["a", "b"],
+                    last_adjustment_order=["a", "b"],
+                    max_run_time=1,
+                    extra_rm_frac=0,
+                    stochastic_mode="count_native_ilp",
+                    pool_count_column="_weight",
+                    output_format="counts",
+                )
+            self.assertFalse(output_path.exists())
 
 
 if __name__ == "__main__":

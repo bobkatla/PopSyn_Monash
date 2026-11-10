@@ -12,6 +12,7 @@ dependencies = [
     # pyproj 3.6.x has no CPython 3.13 wheels; GeoPandas needs this at runtime.
     "pyproj>=3.7.0; python_version >= '3.10'",
     "numpy>=1.26",
+    "networkx>=3.2,<4",
     # NumPy 1.26 and SciPy 1.13 predate CPython 3.13 wheels.
     "numpy>=2.1.0; python_version >= '3.13'",
     "pgmpy>=0.1.25",

@@ -24,13 +24,15 @@ def cli():
 )
 @click.option(
     "-o", "--output-path",
-    type=click.Path(exists=True, file_okay=False, dir_okay=True),
+    type=click.Path(exists=False, file_okay=False, dir_okay=True),
     required=True,
-    help="The path to the output directory."
+    help="The output directory; it is created when it does not exist."
 )
 @cli.command()
 def synthesize(runs_yml, output_path):
     """Run the synthetic population generation."""
+    output_path = Path(output_path)
+    output_path.mkdir(parents=True, exist_ok=True)
     with open(runs_yml, "r") as f:
         runs = yaml.safe_load(f)
     timing_records = []
@@ -67,7 +69,6 @@ def synthesize(runs_yml, output_path):
                 else:
                     raise ValueError(f"Level {run_info['level']} not supported.")
                 meta_output_dir = output_path_run / "meta"
-                meta_output_dir.mkdir(parents=True, exist_ok=True)
                 run_saa(
                     marg_file=marg,
                     pool_file=pool,
@@ -83,6 +84,15 @@ def synthesize(runs_yml, output_path):
                     include_zero_cell_values=run_info["include_zero_cell_values"],
                     randomly_add_last=run_info.get("randomly_add_last", []),
                     stochastic_mode=run_info.get("stochastic_mode", "count_native"),
+                    pool_count_column=run_info.get("pool_count_column"),
+                    output_format=run_info.get("output_format", "rows"),
+                    direct_solver_mode=run_info.get(
+                        "direct_solver_mode", "single_stage"
+                    ),
+                    direct_adjustment_backend=run_info.get(
+                        "direct_adjustment_backend", "cbc"
+                    ),
+                    zone_workers=run_info.get("zone_workers", 1),
                     meta_output_dir=meta_output_dir
                 )
             elif method == "ipf":

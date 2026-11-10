@@ -151,6 +151,12 @@ def saa_run(
     stochastic_mode: Literal[
         "count_native", "legacy_exact", "count_native_ilp"
     ] = "count_native",
+    output_format: Literal["rows", "counts"] = "rows",
+    direct_solver_mode: Literal["single_stage", "two_stage"] = "single_stage",
+    direct_adjustment_backend: Literal[
+        "cbc", "min_cost_flow"
+    ] = "cbc",
+    direct_pool_cache: dict | None = None,
 ) -> Tuple[pl.DataFrame, List[int]]:
     """Run one of the complete-record, legacy, or direct-count SAA modes."""
     if stochastic_mode not in {
@@ -164,6 +170,18 @@ def saa_run(
         )
     if considered_atts is None or ordered_to_adjust_atts is None:
         raise ValueError("considered_atts and ordered_to_adjust_atts are required")
+    if output_format not in {"rows", "counts"}:
+        raise ValueError("output_format must be 'rows' or 'counts'")
+    if output_format == "counts" and stochastic_mode != "count_native_ilp":
+        raise ValueError("output_format='counts' is currently direct-mode only")
+    if direct_solver_mode not in {"single_stage", "two_stage"}:
+        raise ValueError(
+            "direct_solver_mode must be 'single_stage' or 'two_stage'"
+        )
+    if direct_adjustment_backend not in {"cbc", "min_cost_flow"}:
+        raise ValueError(
+            "direct_adjustment_backend must be 'cbc' or 'min_cost_flow'"
+        )
     ordered = list(ordered_to_adjust_atts)
     final_order = list(last_adjustment_order or [])
     random_last = list(randomly_add_last or [])
@@ -180,6 +198,10 @@ def saa_run(
             include_zero_cell_values,
             random_last,
             meta_output_dir,
+            output_format,
+            direct_solver_mode,
+            direct_adjustment_backend,
+            direct_pool_cache,
         )
     with zero_cell_scope():
         if stochastic_mode == "legacy_exact":
@@ -466,6 +488,10 @@ def _saa_run_count_native_ilp(
     include_zero_cell_values,
     randomly_add_last,
     meta_output_dir,
+    output_format,
+    direct_solver_mode,
+    direct_adjustment_backend,
+    direct_pool_cache,
 ):
     """Run progressive direct-count passes with existing count loop-backs."""
 
@@ -497,13 +523,17 @@ def _saa_run_count_native_ilp(
 
     pass_index = 0
     while pass_index < max_run_time and residual_size > 0:
-        pass_order = _order_for_pass(
-            current_order,
-            last_adjustment_order,
-            current_marg.columns,
-            pass_index,
-            max_run_time,
-            randomly_add_last,
+        pass_order = (
+            list(ordered_to_adjust_atts)
+            if max_run_time == 1
+            else _order_for_pass(
+                current_order,
+                last_adjustment_order,
+                current_marg.columns,
+                pass_index,
+                max_run_time,
+                randomly_add_last,
+            )
         )
         current_order = pass_order
         target_sizes.append(residual_size)
@@ -512,6 +542,9 @@ def _saa_run_count_native_ilp(
             count_pool,
             pass_order,
             pass_index=pass_index,
+            solver_mode=direct_solver_mode,
+            adjustment_backend=direct_adjustment_backend,
+            conditional_cache=direct_pool_cache,
         )
         pass_population = _zone_as_string(pass_result.population)
         if population_size(pass_population) != residual_size:
@@ -572,8 +605,11 @@ def _saa_run_count_native_ilp(
         raise AssertionError("Final direct-count population does not match marginals")
     if output_each_step:
         _write_direct_diagnostics(meta_output_dir, adjustments, loopbacks)
-    final = expand_counts(
-        final_count.select(considered_atts + [zone_field, count_field])
+    selected = final_count.select(
+        [zone_field, *considered_atts, count_field]
+    ).sort([zone_field, *considered_atts])
+    final = selected if output_format == "counts" else expand_counts(
+        selected.select(considered_atts + [zone_field, count_field])
     )
     return final, target_sizes
 
