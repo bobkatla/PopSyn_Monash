@@ -232,6 +232,27 @@ def _add_row_constraints(problem, variables, data, column_indices):
         )
 
 
+def _add_soft_column_constraints(
+    problem,
+    variables,
+    slack_positive,
+    slack_negative,
+    data,
+    column_indices,
+):
+    for column_index in column_indices:
+        problem += (
+            lpSum(
+                variables[(row_index, column_index)]
+                for row_index in range(len(data.row_keys))
+            )
+            == data.target_counts[column_index]
+            + slack_positive[column_index]
+            - slack_negative[column_index],
+            f"column_{column_index}",
+        )
+
+
 def solve_direct_adjustment(
     data: DirectAdjustmentInput,
     *,
@@ -245,72 +266,119 @@ def solve_direct_adjustment(
     active_columns = [
         index for index, target in enumerate(data.target_counts) if target > 0
     ]
+    all_columns = list(range(len(data.states)))
+    model_columns = all_columns if solver_mode == "two_stage" else active_columns
     stage1_stats = None
-    stage1_objective = 0.0
+    stage1_objective = 0
+    stage1_solve_seconds = 0.0
+    stage1_variable_count = 0
+    stage1_constraint_count = 0
     if solver_mode == "two_stage":
         stage1 = LpProblem(f"DirectCountStage1_{data.attribute}", LpMinimize)
-        stage1_y = _base_variables(stage1, data, active_columns)
+        stage1_y = _base_variables(stage1, data, model_columns)
         slack_positive = {
             column_index: stage1.add_variable(
-                f"L_pos_{column_index}", lowBound=0, cat="Continuous"
+                f"L_pos_{column_index}", lowBound=0, cat="Integer"
             )
-            for column_index in active_columns
+            for column_index in model_columns
         }
         slack_negative = {
             column_index: stage1.add_variable(
-                f"L_neg_{column_index}", lowBound=0, cat="Continuous"
+                f"L_neg_{column_index}", lowBound=0, cat="Integer"
             )
-            for column_index in active_columns
+            for column_index in model_columns
         }
-        _add_row_constraints(stage1, stage1_y, data, active_columns)
-        for column_index in active_columns:
-            target = data.target_counts[column_index]
-            stage1 += (
-                lpSum(
-                    stage1_y[(row_index, column_index)]
-                    for row_index in range(len(data.row_keys))
-                )
-                == target
-                + slack_positive[column_index]
-                - slack_negative[column_index],
-                f"column_{column_index}",
-            )
+        _add_row_constraints(stage1, stage1_y, data, model_columns)
+        _add_soft_column_constraints(
+            stage1,
+            stage1_y,
+            slack_positive,
+            slack_negative,
+            data,
+            model_columns,
+        )
         stage1 += lpSum(slack_positive.values()) + lpSum(slack_negative.values())
-        stage1_stats = stage1.solve(create_cbc_solver(reproducible=True))
+        stage1_variable_count = len(stage1.variables())
+        stage1_constraint_count = len(stage1.constraints())
+        stage1_started = time.perf_counter()
+        stage1_stats = _solve_with_cbc_log(stage1)
+        stage1_solve_seconds = time.perf_counter() - stage1_started
         _require_optimal(stage1_stats, "Stage 1", data.attribute)
-        stage1_objective = float(stage1_stats.objective or 0.0)
-        if abs(stage1_objective) > OBJECTIVE_TOLERANCE:
+        stage1_objective = sum(
+            _integer_value(variable, variable.name)
+            for variable in [
+                *slack_positive.values(),
+                *slack_negative.values(),
+            ]
+        )
+        reported_stage1_objective = float(stage1_stats.objective or 0.0)
+        if abs(reported_stage1_objective - stage1_objective) > OBJECTIVE_TOLERANCE:
             raise RuntimeError(
-                f"Stage 1 for {data.attribute!r} has nonzero marginal error "
+                f"Stage 1 for {data.attribute!r} returned inconsistent "
+                f"objective values: {reported_stage1_objective} and "
                 f"{stage1_objective}"
             )
 
     stage2 = LpProblem(f"DirectCountStage2_{data.attribute}", LpMinimize)
-    stage2_y = _base_variables(stage2, data, active_columns)
+    stage2_y = _base_variables(stage2, data, model_columns)
     deviations = {
         (row_index, column_index): stage2.add_variable(
             f"D_{row_index}_{column_index}", lowBound=0, cat="Continuous"
         )
         for row_index in range(len(data.row_keys))
-        for column_index in active_columns
+        for column_index in model_columns
     }
-    _add_row_constraints(stage2, stage2_y, data, active_columns)
-    for column_index in active_columns:
-        target = data.target_counts[column_index]
-        stage2 += (
-            lpSum(
-                stage2_y[(row_index, column_index)]
-                for row_index in range(len(data.row_keys))
+    _add_row_constraints(stage2, stage2_y, data, model_columns)
+    stage2_slack_positive = {}
+    stage2_slack_negative = {}
+    if solver_mode == "two_stage":
+        stage2_slack_positive = {
+            column_index: stage2.add_variable(
+                f"L_pos_{column_index}", lowBound=0, cat="Integer"
             )
-            == target,
-            f"column_{column_index}",
+            for column_index in model_columns
+        }
+        stage2_slack_negative = {
+            column_index: stage2.add_variable(
+                f"L_neg_{column_index}", lowBound=0, cat="Integer"
+            )
+            for column_index in model_columns
+        }
+        _add_soft_column_constraints(
+            stage2,
+            stage2_y,
+            stage2_slack_positive,
+            stage2_slack_negative,
+            data,
+            model_columns,
         )
+        stage2 += (
+            lpSum(stage2_slack_positive.values())
+            + lpSum(stage2_slack_negative.values())
+            == stage1_objective,
+            "fix_stage1_objective",
+        )
+    else:
+        for column_index in model_columns:
+            target = data.target_counts[column_index]
+            stage2 += (
+                lpSum(
+                    stage2_y[(row_index, column_index)]
+                    for row_index in range(len(data.row_keys))
+                )
+                == target,
+                f"column_{column_index}",
+            )
     for key, deviation in deviations.items():
         reference = float(data.references[key[0]][key[1]])
         stage2 += deviation >= stage2_y[key] - reference
         stage2 += deviation >= reference - stage2_y[key]
     stage2 += lpSum(deviations.values())
+    stage2_variable_count = len(stage2.variables())
+    stage2_constraint_count = len(stage2.constraints())
+    stage2_started = time.perf_counter()
     stage2_stats = _solve_with_cbc_log(stage2)
+    stage2_solve_seconds = time.perf_counter() - stage2_started
     _require_optimal(
         stage2_stats, "Stage 2", data.attribute, allow_zero_gap=True
     )
@@ -326,6 +394,18 @@ def solve_direct_adjustment(
             for key, variable in stage2_y.items()
         }
     )
+    stage2_slack_objective = sum(
+        _integer_value(variable, variable.name)
+        for variable in [
+            *stage2_slack_positive.values(),
+            *stage2_slack_negative.values(),
+        ]
+    )
+    if solver_mode == "two_stage" and stage2_slack_objective != stage1_objective:
+        raise RuntimeError(
+            f"Stage 2 for {data.attribute!r} did not retain the Stage 1 "
+            f"objective: {stage2_slack_objective} != {stage1_objective}"
+        )
     exact_stage2_objective = sum(
         abs(Fraction(value) - data.references[key[0]][key[1]])
         for key, value in values.items()
@@ -353,6 +433,15 @@ def solve_direct_adjustment(
         )
         for column_index, state in enumerate(data.states)
     }
+    marginal_l1_error = sum(
+        abs(achieved[state] - target)
+        for state, target in zip(data.states, data.target_counts)
+    )
+    if solver_mode == "two_stage" and marginal_l1_error != stage1_objective:
+        raise RuntimeError(
+            f"Stage 2 for {data.attribute!r} has marginal error "
+            f"{marginal_l1_error}, expected {stage1_objective}"
+        )
     preserved_rows = all(
         sum(
             values[(row_index, column_index)]
@@ -376,13 +465,23 @@ def solve_direct_adjustment(
         "prior_row_count": len(data.row_keys),
         "ilp_cell_count": len(data.row_keys) * len(data.states),
         "active_column_count": len(active_columns),
-        "eliminated_zero_target_columns": len(data.states) - len(active_columns),
+        "eliminated_zero_target_columns": (
+            len(data.states) - len(active_columns)
+            if solver_mode == "single_stage"
+            else 0
+        ),
         "stage1_status": (
             stage1_stats.status_str
             if stage1_stats is not None
             else "SkippedExactConstraints"
         ),
         "stage1_objective": stage1_objective,
+        "stage1_solver_gap": (
+            stage1_stats.solver_gap if stage1_stats is not None else None
+        ),
+        "stage1_solve_seconds": stage1_solve_seconds,
+        "stage1_variable_count": stage1_variable_count,
+        "stage1_constraint_count": stage1_constraint_count,
         "stage2_status": stage2_stats.status_str,
         "stage2_objective": float(exact_stage2_objective),
         "stage2_objective_fraction": (
@@ -390,14 +489,15 @@ def solve_direct_adjustment(
         ),
         "stage2_objective_scale": None,
         "stage2_solver_gap": stage2_stats.solver_gap,
+        "stage2_slack_objective": stage2_slack_objective,
+        "stage2_solve_seconds": stage2_solve_seconds,
+        "stage2_variable_count": stage2_variable_count,
+        "stage2_constraint_count": stage2_constraint_count,
         "target_counts_json": json.dumps(
             dict(zip(data.states, data.target_counts)), sort_keys=True
         ),
         "achieved_counts_json": json.dumps(achieved, sort_keys=True),
-        "marginal_l1_error": sum(
-            abs(achieved[state] - target)
-            for state, target in zip(data.states, data.target_counts)
-        ),
+        "marginal_l1_error": marginal_l1_error,
         "row_totals_preserved": preserved_rows,
         "unsupported_row_count": len(data.unsupported_rows),
         "unsupported_column_count": len(data.unsupported_columns),

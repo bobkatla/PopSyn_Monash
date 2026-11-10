@@ -95,8 +95,136 @@ class DirectCountILPTests(DirectCountFixture):
 
         two_stage = solve_direct_adjustment(prepared, solver_mode="two_stage")
         self.assertEqual(two_stage.diagnostic["stage1_status"], "Optimal")
+        self.assertEqual(two_stage.diagnostic["stage1_objective"], 0)
+        self.assertEqual(two_stage.diagnostic["stage2_slack_objective"], 0)
         self.assertEqual(two_stage.diagnostic["solver_mode"], "two_stage")
         self.assertTrue(two_stage.counts.equals(result.counts))
+        for stage in ("stage1", "stage2"):
+            self.assertGreater(two_stage.diagnostic[f"{stage}_solve_seconds"], 0)
+            self.assertGreater(two_stage.diagnostic[f"{stage}_variable_count"], 0)
+            self.assertGreater(two_stage.diagnostic[f"{stage}_constraint_count"], 0)
+
+    def test_two_stage_retains_positive_optimal_slack(self):
+        partial = pl.DataFrame(
+            {"zone_id": ["101"], "a": ["x"], "count": [5]}
+        )
+        pool = pl.DataFrame(
+            {
+                "a": ["x", "x"],
+                "b": ["m", "n"],
+                "count": [1, 4],
+            }
+        )
+        prepared = prepare_direct_adjustment(
+            partial, pool, "b", {"m": 2, "n": 2, "zero": 0}
+        )
+
+        result = solve_direct_adjustment(prepared, solver_mode="two_stage")
+        flow = solve_direct_adjustment_flow(prepared, solver_mode="two_stage")
+
+        self.assertEqual(result.diagnostic["stage1_status"], "Optimal")
+        self.assertEqual(result.diagnostic["stage1_objective"], 1)
+        self.assertEqual(result.diagnostic["stage2_slack_objective"], 1)
+        self.assertEqual(result.diagnostic["marginal_l1_error"], 1)
+        self.assertTrue(result.diagnostic["row_totals_preserved"])
+        self.assertEqual(result.diagnostic["eliminated_zero_target_columns"], 0)
+        self.assertEqual(result.counts["count"].sum(), 5)
+        self.assertEqual(flow.diagnostic["stage1_status"], "Optimal")
+        self.assertEqual(flow.diagnostic["stage1_objective"], 1)
+        self.assertEqual(flow.diagnostic["stage2_slack_objective"], 1)
+        self.assertEqual(flow.diagnostic["marginal_l1_error"], 1)
+        self.assertEqual(
+            flow.diagnostic["stage2_objective_fraction"],
+            result.diagnostic["stage2_objective_fraction"],
+        )
+
+    def test_two_stage_direct_pass_allows_inconsistent_census_totals(self):
+        marginal = pd.DataFrame(
+            [[3, 2, 2, 2]],
+            index=pd.Index([101], name="zone_id"),
+            columns=pd.MultiIndex.from_tuples(
+                [("a", "x"), ("a", "y"), ("b", "m"), ("b", "n")]
+            ),
+        )
+        result = run_direct_count_pass(
+            marginal,
+            self.pool(),
+            ["a", "b"],
+            pass_index=0,
+            solver_mode="two_stage",
+            adjustment_backend="cbc",
+        )
+
+        self.assertEqual(population_size(result.population), 5)
+        self.assertEqual(result.adjustments[1]["stage1_objective"], 1)
+        self.assertEqual(result.adjustments[1]["marginal_l1_error"], 1)
+
+        final, _ = saa_run(
+            marginal,
+            self.pool(),
+            considered_atts=["a", "b"],
+            ordered_to_adjust_atts=["a", "b"],
+            last_adjustment_order=["a", "b"],
+            max_run_time=1,
+            extra_rm_frac=0,
+            stochastic_mode="count_native_ilp",
+            output_format="counts",
+            direct_solver_mode="two_stage",
+            direct_adjustment_backend="cbc",
+        )
+        self.assertEqual(population_size(final), 5)
+
+    def test_two_stage_flow_matches_unique_cbc_solution(self):
+        cbc = run_direct_count_pass(
+            self.marginal(),
+            self.pool(),
+            ["a", "b"],
+            pass_index=0,
+            solver_mode="two_stage",
+            adjustment_backend="cbc",
+        )
+        flow = run_direct_count_pass(
+            self.marginal(),
+            self.pool(),
+            ["a", "b"],
+            pass_index=0,
+            solver_mode="two_stage",
+            adjustment_backend="min_cost_flow",
+        )
+        self.assertTrue(cbc.population.equals(flow.population))
+        self.assertEqual(flow.adjustments[1]["stage1_objective"], 0)
+
+    def test_two_stage_flow_matches_cbc_for_deficit_and_zero_targets(self):
+        partial = pl.DataFrame(
+            {
+                "zone_id": ["101", "101"],
+                "a": ["x", "missing"],
+                "count": [3, 1],
+            }
+        )
+        pool = pl.DataFrame(
+            {
+                "a": ["x", "x"],
+                "b": ["m", "n"],
+                "count": [0.1, 0.2],
+            }
+        )
+        prepared = prepare_direct_adjustment(
+            partial, pool, "b", {"m": 2, "n": 3, "zero": 0}
+        )
+
+        cbc = solve_direct_adjustment(prepared, solver_mode="two_stage")
+        flow = solve_direct_adjustment_flow(prepared, solver_mode="two_stage")
+
+        self.assertEqual(cbc.diagnostic["stage1_objective"], 1)
+        self.assertEqual(flow.diagnostic["stage1_objective"], 1)
+        self.assertEqual(flow.diagnostic["marginal_l1_error"], 1)
+        self.assertEqual(flow.diagnostic["unsupported_row_count"], 1)
+        self.assertEqual(flow.diagnostic["eliminated_zero_target_columns"], 0)
+        self.assertEqual(
+            flow.diagnostic["stage2_objective_fraction"],
+            cbc.diagnostic["stage2_objective_fraction"],
+        )
 
     def test_completely_unsupported_row_uses_zero_references(self):
         partial = pl.DataFrame(
@@ -463,6 +591,79 @@ class DirectCountFileRunTests(unittest.TestCase):
             pd.testing.assert_frame_equal(
                 actual.astype(int), expected.astype(int), check_names=False
             )
+
+    def test_two_stage_parallel_diagnostics_are_combined_and_resumable(self):
+        marginal = pd.DataFrame(
+            [[3, 2, 2, 3], [1, 3, 2, 2]],
+            index=pd.Index([101, 102], name="zone_id"),
+            columns=pd.MultiIndex.from_tuples(
+                [("a", "x"), ("a", "y"), ("b", "m"), ("b", "n")]
+            ),
+        )
+        raw_pool = pd.DataFrame(
+            {
+                "a": ["x", "x", "y", "y"],
+                "b": ["m", "n", "m", "n"],
+                "_weight": [0.1, 0.2, 0.3, 0.4],
+            }
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            marginal_path = directory / "marginal.csv"
+            pool_path = directory / "pool.csv"
+            output_path = directory / "run" / "counts.csv"
+            marginal.reset_index().to_csv(marginal_path, index=False)
+            raw_pool.to_csv(pool_path, index=False)
+
+            def execute():
+                run_saa_files(
+                    marg_file=marginal_path,
+                    pool_file=pool_path,
+                    zone_field="zone_id",
+                    output_file=output_path,
+                    considered_atts=["a", "b"],
+                    ordered_to_adjust_atts=["a", "b"],
+                    last_adjustment_order=["a", "b"],
+                    max_run_time=1,
+                    extra_rm_frac=0,
+                    stochastic_mode="count_native_ilp",
+                    pool_count_column="_weight",
+                    output_format="counts",
+                    direct_solver_mode="two_stage",
+                    direct_adjustment_backend="min_cost_flow",
+                    zone_workers=2,
+                )
+
+            execute()
+            combined = pd.read_csv(
+                output_path.parent / "meta" / "direct_count_adjustments.csv",
+                dtype={"zone": str},
+            )
+            self.assertEqual(set(combined["zone"]), {"101", "102"})
+            self.assertEqual(len(combined), 4)
+            solved = combined[combined["adjustment_index"] == 1]
+            self.assertTrue((solved["stage1_status"] == "Optimal").all())
+            self.assertTrue((solved["stage1_objective"] == 0).all())
+            for column in [
+                "stage1_solve_seconds",
+                "stage2_solve_seconds",
+                "stage1_variable_count",
+                "stage2_variable_count",
+                "stage1_constraint_count",
+                "stage2_constraint_count",
+            ]:
+                self.assertIn(column, combined.columns)
+
+            missing_sidecar = (
+                output_path.parent
+                / "zone_artifacts"
+                / "diagnostics"
+                / "zone_0001"
+                / "direct_count_adjustments.csv"
+            )
+            missing_sidecar.unlink()
+            execute()
+            self.assertTrue(missing_sidecar.exists())
 
     def test_failed_zone_does_not_publish_partial_output(self):
         marginal = pd.DataFrame(

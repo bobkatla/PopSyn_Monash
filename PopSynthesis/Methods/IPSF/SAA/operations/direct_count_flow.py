@@ -5,6 +5,7 @@ from __future__ import annotations
 from fractions import Fraction
 import json
 import time
+from typing import Literal
 
 import networkx as nx
 import polars as pl
@@ -41,6 +42,11 @@ def _build_result(
     arc_count: int,
     solve_seconds: float,
     trivial: bool,
+    solver_mode: Literal["single_stage", "two_stage"],
+    stage1_objective: int = 0,
+    stage1_solve_seconds: float = 0.0,
+    stage1_node_count: int = 0,
+    stage1_arc_count: int = 0,
 ) -> DirectAdjustmentResult:
     rows: list[dict[str, object]] = []
     for row_index, row_key in enumerate(data.row_keys):
@@ -76,31 +82,53 @@ def _build_result(
         if pool_value == 0 and values[(row_index, column_index)] > 0
     )
     active_columns = sum(target > 0 for target in data.target_counts)
+    marginal_l1_error = sum(
+        abs(achieved[state] - target)
+        for state, target in zip(data.states, data.target_counts)
+    )
+    if solver_mode == "two_stage" and marginal_l1_error != stage1_objective:
+        raise RuntimeError(
+            f"Flow Stage 2 for {data.attribute!r} has marginal error "
+            f"{marginal_l1_error}, expected {stage1_objective}"
+        )
     diagnostic = {
         "mode": "count_native_ilp",
         "adjustment_backend": "min_cost_flow",
-        "solver_mode": "exact_flow",
+        "solver_mode": (
+            "two_stage" if solver_mode == "two_stage" else "exact_flow"
+        ),
         "zone": data.zone,
         "active_attribute": data.attribute,
         "prior_row_count": len(data.row_keys),
         "ilp_cell_count": len(data.row_keys) * len(data.states),
         "active_column_count": active_columns,
-        "eliminated_zero_target_columns": len(data.states) - active_columns,
-        "stage1_status": "SkippedExactConstraints",
-        "stage1_objective": 0.0,
+        "eliminated_zero_target_columns": (
+            0
+            if solver_mode == "two_stage"
+            else len(data.states) - active_columns
+        ),
+        "stage1_status": (
+            "Optimal" if solver_mode == "two_stage" else "SkippedExactConstraints"
+        ),
+        "stage1_objective": stage1_objective,
+        "stage1_solver_gap": 0 if solver_mode == "two_stage" else None,
+        "stage1_solve_seconds": stage1_solve_seconds,
+        "stage1_variable_count": stage1_arc_count,
+        "stage1_constraint_count": stage1_node_count,
         "stage2_status": "Optimal",
         "stage2_objective": float(objective),
         "stage2_objective_fraction": f"{objective.numerator}/{objective.denominator}",
         "stage2_objective_scale": None,
         "stage2_solver_gap": 0,
+        "stage2_slack_objective": stage1_objective,
+        "stage2_solve_seconds": solve_seconds,
+        "stage2_variable_count": arc_count,
+        "stage2_constraint_count": node_count,
         "target_counts_json": json.dumps(
             dict(zip(data.states, data.target_counts)), sort_keys=True
         ),
         "achieved_counts_json": json.dumps(achieved, sort_keys=True),
-        "marginal_l1_error": sum(
-            abs(achieved[state] - target)
-            for state, target in zip(data.states, data.target_counts)
-        ),
+        "marginal_l1_error": marginal_l1_error,
         "row_totals_preserved": all(
             sum(values[(row_index, column_index)] for column_index in range(len(data.states)))
             == expected
@@ -123,9 +151,13 @@ def _build_result(
 
 def solve_direct_adjustment_flow(
     data: DirectAdjustmentInput,
+    *,
+    solver_mode: Literal["single_stage", "two_stage"] = "single_stage",
 ) -> DirectAdjustmentResult:
     """Solve the dense integer transportation problem exactly as min-cost flow."""
 
+    if solver_mode not in {"single_stage", "two_stage"}:
+        raise ValueError("solver_mode must be 'single_stage' or 'two_stage'")
     started = time.perf_counter()
     row_count = len(data.row_keys)
     column_count = len(data.states)
@@ -138,7 +170,7 @@ def solve_direct_adjustment_flow(
         for column_index in range(column_count)
     }
 
-    if len(active_columns) == 1:
+    if solver_mode == "single_stage" and len(active_columns) == 1:
         column_index = active_columns[0]
         for row_index, row_total in enumerate(data.row_totals):
             values[(row_index, column_index)] = row_total
@@ -150,8 +182,9 @@ def solve_direct_adjustment_flow(
             arc_count=0,
             solve_seconds=0.0,
             trivial=True,
+            solver_mode=solver_mode,
         )
-    if row_count == 1:
+    if solver_mode == "single_stage" and row_count == 1:
         for column_index in active_columns:
             values[(0, column_index)] = data.target_counts[column_index]
         return _build_result(
@@ -162,21 +195,104 @@ def solve_direct_adjustment_flow(
             arc_count=0,
             solve_seconds=0.0,
             trivial=True,
+            solver_mode=solver_mode,
         )
+
+    model_columns = (
+        list(range(column_count))
+        if solver_mode == "two_stage"
+        else active_columns
+    )
+    total_supply = sum(data.row_totals)
+    target_total = sum(data.target_counts)
+    stage1_objective = (
+        abs(total_supply - target_total) if solver_mode == "two_stage" else 0
+    )
+    stage1_solve_seconds = 0.0
+    stage1_node_count = 0
+    stage1_arc_count = 0
+    if solver_mode == "two_stage":
+        stage1_graph = nx.MultiDiGraph()
+        for row_index, supply in enumerate(data.row_totals):
+            stage1_graph.add_node(("row", row_index), demand=-supply)
+        for column_index in model_columns:
+            stage1_graph.add_node(
+                ("column", column_index),
+                demand=data.target_counts[column_index],
+            )
+        for row_index, supply in enumerate(data.row_totals):
+            for column_index in model_columns:
+                stage1_graph.add_edge(
+                    ("row", row_index),
+                    ("column", column_index),
+                    capacity=supply,
+                    weight=0,
+                )
+        balance_demand = total_supply - target_total
+        if balance_demand:
+            stage1_graph.add_node("balance", demand=balance_demand)
+            if balance_demand > 0:
+                for column_index in model_columns:
+                    stage1_graph.add_edge(
+                        ("column", column_index),
+                        "balance",
+                        capacity=stage1_objective,
+                        weight=1,
+                    )
+            else:
+                for column_index in model_columns:
+                    stage1_graph.add_edge(
+                        "balance",
+                        ("column", column_index),
+                        capacity=data.target_counts[column_index],
+                        weight=1,
+                    )
+        stage1_node_count = stage1_graph.number_of_nodes()
+        stage1_arc_count = stage1_graph.number_of_edges()
+        stage1_started = time.perf_counter()
+        stage1_cost, _ = nx.network_simplex(stage1_graph)
+        stage1_solve_seconds = time.perf_counter() - stage1_started
+        if stage1_cost != stage1_objective:
+            raise RuntimeError(
+                f"Flow Stage 1 for {data.attribute!r} returned objective "
+                f"{stage1_cost}, expected {stage1_objective}"
+            )
 
     graph = nx.MultiDiGraph()
     for row_index, row_total in enumerate(data.row_totals):
         graph.add_node(("row", row_index), demand=-row_total)
-    for column_index in active_columns:
+    for column_index in model_columns:
         graph.add_node(
             ("column", column_index),
             demand=data.target_counts[column_index],
         )
+    balance_demand = total_supply - target_total
+    if solver_mode == "two_stage" and balance_demand:
+        graph.add_node("balance", demand=balance_demand)
+        if balance_demand > 0:
+            for column_index in model_columns:
+                graph.add_edge(
+                    ("column", column_index),
+                    "balance",
+                    capacity=stage1_objective,
+                    weight=0,
+                )
+        else:
+            for column_index in model_columns:
+                graph.add_edge(
+                    "balance",
+                    ("column", column_index),
+                    capacity=data.target_counts[column_index],
+                    weight=0,
+                )
 
     edge_keys: dict[tuple[int, int], list[int]] = {}
     for row_index, row_total in enumerate(data.row_totals):
-        for column_index in active_columns:
-            capacity = min(row_total, data.target_counts[column_index])
+        for column_index in model_columns:
+            column_capacity = data.target_counts[column_index]
+            if solver_mode == "two_stage" and balance_demand > 0:
+                column_capacity += stage1_objective
+            capacity = min(row_total, column_capacity)
             keys = []
             for piece_capacity, cost in _cell_pieces(
                 data.references[row_index][column_index], capacity
@@ -209,4 +325,9 @@ def solve_direct_adjustment_flow(
         arc_count=graph.number_of_edges(),
         solve_seconds=solve_seconds,
         trivial=False,
+        solver_mode=solver_mode,
+        stage1_objective=stage1_objective,
+        stage1_solve_seconds=stage1_solve_seconds,
+        stage1_node_count=stage1_node_count,
+        stage1_arc_count=stage1_arc_count,
     )

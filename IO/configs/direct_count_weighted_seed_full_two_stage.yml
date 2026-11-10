@@ -1,0 +1,39 @@
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts:
+    - hhsize
+    - totalvehs
+    - dwelltype
+    - owndwell
+    - hhinc
+  ordered_to_adjust_atts:
+    - hhsize
+    - totalvehs
+    - dwelltype
+    - owndwell
+    - hhinc
+  last_adjustment_order:
+    - hhsize
+    - totalvehs
+    - dwelltype
+    - owndwell
+    - hhinc
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: weighted_seed_flow_two_stage
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: weighted_seed_flow_two_stage
+  hh_syn_name: household_counts.csv
+  reruns: 3

@@ -44,6 +44,7 @@ def benchmark_zone(
     zone_marginal: pd.DataFrame,
     pool: pl.DataFrame,
     flow_repeats: int,
+    solver_mode: str = "single_stage",
 ) -> list[dict[str, object]]:
     zone, targets = _targets_by_attribute(zone_marginal, ATTRIBUTES)
     current = _initial_counts(zone, targets)
@@ -66,18 +67,29 @@ def benchmark_zone(
         prepare_seconds = perf_counter() - prepare_started
 
         cbc_started = perf_counter()
-        cbc = solve_direct_adjustment(prepared)
+        cbc = solve_direct_adjustment(prepared, solver_mode=solver_mode)
         cbc_seconds = perf_counter() - cbc_started
 
         flow_results = []
         flow_times = []
         for _ in range(flow_repeats):
             flow_started = perf_counter()
-            flow_results.append(solve_direct_adjustment_flow(prepared))
+            flow_results.append(
+                solve_direct_adjustment_flow(
+                    prepared, solver_mode=solver_mode
+                )
+            )
             flow_times.append(perf_counter() - flow_started)
         flow = flow_results[0]
         if any(not flow.counts.equals(result.counts) for result in flow_results[1:]):
             raise AssertionError(f"Flow was not repeatable for {zone}.{attribute}")
+        if (
+            cbc.diagnostic["stage1_objective"]
+            != flow.diagnostic["stage1_objective"]
+        ):
+            raise AssertionError(
+                f"Stage 1 objective mismatch for {zone}.{attribute}"
+            )
         if (
             cbc.diagnostic["stage2_objective_fraction"]
             != flow.diagnostic["stage2_objective_fraction"]
@@ -98,6 +110,8 @@ def benchmark_zone(
             "dense_cells": len(prepared.row_keys) * len(prepared.states),
             "active_columns": sum(value > 0 for value in prepared.target_counts),
             "unsupported_rows": len(prepared.unsupported_rows),
+            "solver_mode": solver_mode,
+            "stage1_objective": cbc.diagnostic["stage1_objective"],
             "objective_fraction": cbc.diagnostic["stage2_objective_fraction"],
         }
         records.append({**common, "backend": "cbc", "solve_seconds": cbc_seconds})
@@ -124,6 +138,7 @@ def benchmark_zone(
                 pool,
                 ATTRIBUTES,
                 pass_index=0,
+                solver_mode=solver_mode,
                 adjustment_backend="min_cost_flow",
                 conditional_cache={},
             ).population
@@ -150,6 +165,11 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--zones", nargs="+", type=int, default=DEFAULT_ZONES)
     parser.add_argument("--flow-repeats", type=int, default=3)
+    parser.add_argument(
+        "--solver-mode",
+        choices=["single_stage", "two_stage"],
+        default="single_stage",
+    )
     parser.add_argument(
         "--marginals",
         type=Path,
@@ -180,7 +200,12 @@ if __name__ == "__main__":
     for zone in arguments.zones:
         print(f"Benchmarking zone {zone}", flush=True)
         benchmark_records.extend(
-            benchmark_zone(marginals.loc[[zone]], pool, arguments.flow_repeats)
+            benchmark_zone(
+                marginals.loc[[zone]],
+                pool,
+                arguments.flow_repeats,
+                arguments.solver_mode,
+            )
         )
     arguments.output.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(benchmark_records).to_csv(arguments.output, index=False)

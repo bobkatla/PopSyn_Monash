@@ -47,9 +47,16 @@ def _run_direct_zone_worker(
         raise RuntimeError("Direct-count worker was not initialized")
     kwargs = dict(_DIRECT_WORKER_KWARGS)
     kwargs["direct_pool_cache"] = _DIRECT_WORKER_CACHE
+    if kwargs.get("direct_solver_mode") == "two_stage":
+        kwargs["meta_output_dir"] = _zone_diagnostic_dir(artifact_path)
+        kwargs["direct_diagnostics_output"] = True
     result, _ = saa_run(zone_marginal, _DIRECT_WORKER_POOL, **kwargs)
     _write_csv_atomically(result, artifact_path)
     return zone_number, str(zone)
+
+
+def _zone_diagnostic_dir(artifact_path: Path) -> Path:
+    return artifact_path.parent / "diagnostics" / artifact_path.stem
 
 
 def process_data_from_files(marg_file: Path, pool_file: Path, zone_field: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -206,6 +213,19 @@ def _validate_zone_artifact(
         raise ValueError(f"Invalid checkpoint counts in {artifact_path}")
 
 
+def _validate_zone_diagnostics(diagnostic_dir: Path, zone: object) -> None:
+    for file_name in [
+        "direct_count_adjustments.csv",
+        "direct_count_loopbacks.csv",
+    ]:
+        path = diagnostic_dir / file_name
+        frame = pd.read_csv(path, dtype={"zone": str})
+        if frame.empty or "zone" not in frame.columns:
+            raise ValueError(f"Invalid diagnostic checkpoint in {path}")
+        if frame["zone"].drop_duplicates().tolist() != [str(zone)]:
+            raise ValueError(f"Invalid diagnostic checkpoint zone in {path}")
+
+
 def _combine_zone_artifacts_atomically(
     artifact_paths: list[Path], output_file: Path
 ) -> None:
@@ -329,13 +349,30 @@ def run_saa(
             artifact_dir / f"zone_{zone_number:04d}.csv"
             for zone_number in range(1, len(marg) + 1)
         ]
+        diagnostics_required = direct_solver_mode == "two_stage"
+        diagnostic_dirs = [
+            _zone_diagnostic_dir(artifact_path)
+            for artifact_path in artifact_paths
+        ]
         total_zones = len(marg)
         missing_tasks = []
         completed = 0
         for zone_number, zone in enumerate(marg.index, start=1):
             artifact_path = artifact_paths[zone_number - 1]
-            if artifact_path.exists():
+            diagnostic_dir = diagnostic_dirs[zone_number - 1]
+            diagnostics_exist = all(
+                (diagnostic_dir / file_name).exists()
+                for file_name in [
+                    "direct_count_adjustments.csv",
+                    "direct_count_loopbacks.csv",
+                ]
+            )
+            if artifact_path.exists() and (
+                not diagnostics_required or diagnostics_exist
+            ):
                 _validate_zone_artifact(artifact_path, zone, expected_columns)
+                if diagnostics_required:
+                    _validate_zone_diagnostics(diagnostic_dir, zone)
                 completed += 1
             else:
                 missing_tasks.append(
@@ -353,6 +390,11 @@ def run_saa(
                     )
                     zone_kwargs = dict(run_kwargs)
                     zone_kwargs["direct_pool_cache"] = cache
+                    if diagnostics_required:
+                        zone_kwargs["meta_output_dir"] = _zone_diagnostic_dir(
+                            artifact_path
+                        )
+                        zone_kwargs["direct_diagnostics_output"] = True
                     zone_result, _ = saa_run(
                         zone_marginal, condensed_pool, **zone_kwargs
                     )
@@ -397,6 +439,20 @@ def run_saa(
                 finally:
                     print()
         _combine_zone_artifacts_atomically(artifact_paths, output_file)
+        if diagnostics_required:
+            combined_meta_dir = (
+                meta_output_dir
+                if meta_output_dir is not None
+                else output_file.parent / "meta"
+            )
+            for file_name in [
+                "direct_count_adjustments.csv",
+                "direct_count_loopbacks.csv",
+            ]:
+                _combine_zone_artifacts_atomically(
+                    [directory / file_name for directory in diagnostic_dirs],
+                    combined_meta_dir / file_name,
+                )
         print(f"Combined {total_zones} zone checkpoints into {output_file}")
         return
 

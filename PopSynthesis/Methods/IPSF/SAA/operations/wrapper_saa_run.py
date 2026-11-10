@@ -3,6 +3,7 @@
 
 import json
 import pandas as pd
+from tempfile import NamedTemporaryFile
 from PopSynthesis.Methods.IPSF.const import (
     data_dir,
     small_test_dir,
@@ -157,6 +158,7 @@ def saa_run(
         "cbc", "min_cost_flow"
     ] = "cbc",
     direct_pool_cache: dict | None = None,
+    direct_diagnostics_output: bool = False,
 ) -> Tuple[pl.DataFrame, List[int]]:
     """Run one of the complete-record, legacy, or direct-count SAA modes."""
     if stochastic_mode not in {
@@ -202,6 +204,7 @@ def saa_run(
             direct_solver_mode,
             direct_adjustment_backend,
             direct_pool_cache,
+            direct_diagnostics_output,
         )
     with zero_cell_scope():
         if stochastic_mode == "legacy_exact":
@@ -466,13 +469,36 @@ def _validate_direct_mode_inputs(
         raise ValueError("Invalid count_native_ilp configuration: " + "; ".join(errors))
 
 
+def _write_frame_atomically(frame: pd.DataFrame, output_file: Path) -> None:
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path: Path | None = None
+    try:
+        with NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            newline="",
+            dir=output_file.parent,
+            prefix=f".{output_file.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as temporary:
+            temporary_path = Path(temporary.name)
+            frame.to_csv(temporary, index=False)
+        temporary_path.replace(output_file)
+    finally:
+        if temporary_path is not None and temporary_path.exists():
+            temporary_path.unlink()
+
+
 def _write_direct_diagnostics(meta_output_dir, adjustments, loopbacks):
     meta_output_dir.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame(adjustments).to_csv(
-        meta_output_dir / "direct_count_adjustments.csv", index=False
+    _write_frame_atomically(
+        pd.DataFrame(adjustments),
+        meta_output_dir / "direct_count_adjustments.csv",
     )
-    pd.DataFrame(loopbacks).to_csv(
-        meta_output_dir / "direct_count_loopbacks.csv", index=False
+    _write_frame_atomically(
+        pd.DataFrame(loopbacks),
+        meta_output_dir / "direct_count_loopbacks.csv",
     )
 
 
@@ -492,6 +518,7 @@ def _saa_run_count_native_ilp(
     direct_solver_mode,
     direct_adjustment_backend,
     direct_pool_cache,
+    direct_diagnostics_output,
 ):
     """Run progressive direct-count passes with existing count loop-backs."""
 
@@ -578,6 +605,7 @@ def _saa_run_count_native_ilp(
         loopbacks.append(
             {
                 "mode": "count_native_ilp",
+                "zone": str(original_marg.index[0]),
                 "pass": pass_index - 1,
                 "pass_order_json": json.dumps(pass_order),
                 "pass_target_population": target_sizes[-1],
@@ -601,9 +629,10 @@ def _saa_run_count_native_ilp(
     final_marg = final_marg.reindex(
         index=expected.index, columns=expected.columns, fill_value=0
     )
-    if not final_marg.astype(int).equals(expected.astype(int)):
+    exact_marginals = final_marg.astype(int).equals(expected.astype(int))
+    if not exact_marginals and direct_solver_mode != "two_stage":
         raise AssertionError("Final direct-count population does not match marginals")
-    if output_each_step:
+    if output_each_step or direct_diagnostics_output:
         _write_direct_diagnostics(meta_output_dir, adjustments, loopbacks)
     selected = final_count.select(
         [zone_field, *considered_atts, count_field]

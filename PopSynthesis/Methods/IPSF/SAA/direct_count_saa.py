@@ -40,7 +40,10 @@ def _integer_count(value: object, label: str) -> int:
 
 
 def _targets_by_attribute(
-    residual_marginals: pd.DataFrame, ordered_attributes: Sequence[str]
+    residual_marginals: pd.DataFrame,
+    ordered_attributes: Sequence[str],
+    *,
+    enforce_consistent_totals: bool = True,
 ) -> tuple[str, dict[str, dict[str, int]]]:
     if not isinstance(residual_marginals.columns, pd.MultiIndex):
         raise ValueError("Marginal columns must be a two-level MultiIndex")
@@ -76,7 +79,7 @@ def _targets_by_attribute(
             )
         targets[attribute] = states
         totals[attribute] = sum(states.values())
-    if len(set(totals.values())) != 1:
+    if enforce_consistent_totals and len(set(totals.values())) != 1:
         raise ValueError(f"Marginal population totals are inconsistent: {totals}")
     return zone, targets
 
@@ -123,7 +126,11 @@ def run_direct_count_pass(
         )
     if conditional_cache is None:
         conditional_cache = {}
-    zone, targets = _targets_by_attribute(residual_marginals, order)
+    zone, targets = _targets_by_attribute(
+        residual_marginals,
+        order,
+        enforce_consistent_totals=solver_mode != "two_stage",
+    )
     _validate_pool(count_pool, order)
     first_attribute = order[0]
     first_rows = [
@@ -153,10 +160,18 @@ def run_direct_count_pass(
             "ilp_cell_count": 0,
             "stage1_status": "NotRun",
             "stage1_objective": None,
+            "stage1_solver_gap": None,
+            "stage1_solve_seconds": 0.0,
+            "stage1_variable_count": 0,
+            "stage1_constraint_count": 0,
             "stage2_status": "NotRun",
             "stage2_objective": None,
             "stage2_objective_scale": None,
             "stage2_solver_gap": None,
+            "stage2_slack_objective": None,
+            "stage2_solve_seconds": 0.0,
+            "stage2_variable_count": 0,
+            "stage2_constraint_count": 0,
             "target_counts_json": json.dumps(
                 targets[first_attribute], sort_keys=True
             ),
@@ -195,7 +210,9 @@ def run_direct_count_pass(
             pool_lookup=conditional_cache[cache_key],
         )
         if adjustment_backend == "min_cost_flow":
-            solved = solve_direct_adjustment_flow(prepared)
+            solved = solve_direct_adjustment_flow(
+                prepared, solver_mode=solver_mode
+            )
         else:
             solved = solve_direct_adjustment(prepared, solver_mode=solver_mode)
         current = solved.counts
