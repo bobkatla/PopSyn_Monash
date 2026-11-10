@@ -104,6 +104,7 @@ def _build_result(
         "active_attribute": data.attribute,
         "direct_reference_mode": data.direct_reference_mode,
         "zero_cell_policy": data.zero_cell_policy,
+        "zero_cell_column_scope": data.zero_cell_column_scope,
         "prior_row_count": len(data.row_keys),
         "ilp_cell_count": len(data.row_keys) * len(data.states),
         "permitted_cell_count": permitted_cell_count,

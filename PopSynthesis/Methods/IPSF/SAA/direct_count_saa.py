@@ -16,6 +16,7 @@ from PopSynthesis.Methods.IPSF.SAA.operations.count_tables import population_siz
 from PopSynthesis.Methods.IPSF.SAA.operations.direct_count_ilp import (
     DIRECT_REFERENCE_MODES,
     PoolLookup,
+    ZERO_CELL_COLUMN_SCOPES,
     ZERO_CELL_POLICIES,
     build_pool_lookup,
     prepare_direct_adjustment,
@@ -138,7 +139,10 @@ def run_direct_count_pass(
     solver_mode: Literal["single_stage", "two_stage"] = "single_stage",
     adjustment_backend: Literal["cbc", "min_cost_flow"] = "cbc",
     zero_cell_policy: Literal[
-        "unrestricted", "seed_only", "relax_empty_rows_columns"
+        "unrestricted",
+        "seed_only",
+        "relax_empty_rows_columns",
+        "relax_empty_rows_global_columns",
     ] = "unrestricted",
     direct_reference_mode: Literal["pool", "all_zero"] = "pool",
     conditional_cache: dict[
@@ -154,8 +158,9 @@ def run_direct_count_pass(
         )
     if zero_cell_policy not in ZERO_CELL_POLICIES:
         raise ValueError(
-            "zero_cell_policy must be 'unrestricted', 'seed_only', or "
-            "'relax_empty_rows_columns'"
+            "zero_cell_policy must be 'unrestricted', 'seed_only', "
+            "'relax_empty_rows_columns', or "
+            "'relax_empty_rows_global_columns'"
         )
     if direct_reference_mode not in DIRECT_REFERENCE_MODES:
         raise ValueError("direct_reference_mode must be 'pool' or 'all_zero'")
@@ -208,6 +213,7 @@ def run_direct_count_pass(
             "active_attribute": first_attribute,
             "direct_reference_mode": direct_reference_mode,
             "zero_cell_policy": zero_cell_policy,
+            "zero_cell_column_scope": ZERO_CELL_COLUMN_SCOPES[zero_cell_policy],
             "pass_target_population": target_population,
             "prior_row_count": 0,
             "ilp_cell_count": 0,

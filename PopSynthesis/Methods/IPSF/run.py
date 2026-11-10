@@ -20,6 +20,9 @@ from PopSynthesis.Methods.IPSF.const import (
     zone_field as internal_zone_field,
 )
 from PopSynthesis.Methods.IPSF.SAA.operations.wrapper_saa_run import saa_run
+from PopSynthesis.Methods.IPSF.SAA.operations.direct_count_ilp import (
+    ZERO_CELL_COLUMN_SCOPES,
+)
 from PopSynthesis.Methods.IPSF.utils.condensed import condense_df
 
 
@@ -282,7 +285,10 @@ def run_saa(
             "cbc", "min_cost_flow"
         ] = "cbc",
         zero_cell_policy: Literal[
-            "unrestricted", "seed_only", "relax_empty_rows_columns"
+            "unrestricted",
+            "seed_only",
+            "relax_empty_rows_columns",
+            "relax_empty_rows_global_columns",
         ] = "unrestricted",
         direct_reference_mode: Literal["pool", "all_zero"] = "pool",
         zone_workers: int = 1,
@@ -302,10 +308,12 @@ def run_saa(
         "unrestricted",
         "seed_only",
         "relax_empty_rows_columns",
+        "relax_empty_rows_global_columns",
     }:
         raise ValueError(
-            "zero_cell_policy must be 'unrestricted', 'seed_only', or "
-            "'relax_empty_rows_columns'"
+            "zero_cell_policy must be 'unrestricted', 'seed_only', "
+            "'relax_empty_rows_columns', or "
+            "'relax_empty_rows_global_columns'"
         )
     if direct_reference_mode not in {"pool", "all_zero"}:
         raise ValueError("direct_reference_mode must be 'pool' or 'all_zero'")
@@ -388,6 +396,7 @@ def run_saa(
             "direct_solver_mode": direct_solver_mode,
             "direct_adjustment_backend": direct_adjustment_backend,
             "zero_cell_policy": zero_cell_policy,
+            "zero_cell_column_scope": ZERO_CELL_COLUMN_SCOPES[zero_cell_policy],
             "direct_reference_mode": direct_reference_mode,
         }
         _prepare_zone_artifact_directory(

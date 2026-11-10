@@ -180,6 +180,7 @@ def parse_args() -> argparse.Namespace:
             "unrestricted",
             "seed_only",
             "relax_empty_rows_columns",
+            "relax_empty_rows_global_columns",
         ],
         default="unrestricted",
     )

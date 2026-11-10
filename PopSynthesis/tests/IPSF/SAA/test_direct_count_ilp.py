@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import polars as pl
+import yaml
 
 from PopSynthesis.Methods.IPSF.SAA.direct_count_saa import run_direct_count_pass
 from PopSynthesis.Methods.IPSF.SAA.operations.count_tables import (
@@ -516,6 +517,28 @@ class DirectCountILPTests(DirectCountFixture):
 
 
 class ZeroCellPolicyTests(DirectCountFixture):
+    def test_four_policy_experiment_config_has_one_rerun_each(self):
+        config_path = (
+            Path(__file__).resolve().parents[4]
+            / "IO"
+            / "configs"
+            / "direct_count_zero_cell_policies.yml"
+        )
+        runs = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(len(runs), 4)
+        self.assertEqual(
+            [run["zero_cell_policy"] for run in runs],
+            [
+                "unrestricted",
+                "seed_only",
+                "relax_empty_rows_columns",
+                "relax_empty_rows_global_columns",
+            ],
+        )
+        self.assertTrue(all(run["reruns"] == 1 for run in runs))
+        self.assertEqual(len({run["output_name"] for run in runs}), 4)
+
     def test_unrestricted_default_matches_explicit_policy(self):
         partial = pl.DataFrame(
             {"zone_id": ["101", "101"], "a": ["x", "y"], "count": [3, 2]}
@@ -582,46 +605,114 @@ class ZeroCellPolicyTests(DirectCountFixture):
                 zero_cell_policy="seed_only",
             )
 
-    def test_relax_policy_opens_unsupported_row(self):
+    def test_both_relax_policies_open_unsupported_row(self):
         partial = pl.DataFrame(
             {"zone_id": ["101"], "a": ["missing"], "count": [2]}
         )
-        prepared = prepare_direct_adjustment(
-            partial,
-            self.pool(),
-            "b",
-            {"m": 1, "n": 1},
-            zero_cell_policy="relax_empty_rows_columns",
-        )
-        self.assertEqual(prepared.permitted_cells, ((True, True),))
-        self.assertEqual(prepared.relaxed_cell_count, 2)
-        result = solve_direct_adjustment_flow(prepared, solver_mode="two_stage")
-        self.assertEqual(result.diagnostic["stage1_objective"], 0)
-        self.assertEqual(result.diagnostic["seed_zero_cells_made_positive"], 2)
+        for policy in (
+            "relax_empty_rows_columns",
+            "relax_empty_rows_global_columns",
+        ):
+            with self.subTest(policy=policy):
+                prepared = prepare_direct_adjustment(
+                    partial,
+                    self.pool(),
+                    "b",
+                    {"m": 1, "n": 1},
+                    zero_cell_policy=policy,
+                )
+                self.assertEqual(prepared.permitted_cells, ((True, True),))
+                self.assertEqual(prepared.relaxed_cell_count, 2)
+                result = solve_direct_adjustment_flow(
+                    prepared, solver_mode="two_stage"
+                )
+                self.assertEqual(result.diagnostic["stage1_objective"], 0)
+                self.assertEqual(
+                    result.diagnostic["seed_zero_cells_made_positive"], 2
+                )
 
-    def test_relax_policy_opens_unsupported_column_only(self):
+    def test_both_relax_policies_open_globally_unsupported_column(self):
         partial = pl.DataFrame(
             {"zone_id": ["101", "101"], "a": ["x", "y"], "count": [3, 2]}
         )
         pool = pl.DataFrame(
             {"a": ["x", "y"], "b": ["m", "m"], "count": [1, 1]}
         )
-        prepared = prepare_direct_adjustment(
+        for policy in (
+            "relax_empty_rows_columns",
+            "relax_empty_rows_global_columns",
+        ):
+            with self.subTest(policy=policy):
+                prepared = prepare_direct_adjustment(
+                    partial,
+                    pool,
+                    "b",
+                    {"m": 2, "n": 3, "zero": 0},
+                    zero_cell_policy=policy,
+                )
+                self.assertEqual(
+                    prepared.permitted_cells,
+                    ((True, True, False), (True, True, False)),
+                )
+                self.assertEqual(prepared.relaxed_cell_count, 2)
+                result = solve_direct_adjustment_flow(
+                    prepared, solver_mode="two_stage"
+                )
+                self.assertEqual(result.diagnostic["stage1_objective"], 0)
+                self.assertEqual(
+                    result.counts.filter(pl.col("b") == "zero").height, 0
+                )
+
+    def test_relax_column_scope_active_versus_global_pool(self):
+        partial = pl.DataFrame(
+            {"zone_id": ["101"], "a": ["x"], "count": [3]}
+        )
+        pool = pl.DataFrame(
+            {
+                "a": ["x", "y"],
+                "b": ["m", "n"],
+                "count": [1, 1],
+            }
+        )
+        active = prepare_direct_adjustment(
             partial,
             pool,
             "b",
-            {"m": 2, "n": 3, "zero": 0},
+            {"m": 1, "n": 2},
             zero_cell_policy="relax_empty_rows_columns",
         )
-        self.assertEqual(
-            prepared.permitted_cells,
-            ((True, True, False), (True, True, False)),
+        global_pool = prepare_direct_adjustment(
+            partial,
+            pool,
+            "b",
+            {"m": 1, "n": 2},
+            zero_cell_policy="relax_empty_rows_global_columns",
         )
-        self.assertEqual(prepared.relaxed_cell_count, 2)
-        result = solve_direct_adjustment_flow(prepared, solver_mode="two_stage")
-        self.assertEqual(result.diagnostic["stage1_objective"], 0)
+
+        self.assertEqual(active.permitted_cells, ((True, True),))
+        self.assertEqual(active.unsupported_columns, ("n",))
+        self.assertEqual(active.zero_cell_column_scope, "active_rows")
+        self.assertEqual(global_pool.permitted_cells, ((True, False),))
+        self.assertEqual(global_pool.unsupported_columns, ())
+        self.assertEqual(global_pool.zero_cell_column_scope, "global_pool")
+
+        active_cbc = solve_direct_adjustment(active, solver_mode="two_stage")
+        active_flow = solve_direct_adjustment_flow(active, solver_mode="two_stage")
+        global_cbc = solve_direct_adjustment(global_pool, solver_mode="two_stage")
+        global_flow = solve_direct_adjustment_flow(
+            global_pool, solver_mode="two_stage"
+        )
+        self.assertEqual(active_cbc.diagnostic["stage1_objective"], 0)
+        self.assertEqual(active_flow.diagnostic["stage1_objective"], 0)
+        self.assertEqual(global_cbc.diagnostic["stage1_objective"], 4)
+        self.assertEqual(global_flow.diagnostic["stage1_objective"], 4)
         self.assertEqual(
-            result.counts.filter(pl.col("b") == "zero").height, 0
+            active_cbc.diagnostic["stage2_objective_fraction"],
+            active_flow.diagnostic["stage2_objective_fraction"],
+        )
+        self.assertEqual(
+            global_cbc.diagnostic["stage2_objective_fraction"],
+            global_flow.diagnostic["stage2_objective_fraction"],
         )
 
     def test_missing_first_attribute_support_and_zero_target_exemption(self):
@@ -994,6 +1085,20 @@ class DirectCountFileRunTests(unittest.TestCase):
             missing_sidecar.unlink()
             execute()
             self.assertTrue(missing_sidecar.exists())
+
+            manifest_path = output_path.parent / "zone_artifacts" / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            self.assertEqual(
+                manifest["settings"]["zero_cell_column_scope"],
+                "not_applicable",
+            )
+            manifest["settings"].pop("zero_cell_column_scope")
+            manifest_path.write_text(
+                json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "different inputs or settings"):
+                execute()
 
     def test_all_zero_file_run_is_parallel_deterministic_and_has_null_pool_hash(self):
         marginal = pd.DataFrame(

@@ -30,6 +30,13 @@ ZERO_CELL_POLICIES = {
     "unrestricted",
     "seed_only",
     "relax_empty_rows_columns",
+    "relax_empty_rows_global_columns",
+}
+ZERO_CELL_COLUMN_SCOPES = {
+    "unrestricted": "not_applicable",
+    "seed_only": "not_applicable",
+    "relax_empty_rows_columns": "active_rows",
+    "relax_empty_rows_global_columns": "global_pool",
 }
 DIRECT_REFERENCE_MODES = {"pool", "all_zero"}
 
@@ -49,6 +56,7 @@ class DirectAdjustmentInput:
     unsupported_columns: tuple[str, ...]
     direct_reference_mode: str
     zero_cell_policy: str
+    zero_cell_column_scope: str
     permitted_cells: tuple[tuple[bool, ...], ...]
     relaxed_cell_count: int
 
@@ -73,8 +81,9 @@ def prepare_direct_adjustment(
 
     if zero_cell_policy not in ZERO_CELL_POLICIES:
         raise ValueError(
-            "zero_cell_policy must be 'unrestricted', 'seed_only', or "
-            "'relax_empty_rows_columns'"
+            "zero_cell_policy must be 'unrestricted', 'seed_only', "
+            "'relax_empty_rows_columns', or "
+            "'relax_empty_rows_global_columns'"
         )
     if direct_reference_mode not in DIRECT_REFERENCE_MODES:
         raise ValueError("direct_reference_mode must be 'pool' or 'all_zero'")
@@ -158,18 +167,36 @@ def prepare_direct_adjustment(
             )
         )
 
-    unsupported_columns = tuple(
-        state
-        for column_index, state in enumerate(states)
-        if sum(row[column_index] for row in pool_rows) == 0
-    )
-    unsupported_row_indices = {
-        index for index, row in enumerate(pool_rows) if sum(row) == 0
-    }
-    unsupported_column_indices = {
+    if direct_reference_mode == "pool":
+        assert count_pool is not None
+        globally_supported_states = {
+            str(value)
+            for value in count_pool[attribute].drop_nulls().unique().to_list()
+        }
+    else:
+        globally_supported_states = set()
+    active_unsupported_column_indices = {
         index
         for index in range(len(states))
         if sum(row[index] for row in pool_rows) == 0
+    }
+    global_unsupported_column_indices = {
+        index
+        for index, state in enumerate(states)
+        if state not in globally_supported_states
+    }
+    unsupported_column_indices = (
+        global_unsupported_column_indices
+        if zero_cell_policy == "relax_empty_rows_global_columns"
+        else active_unsupported_column_indices
+    )
+    unsupported_columns = tuple(
+        state
+        for index, state in enumerate(states)
+        if index in unsupported_column_indices
+    )
+    unsupported_row_indices = {
+        index for index, row in enumerate(pool_rows) if sum(row) == 0
     }
     if zero_cell_policy == "seed_only" and unsupported_row_indices:
         row_index = min(unsupported_row_indices)
@@ -215,6 +242,7 @@ def prepare_direct_adjustment(
         unsupported_columns=unsupported_columns,
         direct_reference_mode=direct_reference_mode,
         zero_cell_policy=zero_cell_policy,
+        zero_cell_column_scope=ZERO_CELL_COLUMN_SCOPES[zero_cell_policy],
         permitted_cells=tuple(permitted_rows),
         relaxed_cell_count=relaxed_cell_count,
     )
@@ -549,6 +577,7 @@ def solve_direct_adjustment(
         "active_attribute": data.attribute,
         "direct_reference_mode": data.direct_reference_mode,
         "zero_cell_policy": data.zero_cell_policy,
+        "zero_cell_column_scope": data.zero_cell_column_scope,
         "prior_row_count": len(data.row_keys),
         "ilp_cell_count": len(data.row_keys) * len(data.states),
         "permitted_cell_count": permitted_cell_count,

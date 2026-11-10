@@ -35,6 +35,9 @@ from PopSynthesis.Methods.IPSF.SAA.operations.count_tables import (
 )
 from PopSynthesis.Methods.IPSF.SAA.operations.shared_vars import zero_cell_scope
 from PopSynthesis.Methods.IPSF.SAA.direct_count_saa import run_direct_count_pass
+from PopSynthesis.Methods.IPSF.SAA.operations.direct_count_ilp import (
+    ZERO_CELL_COLUMN_SCOPES,
+)
 
 
 def get_test_pp() -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -158,7 +161,10 @@ def saa_run(
         "cbc", "min_cost_flow"
     ] = "cbc",
     zero_cell_policy: Literal[
-        "unrestricted", "seed_only", "relax_empty_rows_columns"
+        "unrestricted",
+        "seed_only",
+        "relax_empty_rows_columns",
+        "relax_empty_rows_global_columns",
     ] = "unrestricted",
     direct_reference_mode: Literal["pool", "all_zero"] = "pool",
     direct_pool_cache: dict | None = None,
@@ -192,10 +198,12 @@ def saa_run(
         "unrestricted",
         "seed_only",
         "relax_empty_rows_columns",
+        "relax_empty_rows_global_columns",
     }:
         raise ValueError(
-            "zero_cell_policy must be 'unrestricted', 'seed_only', or "
-            "'relax_empty_rows_columns'"
+            "zero_cell_policy must be 'unrestricted', 'seed_only', "
+            "'relax_empty_rows_columns', or "
+            "'relax_empty_rows_global_columns'"
         )
     if direct_reference_mode not in {"pool", "all_zero"}:
         raise ValueError("direct_reference_mode must be 'pool' or 'all_zero'")
@@ -653,6 +661,10 @@ def _saa_run_count_native_ilp(
             {
                 "mode": "count_native_ilp",
                 "direct_reference_mode": direct_reference_mode,
+                "zero_cell_policy": zero_cell_policy,
+                "zero_cell_column_scope": ZERO_CELL_COLUMN_SCOPES[
+                    zero_cell_policy
+                ],
                 "zone": str(original_marg.index[0]),
                 "pass": pass_index - 1,
                 "pass_order_json": json.dumps(pass_order),
