@@ -102,6 +102,7 @@ def _build_result(
         ),
         "zone": data.zone,
         "active_attribute": data.attribute,
+        "direct_reference_mode": data.direct_reference_mode,
         "zero_cell_policy": data.zero_cell_policy,
         "prior_row_count": len(data.row_keys),
         "ilp_cell_count": len(data.row_keys) * len(data.states),

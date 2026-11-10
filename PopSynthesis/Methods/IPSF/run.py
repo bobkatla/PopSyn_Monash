@@ -29,7 +29,7 @@ _DIRECT_WORKER_CACHE: dict = {}
 
 
 def _initialize_direct_worker(
-    count_pool: pl.DataFrame, run_kwargs: dict[str, object]
+    count_pool: pl.DataFrame | None, run_kwargs: dict[str, object]
 ) -> None:
     global _DIRECT_WORKER_POOL, _DIRECT_WORKER_KWARGS, _DIRECT_WORKER_CACHE
     _DIRECT_WORKER_POOL = count_pool
@@ -43,7 +43,7 @@ def _run_direct_zone_worker(
     zone_marginal: pd.DataFrame,
     artifact_path: Path,
 ) -> tuple[int, str]:
-    if _DIRECT_WORKER_POOL is None or _DIRECT_WORKER_KWARGS is None:
+    if _DIRECT_WORKER_KWARGS is None:
         raise RuntimeError("Direct-count worker was not initialized")
     kwargs = dict(_DIRECT_WORKER_KWARGS)
     kwargs["direct_pool_cache"] = _DIRECT_WORKER_CACHE
@@ -59,7 +59,9 @@ def _zone_diagnostic_dir(artifact_path: Path) -> Path:
     return artifact_path.parent / "diagnostics" / artifact_path.stem
 
 
-def process_data_from_files(marg_file: Path, pool_file: Path, zone_field: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def process_data_from_files(
+    marg_file: Path, pool_file: Path | None, zone_field: str
+) -> Tuple[pd.DataFrame, pd.DataFrame | None]:
     marg = pd.read_csv(marg_file, header=[0, 1])
     sample_geog_columns = marg.columns[
         marg.columns.get_level_values(0) == "sample_geog"
@@ -75,8 +77,10 @@ def process_data_from_files(marg_file: Path, pool_file: Path, zone_field: str) -
         )
     marg = marg.set_index(zone_columns[0])
     marg.index.name = internal_zone_field
-    pool = pd.read_csv(pool_file)
-    pool = pool.drop(columns=["serialno", "sample_geog"], errors="ignore")
+    pool = None
+    if pool_file is not None:
+        pool = pd.read_csv(pool_file)
+        pool = pool.drop(columns=["serialno", "sample_geog"], errors="ignore")
     return marg, pool
 
 
@@ -164,7 +168,7 @@ def _file_sha256(path: Path) -> str:
 def _prepare_zone_artifact_directory(
     artifact_dir: Path,
     marg_file: Path,
-    pool_file: Path,
+    pool_file: Path | None,
     settings: dict[str, object],
 ) -> None:
     artifact_dir.mkdir(parents=True, exist_ok=True)
@@ -172,7 +176,7 @@ def _prepare_zone_artifact_directory(
     manifest = {
         "format_version": 1,
         "marginal_sha256": _file_sha256(marg_file),
-        "pool_sha256": _file_sha256(pool_file),
+        "pool_sha256": _file_sha256(pool_file) if pool_file is not None else None,
         "settings": settings,
     }
     if manifest_path.exists():
@@ -253,7 +257,7 @@ def _combine_zone_artifacts_atomically(
 
 def run_saa(
         marg_file: Path,
-        pool_file: Path,
+        pool_file: Path | None,
         zone_field: str,
         output_file: Path,
         considered_atts: Optional[List[str]] = None,
@@ -280,6 +284,7 @@ def run_saa(
         zero_cell_policy: Literal[
             "unrestricted", "seed_only", "relax_empty_rows_columns"
         ] = "unrestricted",
+        direct_reference_mode: Literal["pool", "all_zero"] = "pool",
         zone_workers: int = 1,
         ) -> None:
     considered_atts = list(
@@ -302,17 +307,41 @@ def run_saa(
             "zero_cell_policy must be 'unrestricted', 'seed_only', or "
             "'relax_empty_rows_columns'"
         )
+    if direct_reference_mode not in {"pool", "all_zero"}:
+        raise ValueError("direct_reference_mode must be 'pool' or 'all_zero'")
+    if direct_reference_mode == "pool" and pool is None:
+        raise ValueError("A pool file is required when direct_reference_mode='pool'")
+    if direct_reference_mode == "all_zero":
+        if stochastic_mode != "count_native_ilp":
+            raise ValueError(
+                "direct_reference_mode='all_zero' requires stochastic_mode='count_native_ilp'"
+            )
+        if pool is not None:
+            raise ValueError(
+                "A pool file must not be supplied when direct_reference_mode='all_zero'"
+            )
+        if pool_count_column is not None:
+            raise ValueError(
+                "pool_count_column is invalid when direct_reference_mode='all_zero'"
+            )
+        if zero_cell_policy != "unrestricted":
+            raise ValueError(
+                "direct_reference_mode='all_zero' requires zero_cell_policy='unrestricted'"
+            )
     if stochastic_mode != "count_native_ilp" and zero_cell_policy != "unrestricted":
         raise ValueError("zero_cell_policy is only configurable in direct-count mode")
     if direct_solver_mode == "single_stage" and zero_cell_policy != "unrestricted":
         raise ValueError("Restricted zero-cell policies require two-stage solving")
     if stochastic_mode == "count_native_ilp":
-        condensed_pool = _prepare_direct_pool(
-            pool, considered_atts, pool_count_column
+        condensed_pool = (
+            None
+            if direct_reference_mode == "all_zero"
+            else _prepare_direct_pool(pool, considered_atts, pool_count_column)
         )
     else:
         if pool_count_column is not None:
             raise ValueError("pool_count_column is currently direct-mode only")
+        assert pool is not None
         condensed_pool = condense_df(pool.astype(str), maintain_order=True)
 
     run_kwargs = {
@@ -335,6 +364,7 @@ def run_saa(
         "direct_solver_mode": direct_solver_mode,
         "direct_adjustment_backend": direct_adjustment_backend,
         "zero_cell_policy": zero_cell_policy,
+        "direct_reference_mode": direct_reference_mode,
     }
 
     if stochastic_mode == "count_native_ilp" and len(marg) > 1:
@@ -358,6 +388,7 @@ def run_saa(
             "direct_solver_mode": direct_solver_mode,
             "direct_adjustment_backend": direct_adjustment_backend,
             "zero_cell_policy": zero_cell_policy,
+            "direct_reference_mode": direct_reference_mode,
         }
         _prepare_zone_artifact_directory(
             artifact_dir, marg_file, pool_file, checkpoint_settings

@@ -138,7 +138,7 @@ def process_shuffle_order(
 
 def saa_run(
     targeted_marg: pd.DataFrame,
-    count_pool: pl.DataFrame,
+    count_pool: pl.DataFrame | None,
     considered_atts: Optional[List[str]] = None,
     ordered_to_adjust_atts: Optional[List[str]] = None,
     last_adjustment_order: Optional[List[str]] = None,
@@ -160,6 +160,7 @@ def saa_run(
     zero_cell_policy: Literal[
         "unrestricted", "seed_only", "relax_empty_rows_columns"
     ] = "unrestricted",
+    direct_reference_mode: Literal["pool", "all_zero"] = "pool",
     direct_pool_cache: dict | None = None,
     direct_diagnostics_output: bool = False,
 ) -> Tuple[pl.DataFrame, List[int]]:
@@ -196,6 +197,15 @@ def saa_run(
             "zero_cell_policy must be 'unrestricted', 'seed_only', or "
             "'relax_empty_rows_columns'"
         )
+    if direct_reference_mode not in {"pool", "all_zero"}:
+        raise ValueError("direct_reference_mode must be 'pool' or 'all_zero'")
+    if direct_reference_mode == "all_zero" and (
+        stochastic_mode != "count_native_ilp" or zero_cell_policy != "unrestricted"
+    ):
+        raise ValueError(
+            "direct_reference_mode='all_zero' requires count_native_ilp and "
+            "zero_cell_policy='unrestricted'"
+        )
     if stochastic_mode != "count_native_ilp" and zero_cell_policy != "unrestricted":
         raise ValueError("zero_cell_policy is only configurable in direct-count mode")
     if direct_solver_mode == "single_stage" and zero_cell_policy != "unrestricted":
@@ -220,6 +230,7 @@ def saa_run(
             direct_solver_mode,
             direct_adjustment_backend,
             zero_cell_policy,
+            direct_reference_mode,
             direct_pool_cache,
             direct_diagnostics_output,
         )
@@ -448,6 +459,7 @@ def _validate_direct_mode_inputs(
     extra_rm_frac,
     include_zero_cell_values,
     randomly_add_last,
+    direct_reference_mode,
 ):
     errors = []
     if not ordered_to_adjust_atts:
@@ -477,11 +489,22 @@ def _validate_direct_mode_inputs(
         errors.append("last_adjustment_order must contain only controlled attributes")
     if not set(randomly_add_last) <= set(ordered_to_adjust_atts):
         errors.append("randomly_add_last must contain only controlled attributes")
-    missing_pool = (
-        set(considered_atts) | {count_field}
-    ) - set(count_pool.columns)
-    if missing_pool:
-        errors.append(f"pool is missing columns {sorted(missing_pool)}")
+    if direct_reference_mode == "pool":
+        if count_pool is None:
+            errors.append("a pool is required when direct_reference_mode='pool'")
+        else:
+            missing_pool = (
+                set(considered_atts) | {count_field}
+            ) - set(count_pool.columns)
+            if missing_pool:
+                errors.append(f"pool is missing columns {sorted(missing_pool)}")
+    elif direct_reference_mode == "all_zero":
+        if count_pool is not None:
+            errors.append(
+                "a pool must not be supplied when direct_reference_mode='all_zero'"
+            )
+    else:
+        errors.append("direct_reference_mode must be 'pool' or 'all_zero'")
     if errors:
         raise ValueError("Invalid count_native_ilp configuration: " + "; ".join(errors))
 
@@ -535,6 +558,7 @@ def _saa_run_count_native_ilp(
     direct_solver_mode,
     direct_adjustment_backend,
     zero_cell_policy,
+    direct_reference_mode,
     direct_pool_cache,
     direct_diagnostics_output,
 ):
@@ -550,11 +574,14 @@ def _saa_run_count_native_ilp(
         extra_rm_frac,
         include_zero_cell_values,
         randomly_add_last,
+        direct_reference_mode,
     )
-    pool_keys = [column for column in count_pool.columns if column != count_field]
-    count_pool = count_pool.with_columns(
-        [pl.col(attribute).cast(pl.String) for attribute in considered_atts]
-    ).sort(pool_keys)
+    if direct_reference_mode == "pool":
+        assert count_pool is not None
+        pool_keys = [column for column in count_pool.columns if column != count_field]
+        count_pool = count_pool.with_columns(
+            [pl.col(attribute).cast(pl.String) for attribute in considered_atts]
+        ).sort(pool_keys)
     original_marg = targeted_marg.copy()
     current_marg = targeted_marg.copy()
     residual_size = int(
@@ -590,6 +617,7 @@ def _saa_run_count_native_ilp(
             solver_mode=direct_solver_mode,
             adjustment_backend=direct_adjustment_backend,
             zero_cell_policy=zero_cell_policy,
+            direct_reference_mode=direct_reference_mode,
             conditional_cache=direct_pool_cache,
         )
         pass_population = _zone_as_string(pass_result.population)
@@ -624,6 +652,7 @@ def _saa_run_count_native_ilp(
         loopbacks.append(
             {
                 "mode": "count_native_ilp",
+                "direct_reference_mode": direct_reference_mode,
                 "zone": str(original_marg.index[0]),
                 "pass": pass_index - 1,
                 "pass_order_json": json.dumps(pass_order),

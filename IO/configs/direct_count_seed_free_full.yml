@@ -1,0 +1,38 @@
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  zone_field: zone_id
+  considered_atts:
+    - hhsize
+    - totalvehs
+    - dwelltype
+    - owndwell
+    - hhinc
+  ordered_to_adjust_atts:
+    - hhsize
+    - totalvehs
+    - dwelltype
+    - owndwell
+    - hhinc
+  last_adjustment_order:
+    - hhsize
+    - totalvehs
+    - dwelltype
+    - owndwell
+    - hhinc
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: seed_free_all_zero
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_reference_mode: all_zero
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  output_format: counts
+  output_name: seed_free_all_zero
+  hh_syn_name: household_counts.csv
+  reruns: 3

@@ -31,6 +31,7 @@ ZERO_CELL_POLICIES = {
     "seed_only",
     "relax_empty_rows_columns",
 }
+DIRECT_REFERENCE_MODES = {"pool", "all_zero"}
 
 
 @dataclass(frozen=True)
@@ -46,6 +47,7 @@ class DirectAdjustmentInput:
     references: tuple[tuple[Fraction, ...], ...]
     unsupported_rows: tuple[tuple[str, ...], ...]
     unsupported_columns: tuple[str, ...]
+    direct_reference_mode: str
     zero_cell_policy: str
     permitted_cells: tuple[tuple[bool, ...], ...]
     relaxed_cell_count: int
@@ -59,12 +61,13 @@ class DirectAdjustmentResult:
 
 def prepare_direct_adjustment(
     partial_counts: pl.DataFrame,
-    count_pool: pl.DataFrame,
+    count_pool: pl.DataFrame | None,
     attribute: str,
     target_counts: Mapping[str, int],
     *,
     pool_lookup: PoolLookup | None = None,
     zero_cell_policy: str = "unrestricted",
+    direct_reference_mode: str = "pool",
 ) -> DirectAdjustmentInput:
     """Build the complete prior-row by current-state pool contingency."""
 
@@ -73,6 +76,14 @@ def prepare_direct_adjustment(
             "zero_cell_policy must be 'unrestricted', 'seed_only', or "
             "'relax_empty_rows_columns'"
         )
+    if direct_reference_mode not in DIRECT_REFERENCE_MODES:
+        raise ValueError("direct_reference_mode must be 'pool' or 'all_zero'")
+    if direct_reference_mode == "all_zero" and zero_cell_policy != "unrestricted":
+        raise ValueError(
+            "direct_reference_mode='all_zero' requires zero_cell_policy='unrestricted'"
+        )
+    if direct_reference_mode == "all_zero" and pool_lookup is not None:
+        raise ValueError("pool_lookup is invalid when direct_reference_mode='all_zero'")
     required = {zone_field, count_field}
     if not required <= set(partial_counts.columns):
         raise ValueError(f"Partial counts must contain {sorted(required)}")
@@ -102,11 +113,16 @@ def prepare_direct_adjustment(
         ).any()
     ).item():
         raise ValueError("Partial count keys cannot contain nulls")
-    missing_pool = set(prior_attributes + (attribute, count_field)) - set(
-        count_pool.columns
-    )
-    if missing_pool:
-        raise ValueError(f"Pool is missing columns: {sorted(missing_pool)}")
+    if direct_reference_mode == "pool":
+        if count_pool is None:
+            raise ValueError("A pool is required when direct_reference_mode='pool'")
+        missing_pool = set(prior_attributes + (attribute, count_field)) - set(
+            count_pool.columns
+        )
+        if missing_pool:
+            raise ValueError(f"Pool is missing columns: {sorted(missing_pool)}")
+    elif count_pool is not None:
+        raise ValueError("A pool must not be supplied when direct_reference_mode='all_zero'")
 
     states = tuple(str(state) for state in target_counts)
     targets = tuple(int(target_counts[state]) for state in target_counts)
@@ -117,8 +133,11 @@ def prepare_direct_adjustment(
         row_keys.append(tuple(str(row[name]) for name in prior_attributes))
         row_totals.append(int(row[count_field]))
 
-    if pool_lookup is None:
+    if direct_reference_mode == "pool" and pool_lookup is None:
+        assert count_pool is not None
         pool_lookup = build_pool_lookup(count_pool, prior_attributes, attribute)
+    if pool_lookup is None:
+        pool_lookup = {}
 
     pool_rows: list[tuple[Fraction, ...]] = []
     reference_rows: list[tuple[Fraction, ...]] = []
@@ -194,6 +213,7 @@ def prepare_direct_adjustment(
         references=tuple(reference_rows),
         unsupported_rows=tuple(unsupported_rows),
         unsupported_columns=unsupported_columns,
+        direct_reference_mode=direct_reference_mode,
         zero_cell_policy=zero_cell_policy,
         permitted_cells=tuple(permitted_rows),
         relaxed_cell_count=relaxed_cell_count,
@@ -527,6 +547,7 @@ def solve_direct_adjustment(
         "solver_mode": solver_mode,
         "zone": data.zone,
         "active_attribute": data.attribute,
+        "direct_reference_mode": data.direct_reference_mode,
         "zero_cell_policy": data.zero_cell_policy,
         "prior_row_count": len(data.row_keys),
         "ilp_cell_count": len(data.row_keys) * len(data.states),

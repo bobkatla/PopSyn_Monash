@@ -14,6 +14,7 @@ import polars as pl
 from PopSynthesis.Methods.IPSF.const import count_field, zone_field
 from PopSynthesis.Methods.IPSF.SAA.operations.count_tables import population_size
 from PopSynthesis.Methods.IPSF.SAA.operations.direct_count_ilp import (
+    DIRECT_REFERENCE_MODES,
     PoolLookup,
     ZERO_CELL_POLICIES,
     build_pool_lookup,
@@ -130,7 +131,7 @@ def _validate_first_attribute_support(
 
 def run_direct_count_pass(
     residual_marginals: pd.DataFrame,
-    count_pool: pl.DataFrame,
+    count_pool: pl.DataFrame | None,
     ordered_attributes: Sequence[str],
     *,
     pass_index: int,
@@ -139,6 +140,7 @@ def run_direct_count_pass(
     zero_cell_policy: Literal[
         "unrestricted", "seed_only", "relax_empty_rows_columns"
     ] = "unrestricted",
+    direct_reference_mode: Literal["pool", "all_zero"] = "pool",
     conditional_cache: dict[
         tuple[tuple[str, ...], str], PoolLookup
     ] | None = None,
@@ -155,6 +157,12 @@ def run_direct_count_pass(
             "zero_cell_policy must be 'unrestricted', 'seed_only', or "
             "'relax_empty_rows_columns'"
         )
+    if direct_reference_mode not in DIRECT_REFERENCE_MODES:
+        raise ValueError("direct_reference_mode must be 'pool' or 'all_zero'")
+    if direct_reference_mode == "all_zero" and zero_cell_policy != "unrestricted":
+        raise ValueError(
+            "direct_reference_mode='all_zero' requires zero_cell_policy='unrestricted'"
+        )
     if solver_mode == "single_stage" and zero_cell_policy != "unrestricted":
         raise ValueError("Restricted zero-cell policies require two-stage solving")
     if conditional_cache is None:
@@ -164,11 +172,18 @@ def run_direct_count_pass(
         order,
         enforce_consistent_totals=solver_mode != "two_stage",
     )
-    _validate_pool(count_pool, order)
+    if direct_reference_mode == "pool":
+        if count_pool is None:
+            raise ValueError("A pool is required when direct_reference_mode='pool'")
+        _validate_pool(count_pool, order)
+    elif count_pool is not None:
+        raise ValueError("A pool must not be supplied when direct_reference_mode='all_zero'")
     first_attribute = order[0]
-    _validate_first_attribute_support(
-        zone, first_attribute, targets[first_attribute], count_pool
-    )
+    if direct_reference_mode == "pool":
+        assert count_pool is not None
+        _validate_first_attribute_support(
+            zone, first_attribute, targets[first_attribute], count_pool
+        )
     first_rows = [
         {
             zone_field: zone,
@@ -191,6 +206,7 @@ def run_direct_count_pass(
             "pass": pass_index,
             "adjustment_index": 0,
             "active_attribute": first_attribute,
+            "direct_reference_mode": direct_reference_mode,
             "zero_cell_policy": zero_cell_policy,
             "pass_target_population": target_population,
             "prior_row_count": 0,
@@ -221,11 +237,16 @@ def run_direct_count_pass(
             "marginal_l1_error": 0,
             "row_totals_preserved": True,
             "unsupported_row_count": 0,
-            "unsupported_column_count": sum(
-                1
-                for state, target in targets[first_attribute].items()
-                if target > 0
-                and count_pool.filter(pl.col(first_attribute) == state).is_empty()
+            "unsupported_column_count": (
+                sum(target > 0 for target in targets[first_attribute].values())
+                if direct_reference_mode == "all_zero"
+                else sum(
+                    1
+                    for state, target in targets[first_attribute].items()
+                    if target > 0
+                    and count_pool is not None
+                    and count_pool.filter(pl.col(first_attribute) == state).is_empty()
+                )
             ),
             "ordinary_zero_cells_made_positive": 0,
             "seed_zero_cells_made_positive": 0,
@@ -239,7 +260,8 @@ def run_direct_count_pass(
     for adjustment_index, attribute in enumerate(order[1:], start=1):
         prior_attributes = tuple(order[:adjustment_index])
         cache_key = (prior_attributes, attribute)
-        if cache_key not in conditional_cache:
+        if direct_reference_mode == "pool" and cache_key not in conditional_cache:
+            assert count_pool is not None
             conditional_cache[cache_key] = build_pool_lookup(
                 count_pool, prior_attributes, attribute
             )
@@ -248,8 +270,13 @@ def run_direct_count_pass(
             count_pool,
             attribute,
             targets[attribute],
-            pool_lookup=conditional_cache[cache_key],
+            pool_lookup=(
+                conditional_cache[cache_key]
+                if direct_reference_mode == "pool"
+                else None
+            ),
             zero_cell_policy=zero_cell_policy,
+            direct_reference_mode=direct_reference_mode,
         )
         if adjustment_backend == "min_cost_flow":
             solved = solve_direct_adjustment_flow(

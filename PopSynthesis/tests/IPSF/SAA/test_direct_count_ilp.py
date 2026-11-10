@@ -59,6 +59,115 @@ class DirectCountFixture(unittest.TestCase):
 
 
 class DirectCountILPTests(DirectCountFixture):
+    def test_all_zero_reference_is_unrestricted_and_backend_equivalent(self):
+        partial = pl.DataFrame(
+            {"zone_id": ["101", "101"], "a": ["x", "y"], "count": [3, 2]}
+        )
+        prepared = prepare_direct_adjustment(
+            partial,
+            None,
+            "b",
+            {"m": 2, "n": 3},
+            direct_reference_mode="all_zero",
+        )
+
+        zero_row = (Fraction(0), Fraction(0))
+        self.assertEqual(prepared.pool_counts, (zero_row, zero_row))
+        self.assertEqual(prepared.references, (zero_row, zero_row))
+        self.assertEqual(
+            prepared.permitted_cells, ((True, True), (True, True))
+        )
+        self.assertEqual(prepared.direct_reference_mode, "all_zero")
+
+        cbc = solve_direct_adjustment(prepared, solver_mode="two_stage")
+        flow = solve_direct_adjustment_flow(prepared, solver_mode="two_stage")
+        for result in (cbc, flow):
+            self.assertEqual(result.diagnostic["stage1_objective"], 0)
+            self.assertEqual(result.diagnostic["marginal_l1_error"], 0)
+            self.assertEqual(
+                result.diagnostic["stage2_objective_fraction"], "5/1"
+            )
+            self.assertTrue(result.diagnostic["row_totals_preserved"])
+            self.assertEqual(
+                result.diagnostic["direct_reference_mode"], "all_zero"
+            )
+
+    def test_all_zero_direct_pass_requires_no_pool(self):
+        result = run_direct_count_pass(
+            self.marginal(),
+            None,
+            ["a", "b"],
+            pass_index=0,
+            solver_mode="two_stage",
+            adjustment_backend="min_cost_flow",
+            direct_reference_mode="all_zero",
+        )
+
+        actual = counts_to_marginals(result.population, ["a", "b"])
+        expected = self.marginal().copy()
+        expected.index = expected.index.astype(str)
+        actual = actual.reindex(
+            index=expected.index, columns=expected.columns, fill_value=0
+        )
+        pd.testing.assert_frame_equal(
+            actual.astype(int), expected.astype(int), check_names=False
+        )
+        self.assertEqual(result.adjustments[1]["stage2_objective_fraction"], "5/1")
+
+    def test_all_zero_reference_supports_existing_loopback(self):
+        state = random.getstate()
+        random.seed(7123)
+        try:
+            result, targets = saa_run(
+                self.marginal(),
+                None,
+                considered_atts=["a", "b"],
+                ordered_to_adjust_atts=["a", "b"],
+                last_adjustment_order=["a", "b"],
+                max_run_time=2,
+                extra_rm_frac=0.4,
+                stochastic_mode="count_native_ilp",
+                output_format="counts",
+                direct_solver_mode="two_stage",
+                direct_adjustment_backend="min_cost_flow",
+                direct_reference_mode="all_zero",
+            )
+        finally:
+            random.setstate(state)
+
+        self.assertGreaterEqual(len(targets), 1)
+        actual = counts_to_marginals(result, ["a", "b"])
+        expected = self.marginal().copy()
+        expected.index = expected.index.astype(str)
+        actual = actual.reindex(
+            index=expected.index, columns=expected.columns, fill_value=0
+        )
+        pd.testing.assert_frame_equal(
+            actual.astype(int), expected.astype(int), check_names=False
+        )
+
+    def test_all_zero_rejects_pool_and_restricted_support(self):
+        partial = pl.DataFrame(
+            {"zone_id": ["101"], "a": ["x"], "count": [2]}
+        )
+        with self.assertRaisesRegex(ValueError, "must not be supplied"):
+            prepare_direct_adjustment(
+                partial,
+                self.pool(),
+                "b",
+                {"m": 1, "n": 1},
+                direct_reference_mode="all_zero",
+            )
+        with self.assertRaisesRegex(ValueError, "requires zero_cell_policy"):
+            prepare_direct_adjustment(
+                partial,
+                None,
+                "b",
+                {"m": 1, "n": 1},
+                zero_cell_policy="seed_only",
+                direct_reference_mode="all_zero",
+            )
+
     def test_hand_calculated_dense_adjustment(self):
         partial = pl.DataFrame(
             {"zone_id": ["101", "101"], "a": ["x", "y"], "count": [3, 2]}
@@ -885,6 +994,60 @@ class DirectCountFileRunTests(unittest.TestCase):
             missing_sidecar.unlink()
             execute()
             self.assertTrue(missing_sidecar.exists())
+
+    def test_all_zero_file_run_is_parallel_deterministic_and_has_null_pool_hash(self):
+        marginal = pd.DataFrame(
+            [[3, 2, 2, 3], [1, 3, 2, 2]],
+            index=pd.Index([101, 102], name="zone_id"),
+            columns=pd.MultiIndex.from_tuples(
+                [("a", "x"), ("a", "y"), ("b", "m"), ("b", "n")]
+            ),
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            marginal_path = directory / "marginal.csv"
+            marginal.reset_index().to_csv(marginal_path, index=False)
+            outputs = [
+                directory / "sequential" / "counts.csv",
+                directory / "parallel" / "counts.csv",
+            ]
+
+            for workers, output_path in zip((1, 2), outputs):
+                run_saa_files(
+                    marg_file=marginal_path,
+                    pool_file=None,
+                    zone_field="zone_id",
+                    output_file=output_path,
+                    considered_atts=["a", "b"],
+                    ordered_to_adjust_atts=["a", "b"],
+                    last_adjustment_order=["a", "b"],
+                    max_run_time=1,
+                    extra_rm_frac=0,
+                    stochastic_mode="count_native_ilp",
+                    output_format="counts",
+                    direct_solver_mode="two_stage",
+                    direct_adjustment_backend="min_cost_flow",
+                    direct_reference_mode="all_zero",
+                    zone_workers=workers,
+                )
+
+            first = pl.read_csv(outputs[0])
+            second = pl.read_csv(outputs[1])
+            self.assertTrue(first.equals(second))
+            for output_path in outputs:
+                manifest = json.loads(
+                    (output_path.parent / "zone_artifacts" / "manifest.json").read_text()
+                )
+                self.assertIsNone(manifest["pool_sha256"])
+                self.assertEqual(
+                    manifest["settings"]["direct_reference_mode"], "all_zero"
+                )
+                diagnostics = pd.read_csv(
+                    output_path.parent / "meta" / "direct_count_adjustments.csv"
+                )
+                self.assertTrue(
+                    (diagnostics["direct_reference_mode"] == "all_zero").all()
+                )
 
     def test_failed_zone_does_not_publish_partial_output(self):
         marginal = pd.DataFrame(

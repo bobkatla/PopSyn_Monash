@@ -62,10 +62,33 @@ def synthesize(runs_yml, output_path):
                 )
             elif method == "saa":
                 marg = pool = None
+                direct_reference_mode = run_info.get(
+                    "direct_reference_mode", "pool"
+                )
+                if direct_reference_mode == "all_zero":
+                    forbidden = {
+                        key
+                        for key in [
+                            "hh_sample_file",
+                            "p_sample_file",
+                            "hh_seed_data",
+                            "pool_count_column",
+                        ]
+                        if key in run_info
+                    }
+                    if forbidden:
+                        raise ValueError(
+                            "direct_reference_mode='all_zero' does not accept: "
+                            + ", ".join(sorted(forbidden))
+                        )
                 if run_info["level"] == "hh":
-                    marg, pool = get_file_general("hh_marg_file"), get_file_general("hh_sample_file")
+                    marg = get_file_general("hh_marg_file")
+                    if direct_reference_mode == "pool":
+                        pool = get_file_general("hh_sample_file")
                 elif run_info["level"] == "pp":
-                    marg, pool = get_file_general("p_marg_file"), get_file_general("p_sample_file")
+                    marg = get_file_general("p_marg_file")
+                    if direct_reference_mode == "pool":
+                        pool = get_file_general("p_sample_file")
                 else:
                     raise ValueError(f"Level {run_info['level']} not supported.")
                 meta_output_dir = output_path_run / "meta"
@@ -95,6 +118,7 @@ def synthesize(runs_yml, output_path):
                     zero_cell_policy=run_info.get(
                         "zero_cell_policy", "unrestricted"
                     ),
+                    direct_reference_mode=direct_reference_mode,
                     zone_workers=run_info.get("zone_workers", 1),
                     meta_output_dir=meta_output_dir
                 )
