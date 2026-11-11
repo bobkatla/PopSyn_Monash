@@ -1,0 +1,3119 @@
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, totalvehs, dwelltype, owndwell, hhinc]
+  ordered_to_adjust_atts: [hhsize, totalvehs, dwelltype, owndwell, hhinc]
+  last_adjustment_order: [hhsize, totalvehs, dwelltype, owndwell, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_001_hhsize_totalvehs_dwelltype_owndwell_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_001_hhsize_totalvehs_dwelltype_owndwell_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, totalvehs, dwelltype, hhinc, owndwell]
+  ordered_to_adjust_atts: [hhsize, totalvehs, dwelltype, hhinc, owndwell]
+  last_adjustment_order: [hhsize, totalvehs, dwelltype, hhinc, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_002_hhsize_totalvehs_dwelltype_hhinc_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_002_hhsize_totalvehs_dwelltype_hhinc_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, totalvehs, owndwell, dwelltype, hhinc]
+  ordered_to_adjust_atts: [hhsize, totalvehs, owndwell, dwelltype, hhinc]
+  last_adjustment_order: [hhsize, totalvehs, owndwell, dwelltype, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_003_hhsize_totalvehs_owndwell_dwelltype_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_003_hhsize_totalvehs_owndwell_dwelltype_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, totalvehs, owndwell, hhinc, dwelltype]
+  ordered_to_adjust_atts: [hhsize, totalvehs, owndwell, hhinc, dwelltype]
+  last_adjustment_order: [hhsize, totalvehs, owndwell, hhinc, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_004_hhsize_totalvehs_owndwell_hhinc_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_004_hhsize_totalvehs_owndwell_hhinc_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, totalvehs, hhinc, dwelltype, owndwell]
+  ordered_to_adjust_atts: [hhsize, totalvehs, hhinc, dwelltype, owndwell]
+  last_adjustment_order: [hhsize, totalvehs, hhinc, dwelltype, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_005_hhsize_totalvehs_hhinc_dwelltype_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_005_hhsize_totalvehs_hhinc_dwelltype_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, totalvehs, hhinc, owndwell, dwelltype]
+  ordered_to_adjust_atts: [hhsize, totalvehs, hhinc, owndwell, dwelltype]
+  last_adjustment_order: [hhsize, totalvehs, hhinc, owndwell, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_006_hhsize_totalvehs_hhinc_owndwell_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_006_hhsize_totalvehs_hhinc_owndwell_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, dwelltype, totalvehs, owndwell, hhinc]
+  ordered_to_adjust_atts: [hhsize, dwelltype, totalvehs, owndwell, hhinc]
+  last_adjustment_order: [hhsize, dwelltype, totalvehs, owndwell, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_007_hhsize_dwelltype_totalvehs_owndwell_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_007_hhsize_dwelltype_totalvehs_owndwell_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, dwelltype, totalvehs, hhinc, owndwell]
+  ordered_to_adjust_atts: [hhsize, dwelltype, totalvehs, hhinc, owndwell]
+  last_adjustment_order: [hhsize, dwelltype, totalvehs, hhinc, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_008_hhsize_dwelltype_totalvehs_hhinc_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_008_hhsize_dwelltype_totalvehs_hhinc_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, dwelltype, owndwell, totalvehs, hhinc]
+  ordered_to_adjust_atts: [hhsize, dwelltype, owndwell, totalvehs, hhinc]
+  last_adjustment_order: [hhsize, dwelltype, owndwell, totalvehs, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_009_hhsize_dwelltype_owndwell_totalvehs_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_009_hhsize_dwelltype_owndwell_totalvehs_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, dwelltype, owndwell, hhinc, totalvehs]
+  ordered_to_adjust_atts: [hhsize, dwelltype, owndwell, hhinc, totalvehs]
+  last_adjustment_order: [hhsize, dwelltype, owndwell, hhinc, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_010_hhsize_dwelltype_owndwell_hhinc_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_010_hhsize_dwelltype_owndwell_hhinc_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, dwelltype, hhinc, totalvehs, owndwell]
+  ordered_to_adjust_atts: [hhsize, dwelltype, hhinc, totalvehs, owndwell]
+  last_adjustment_order: [hhsize, dwelltype, hhinc, totalvehs, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_011_hhsize_dwelltype_hhinc_totalvehs_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_011_hhsize_dwelltype_hhinc_totalvehs_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, dwelltype, hhinc, owndwell, totalvehs]
+  ordered_to_adjust_atts: [hhsize, dwelltype, hhinc, owndwell, totalvehs]
+  last_adjustment_order: [hhsize, dwelltype, hhinc, owndwell, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_012_hhsize_dwelltype_hhinc_owndwell_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_012_hhsize_dwelltype_hhinc_owndwell_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, owndwell, totalvehs, dwelltype, hhinc]
+  ordered_to_adjust_atts: [hhsize, owndwell, totalvehs, dwelltype, hhinc]
+  last_adjustment_order: [hhsize, owndwell, totalvehs, dwelltype, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_013_hhsize_owndwell_totalvehs_dwelltype_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_013_hhsize_owndwell_totalvehs_dwelltype_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, owndwell, totalvehs, hhinc, dwelltype]
+  ordered_to_adjust_atts: [hhsize, owndwell, totalvehs, hhinc, dwelltype]
+  last_adjustment_order: [hhsize, owndwell, totalvehs, hhinc, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_014_hhsize_owndwell_totalvehs_hhinc_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_014_hhsize_owndwell_totalvehs_hhinc_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, owndwell, dwelltype, totalvehs, hhinc]
+  ordered_to_adjust_atts: [hhsize, owndwell, dwelltype, totalvehs, hhinc]
+  last_adjustment_order: [hhsize, owndwell, dwelltype, totalvehs, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_015_hhsize_owndwell_dwelltype_totalvehs_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_015_hhsize_owndwell_dwelltype_totalvehs_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, owndwell, dwelltype, hhinc, totalvehs]
+  ordered_to_adjust_atts: [hhsize, owndwell, dwelltype, hhinc, totalvehs]
+  last_adjustment_order: [hhsize, owndwell, dwelltype, hhinc, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_016_hhsize_owndwell_dwelltype_hhinc_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_016_hhsize_owndwell_dwelltype_hhinc_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, owndwell, hhinc, totalvehs, dwelltype]
+  ordered_to_adjust_atts: [hhsize, owndwell, hhinc, totalvehs, dwelltype]
+  last_adjustment_order: [hhsize, owndwell, hhinc, totalvehs, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_017_hhsize_owndwell_hhinc_totalvehs_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_017_hhsize_owndwell_hhinc_totalvehs_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, owndwell, hhinc, dwelltype, totalvehs]
+  ordered_to_adjust_atts: [hhsize, owndwell, hhinc, dwelltype, totalvehs]
+  last_adjustment_order: [hhsize, owndwell, hhinc, dwelltype, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_018_hhsize_owndwell_hhinc_dwelltype_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_018_hhsize_owndwell_hhinc_dwelltype_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, hhinc, totalvehs, dwelltype, owndwell]
+  ordered_to_adjust_atts: [hhsize, hhinc, totalvehs, dwelltype, owndwell]
+  last_adjustment_order: [hhsize, hhinc, totalvehs, dwelltype, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_019_hhsize_hhinc_totalvehs_dwelltype_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_019_hhsize_hhinc_totalvehs_dwelltype_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, hhinc, totalvehs, owndwell, dwelltype]
+  ordered_to_adjust_atts: [hhsize, hhinc, totalvehs, owndwell, dwelltype]
+  last_adjustment_order: [hhsize, hhinc, totalvehs, owndwell, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_020_hhsize_hhinc_totalvehs_owndwell_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_020_hhsize_hhinc_totalvehs_owndwell_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, hhinc, dwelltype, totalvehs, owndwell]
+  ordered_to_adjust_atts: [hhsize, hhinc, dwelltype, totalvehs, owndwell]
+  last_adjustment_order: [hhsize, hhinc, dwelltype, totalvehs, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_021_hhsize_hhinc_dwelltype_totalvehs_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_021_hhsize_hhinc_dwelltype_totalvehs_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, hhinc, dwelltype, owndwell, totalvehs]
+  ordered_to_adjust_atts: [hhsize, hhinc, dwelltype, owndwell, totalvehs]
+  last_adjustment_order: [hhsize, hhinc, dwelltype, owndwell, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_022_hhsize_hhinc_dwelltype_owndwell_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_022_hhsize_hhinc_dwelltype_owndwell_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, hhinc, owndwell, totalvehs, dwelltype]
+  ordered_to_adjust_atts: [hhsize, hhinc, owndwell, totalvehs, dwelltype]
+  last_adjustment_order: [hhsize, hhinc, owndwell, totalvehs, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_023_hhsize_hhinc_owndwell_totalvehs_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_023_hhsize_hhinc_owndwell_totalvehs_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhsize, hhinc, owndwell, dwelltype, totalvehs]
+  ordered_to_adjust_atts: [hhsize, hhinc, owndwell, dwelltype, totalvehs]
+  last_adjustment_order: [hhsize, hhinc, owndwell, dwelltype, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_024_hhsize_hhinc_owndwell_dwelltype_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_024_hhsize_hhinc_owndwell_dwelltype_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, hhsize, dwelltype, owndwell, hhinc]
+  ordered_to_adjust_atts: [totalvehs, hhsize, dwelltype, owndwell, hhinc]
+  last_adjustment_order: [totalvehs, hhsize, dwelltype, owndwell, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_025_totalvehs_hhsize_dwelltype_owndwell_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_025_totalvehs_hhsize_dwelltype_owndwell_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, hhsize, dwelltype, hhinc, owndwell]
+  ordered_to_adjust_atts: [totalvehs, hhsize, dwelltype, hhinc, owndwell]
+  last_adjustment_order: [totalvehs, hhsize, dwelltype, hhinc, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_026_totalvehs_hhsize_dwelltype_hhinc_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_026_totalvehs_hhsize_dwelltype_hhinc_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, hhsize, owndwell, dwelltype, hhinc]
+  ordered_to_adjust_atts: [totalvehs, hhsize, owndwell, dwelltype, hhinc]
+  last_adjustment_order: [totalvehs, hhsize, owndwell, dwelltype, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_027_totalvehs_hhsize_owndwell_dwelltype_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_027_totalvehs_hhsize_owndwell_dwelltype_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, hhsize, owndwell, hhinc, dwelltype]
+  ordered_to_adjust_atts: [totalvehs, hhsize, owndwell, hhinc, dwelltype]
+  last_adjustment_order: [totalvehs, hhsize, owndwell, hhinc, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_028_totalvehs_hhsize_owndwell_hhinc_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_028_totalvehs_hhsize_owndwell_hhinc_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, hhsize, hhinc, dwelltype, owndwell]
+  ordered_to_adjust_atts: [totalvehs, hhsize, hhinc, dwelltype, owndwell]
+  last_adjustment_order: [totalvehs, hhsize, hhinc, dwelltype, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_029_totalvehs_hhsize_hhinc_dwelltype_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_029_totalvehs_hhsize_hhinc_dwelltype_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, hhsize, hhinc, owndwell, dwelltype]
+  ordered_to_adjust_atts: [totalvehs, hhsize, hhinc, owndwell, dwelltype]
+  last_adjustment_order: [totalvehs, hhsize, hhinc, owndwell, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_030_totalvehs_hhsize_hhinc_owndwell_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_030_totalvehs_hhsize_hhinc_owndwell_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, dwelltype, hhsize, owndwell, hhinc]
+  ordered_to_adjust_atts: [totalvehs, dwelltype, hhsize, owndwell, hhinc]
+  last_adjustment_order: [totalvehs, dwelltype, hhsize, owndwell, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_031_totalvehs_dwelltype_hhsize_owndwell_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_031_totalvehs_dwelltype_hhsize_owndwell_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, dwelltype, hhsize, hhinc, owndwell]
+  ordered_to_adjust_atts: [totalvehs, dwelltype, hhsize, hhinc, owndwell]
+  last_adjustment_order: [totalvehs, dwelltype, hhsize, hhinc, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_032_totalvehs_dwelltype_hhsize_hhinc_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_032_totalvehs_dwelltype_hhsize_hhinc_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, dwelltype, owndwell, hhsize, hhinc]
+  ordered_to_adjust_atts: [totalvehs, dwelltype, owndwell, hhsize, hhinc]
+  last_adjustment_order: [totalvehs, dwelltype, owndwell, hhsize, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_033_totalvehs_dwelltype_owndwell_hhsize_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_033_totalvehs_dwelltype_owndwell_hhsize_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, dwelltype, owndwell, hhinc, hhsize]
+  ordered_to_adjust_atts: [totalvehs, dwelltype, owndwell, hhinc, hhsize]
+  last_adjustment_order: [totalvehs, dwelltype, owndwell, hhinc, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_034_totalvehs_dwelltype_owndwell_hhinc_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_034_totalvehs_dwelltype_owndwell_hhinc_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, dwelltype, hhinc, hhsize, owndwell]
+  ordered_to_adjust_atts: [totalvehs, dwelltype, hhinc, hhsize, owndwell]
+  last_adjustment_order: [totalvehs, dwelltype, hhinc, hhsize, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_035_totalvehs_dwelltype_hhinc_hhsize_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_035_totalvehs_dwelltype_hhinc_hhsize_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, dwelltype, hhinc, owndwell, hhsize]
+  ordered_to_adjust_atts: [totalvehs, dwelltype, hhinc, owndwell, hhsize]
+  last_adjustment_order: [totalvehs, dwelltype, hhinc, owndwell, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_036_totalvehs_dwelltype_hhinc_owndwell_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_036_totalvehs_dwelltype_hhinc_owndwell_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, owndwell, hhsize, dwelltype, hhinc]
+  ordered_to_adjust_atts: [totalvehs, owndwell, hhsize, dwelltype, hhinc]
+  last_adjustment_order: [totalvehs, owndwell, hhsize, dwelltype, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_037_totalvehs_owndwell_hhsize_dwelltype_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_037_totalvehs_owndwell_hhsize_dwelltype_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, owndwell, hhsize, hhinc, dwelltype]
+  ordered_to_adjust_atts: [totalvehs, owndwell, hhsize, hhinc, dwelltype]
+  last_adjustment_order: [totalvehs, owndwell, hhsize, hhinc, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_038_totalvehs_owndwell_hhsize_hhinc_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_038_totalvehs_owndwell_hhsize_hhinc_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, owndwell, dwelltype, hhsize, hhinc]
+  ordered_to_adjust_atts: [totalvehs, owndwell, dwelltype, hhsize, hhinc]
+  last_adjustment_order: [totalvehs, owndwell, dwelltype, hhsize, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_039_totalvehs_owndwell_dwelltype_hhsize_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_039_totalvehs_owndwell_dwelltype_hhsize_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, owndwell, dwelltype, hhinc, hhsize]
+  ordered_to_adjust_atts: [totalvehs, owndwell, dwelltype, hhinc, hhsize]
+  last_adjustment_order: [totalvehs, owndwell, dwelltype, hhinc, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_040_totalvehs_owndwell_dwelltype_hhinc_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_040_totalvehs_owndwell_dwelltype_hhinc_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, owndwell, hhinc, hhsize, dwelltype]
+  ordered_to_adjust_atts: [totalvehs, owndwell, hhinc, hhsize, dwelltype]
+  last_adjustment_order: [totalvehs, owndwell, hhinc, hhsize, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_041_totalvehs_owndwell_hhinc_hhsize_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_041_totalvehs_owndwell_hhinc_hhsize_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, owndwell, hhinc, dwelltype, hhsize]
+  ordered_to_adjust_atts: [totalvehs, owndwell, hhinc, dwelltype, hhsize]
+  last_adjustment_order: [totalvehs, owndwell, hhinc, dwelltype, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_042_totalvehs_owndwell_hhinc_dwelltype_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_042_totalvehs_owndwell_hhinc_dwelltype_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, hhinc, hhsize, dwelltype, owndwell]
+  ordered_to_adjust_atts: [totalvehs, hhinc, hhsize, dwelltype, owndwell]
+  last_adjustment_order: [totalvehs, hhinc, hhsize, dwelltype, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_043_totalvehs_hhinc_hhsize_dwelltype_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_043_totalvehs_hhinc_hhsize_dwelltype_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, hhinc, hhsize, owndwell, dwelltype]
+  ordered_to_adjust_atts: [totalvehs, hhinc, hhsize, owndwell, dwelltype]
+  last_adjustment_order: [totalvehs, hhinc, hhsize, owndwell, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_044_totalvehs_hhinc_hhsize_owndwell_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_044_totalvehs_hhinc_hhsize_owndwell_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, hhinc, dwelltype, hhsize, owndwell]
+  ordered_to_adjust_atts: [totalvehs, hhinc, dwelltype, hhsize, owndwell]
+  last_adjustment_order: [totalvehs, hhinc, dwelltype, hhsize, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_045_totalvehs_hhinc_dwelltype_hhsize_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_045_totalvehs_hhinc_dwelltype_hhsize_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, hhinc, dwelltype, owndwell, hhsize]
+  ordered_to_adjust_atts: [totalvehs, hhinc, dwelltype, owndwell, hhsize]
+  last_adjustment_order: [totalvehs, hhinc, dwelltype, owndwell, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_046_totalvehs_hhinc_dwelltype_owndwell_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_046_totalvehs_hhinc_dwelltype_owndwell_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, hhinc, owndwell, hhsize, dwelltype]
+  ordered_to_adjust_atts: [totalvehs, hhinc, owndwell, hhsize, dwelltype]
+  last_adjustment_order: [totalvehs, hhinc, owndwell, hhsize, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_047_totalvehs_hhinc_owndwell_hhsize_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_047_totalvehs_hhinc_owndwell_hhsize_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [totalvehs, hhinc, owndwell, dwelltype, hhsize]
+  ordered_to_adjust_atts: [totalvehs, hhinc, owndwell, dwelltype, hhsize]
+  last_adjustment_order: [totalvehs, hhinc, owndwell, dwelltype, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_048_totalvehs_hhinc_owndwell_dwelltype_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_048_totalvehs_hhinc_owndwell_dwelltype_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, hhsize, totalvehs, owndwell, hhinc]
+  ordered_to_adjust_atts: [dwelltype, hhsize, totalvehs, owndwell, hhinc]
+  last_adjustment_order: [dwelltype, hhsize, totalvehs, owndwell, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_049_dwelltype_hhsize_totalvehs_owndwell_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_049_dwelltype_hhsize_totalvehs_owndwell_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, hhsize, totalvehs, hhinc, owndwell]
+  ordered_to_adjust_atts: [dwelltype, hhsize, totalvehs, hhinc, owndwell]
+  last_adjustment_order: [dwelltype, hhsize, totalvehs, hhinc, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_050_dwelltype_hhsize_totalvehs_hhinc_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_050_dwelltype_hhsize_totalvehs_hhinc_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, hhsize, owndwell, totalvehs, hhinc]
+  ordered_to_adjust_atts: [dwelltype, hhsize, owndwell, totalvehs, hhinc]
+  last_adjustment_order: [dwelltype, hhsize, owndwell, totalvehs, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_051_dwelltype_hhsize_owndwell_totalvehs_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_051_dwelltype_hhsize_owndwell_totalvehs_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, hhsize, owndwell, hhinc, totalvehs]
+  ordered_to_adjust_atts: [dwelltype, hhsize, owndwell, hhinc, totalvehs]
+  last_adjustment_order: [dwelltype, hhsize, owndwell, hhinc, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_052_dwelltype_hhsize_owndwell_hhinc_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_052_dwelltype_hhsize_owndwell_hhinc_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, hhsize, hhinc, totalvehs, owndwell]
+  ordered_to_adjust_atts: [dwelltype, hhsize, hhinc, totalvehs, owndwell]
+  last_adjustment_order: [dwelltype, hhsize, hhinc, totalvehs, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_053_dwelltype_hhsize_hhinc_totalvehs_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_053_dwelltype_hhsize_hhinc_totalvehs_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, hhsize, hhinc, owndwell, totalvehs]
+  ordered_to_adjust_atts: [dwelltype, hhsize, hhinc, owndwell, totalvehs]
+  last_adjustment_order: [dwelltype, hhsize, hhinc, owndwell, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_054_dwelltype_hhsize_hhinc_owndwell_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_054_dwelltype_hhsize_hhinc_owndwell_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, totalvehs, hhsize, owndwell, hhinc]
+  ordered_to_adjust_atts: [dwelltype, totalvehs, hhsize, owndwell, hhinc]
+  last_adjustment_order: [dwelltype, totalvehs, hhsize, owndwell, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_055_dwelltype_totalvehs_hhsize_owndwell_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_055_dwelltype_totalvehs_hhsize_owndwell_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, totalvehs, hhsize, hhinc, owndwell]
+  ordered_to_adjust_atts: [dwelltype, totalvehs, hhsize, hhinc, owndwell]
+  last_adjustment_order: [dwelltype, totalvehs, hhsize, hhinc, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_056_dwelltype_totalvehs_hhsize_hhinc_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_056_dwelltype_totalvehs_hhsize_hhinc_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, totalvehs, owndwell, hhsize, hhinc]
+  ordered_to_adjust_atts: [dwelltype, totalvehs, owndwell, hhsize, hhinc]
+  last_adjustment_order: [dwelltype, totalvehs, owndwell, hhsize, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_057_dwelltype_totalvehs_owndwell_hhsize_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_057_dwelltype_totalvehs_owndwell_hhsize_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, totalvehs, owndwell, hhinc, hhsize]
+  ordered_to_adjust_atts: [dwelltype, totalvehs, owndwell, hhinc, hhsize]
+  last_adjustment_order: [dwelltype, totalvehs, owndwell, hhinc, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_058_dwelltype_totalvehs_owndwell_hhinc_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_058_dwelltype_totalvehs_owndwell_hhinc_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, totalvehs, hhinc, hhsize, owndwell]
+  ordered_to_adjust_atts: [dwelltype, totalvehs, hhinc, hhsize, owndwell]
+  last_adjustment_order: [dwelltype, totalvehs, hhinc, hhsize, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_059_dwelltype_totalvehs_hhinc_hhsize_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_059_dwelltype_totalvehs_hhinc_hhsize_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, totalvehs, hhinc, owndwell, hhsize]
+  ordered_to_adjust_atts: [dwelltype, totalvehs, hhinc, owndwell, hhsize]
+  last_adjustment_order: [dwelltype, totalvehs, hhinc, owndwell, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_060_dwelltype_totalvehs_hhinc_owndwell_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_060_dwelltype_totalvehs_hhinc_owndwell_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, owndwell, hhsize, totalvehs, hhinc]
+  ordered_to_adjust_atts: [dwelltype, owndwell, hhsize, totalvehs, hhinc]
+  last_adjustment_order: [dwelltype, owndwell, hhsize, totalvehs, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_061_dwelltype_owndwell_hhsize_totalvehs_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_061_dwelltype_owndwell_hhsize_totalvehs_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, owndwell, hhsize, hhinc, totalvehs]
+  ordered_to_adjust_atts: [dwelltype, owndwell, hhsize, hhinc, totalvehs]
+  last_adjustment_order: [dwelltype, owndwell, hhsize, hhinc, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_062_dwelltype_owndwell_hhsize_hhinc_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_062_dwelltype_owndwell_hhsize_hhinc_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, owndwell, totalvehs, hhsize, hhinc]
+  ordered_to_adjust_atts: [dwelltype, owndwell, totalvehs, hhsize, hhinc]
+  last_adjustment_order: [dwelltype, owndwell, totalvehs, hhsize, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_063_dwelltype_owndwell_totalvehs_hhsize_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_063_dwelltype_owndwell_totalvehs_hhsize_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, owndwell, totalvehs, hhinc, hhsize]
+  ordered_to_adjust_atts: [dwelltype, owndwell, totalvehs, hhinc, hhsize]
+  last_adjustment_order: [dwelltype, owndwell, totalvehs, hhinc, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_064_dwelltype_owndwell_totalvehs_hhinc_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_064_dwelltype_owndwell_totalvehs_hhinc_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, owndwell, hhinc, hhsize, totalvehs]
+  ordered_to_adjust_atts: [dwelltype, owndwell, hhinc, hhsize, totalvehs]
+  last_adjustment_order: [dwelltype, owndwell, hhinc, hhsize, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_065_dwelltype_owndwell_hhinc_hhsize_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_065_dwelltype_owndwell_hhinc_hhsize_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, owndwell, hhinc, totalvehs, hhsize]
+  ordered_to_adjust_atts: [dwelltype, owndwell, hhinc, totalvehs, hhsize]
+  last_adjustment_order: [dwelltype, owndwell, hhinc, totalvehs, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_066_dwelltype_owndwell_hhinc_totalvehs_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_066_dwelltype_owndwell_hhinc_totalvehs_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, hhinc, hhsize, totalvehs, owndwell]
+  ordered_to_adjust_atts: [dwelltype, hhinc, hhsize, totalvehs, owndwell]
+  last_adjustment_order: [dwelltype, hhinc, hhsize, totalvehs, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_067_dwelltype_hhinc_hhsize_totalvehs_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_067_dwelltype_hhinc_hhsize_totalvehs_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, hhinc, hhsize, owndwell, totalvehs]
+  ordered_to_adjust_atts: [dwelltype, hhinc, hhsize, owndwell, totalvehs]
+  last_adjustment_order: [dwelltype, hhinc, hhsize, owndwell, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_068_dwelltype_hhinc_hhsize_owndwell_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_068_dwelltype_hhinc_hhsize_owndwell_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, hhinc, totalvehs, hhsize, owndwell]
+  ordered_to_adjust_atts: [dwelltype, hhinc, totalvehs, hhsize, owndwell]
+  last_adjustment_order: [dwelltype, hhinc, totalvehs, hhsize, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_069_dwelltype_hhinc_totalvehs_hhsize_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_069_dwelltype_hhinc_totalvehs_hhsize_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, hhinc, totalvehs, owndwell, hhsize]
+  ordered_to_adjust_atts: [dwelltype, hhinc, totalvehs, owndwell, hhsize]
+  last_adjustment_order: [dwelltype, hhinc, totalvehs, owndwell, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_070_dwelltype_hhinc_totalvehs_owndwell_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_070_dwelltype_hhinc_totalvehs_owndwell_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, hhinc, owndwell, hhsize, totalvehs]
+  ordered_to_adjust_atts: [dwelltype, hhinc, owndwell, hhsize, totalvehs]
+  last_adjustment_order: [dwelltype, hhinc, owndwell, hhsize, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_071_dwelltype_hhinc_owndwell_hhsize_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_071_dwelltype_hhinc_owndwell_hhsize_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [dwelltype, hhinc, owndwell, totalvehs, hhsize]
+  ordered_to_adjust_atts: [dwelltype, hhinc, owndwell, totalvehs, hhsize]
+  last_adjustment_order: [dwelltype, hhinc, owndwell, totalvehs, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_072_dwelltype_hhinc_owndwell_totalvehs_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_072_dwelltype_hhinc_owndwell_totalvehs_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, hhsize, totalvehs, dwelltype, hhinc]
+  ordered_to_adjust_atts: [owndwell, hhsize, totalvehs, dwelltype, hhinc]
+  last_adjustment_order: [owndwell, hhsize, totalvehs, dwelltype, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_073_owndwell_hhsize_totalvehs_dwelltype_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_073_owndwell_hhsize_totalvehs_dwelltype_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, hhsize, totalvehs, hhinc, dwelltype]
+  ordered_to_adjust_atts: [owndwell, hhsize, totalvehs, hhinc, dwelltype]
+  last_adjustment_order: [owndwell, hhsize, totalvehs, hhinc, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_074_owndwell_hhsize_totalvehs_hhinc_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_074_owndwell_hhsize_totalvehs_hhinc_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, hhsize, dwelltype, totalvehs, hhinc]
+  ordered_to_adjust_atts: [owndwell, hhsize, dwelltype, totalvehs, hhinc]
+  last_adjustment_order: [owndwell, hhsize, dwelltype, totalvehs, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_075_owndwell_hhsize_dwelltype_totalvehs_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_075_owndwell_hhsize_dwelltype_totalvehs_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, hhsize, dwelltype, hhinc, totalvehs]
+  ordered_to_adjust_atts: [owndwell, hhsize, dwelltype, hhinc, totalvehs]
+  last_adjustment_order: [owndwell, hhsize, dwelltype, hhinc, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_076_owndwell_hhsize_dwelltype_hhinc_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_076_owndwell_hhsize_dwelltype_hhinc_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, hhsize, hhinc, totalvehs, dwelltype]
+  ordered_to_adjust_atts: [owndwell, hhsize, hhinc, totalvehs, dwelltype]
+  last_adjustment_order: [owndwell, hhsize, hhinc, totalvehs, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_077_owndwell_hhsize_hhinc_totalvehs_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_077_owndwell_hhsize_hhinc_totalvehs_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, hhsize, hhinc, dwelltype, totalvehs]
+  ordered_to_adjust_atts: [owndwell, hhsize, hhinc, dwelltype, totalvehs]
+  last_adjustment_order: [owndwell, hhsize, hhinc, dwelltype, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_078_owndwell_hhsize_hhinc_dwelltype_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_078_owndwell_hhsize_hhinc_dwelltype_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, totalvehs, hhsize, dwelltype, hhinc]
+  ordered_to_adjust_atts: [owndwell, totalvehs, hhsize, dwelltype, hhinc]
+  last_adjustment_order: [owndwell, totalvehs, hhsize, dwelltype, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_079_owndwell_totalvehs_hhsize_dwelltype_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_079_owndwell_totalvehs_hhsize_dwelltype_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, totalvehs, hhsize, hhinc, dwelltype]
+  ordered_to_adjust_atts: [owndwell, totalvehs, hhsize, hhinc, dwelltype]
+  last_adjustment_order: [owndwell, totalvehs, hhsize, hhinc, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_080_owndwell_totalvehs_hhsize_hhinc_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_080_owndwell_totalvehs_hhsize_hhinc_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, totalvehs, dwelltype, hhsize, hhinc]
+  ordered_to_adjust_atts: [owndwell, totalvehs, dwelltype, hhsize, hhinc]
+  last_adjustment_order: [owndwell, totalvehs, dwelltype, hhsize, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_081_owndwell_totalvehs_dwelltype_hhsize_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_081_owndwell_totalvehs_dwelltype_hhsize_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, totalvehs, dwelltype, hhinc, hhsize]
+  ordered_to_adjust_atts: [owndwell, totalvehs, dwelltype, hhinc, hhsize]
+  last_adjustment_order: [owndwell, totalvehs, dwelltype, hhinc, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_082_owndwell_totalvehs_dwelltype_hhinc_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_082_owndwell_totalvehs_dwelltype_hhinc_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, totalvehs, hhinc, hhsize, dwelltype]
+  ordered_to_adjust_atts: [owndwell, totalvehs, hhinc, hhsize, dwelltype]
+  last_adjustment_order: [owndwell, totalvehs, hhinc, hhsize, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_083_owndwell_totalvehs_hhinc_hhsize_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_083_owndwell_totalvehs_hhinc_hhsize_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, totalvehs, hhinc, dwelltype, hhsize]
+  ordered_to_adjust_atts: [owndwell, totalvehs, hhinc, dwelltype, hhsize]
+  last_adjustment_order: [owndwell, totalvehs, hhinc, dwelltype, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_084_owndwell_totalvehs_hhinc_dwelltype_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_084_owndwell_totalvehs_hhinc_dwelltype_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, dwelltype, hhsize, totalvehs, hhinc]
+  ordered_to_adjust_atts: [owndwell, dwelltype, hhsize, totalvehs, hhinc]
+  last_adjustment_order: [owndwell, dwelltype, hhsize, totalvehs, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_085_owndwell_dwelltype_hhsize_totalvehs_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_085_owndwell_dwelltype_hhsize_totalvehs_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, dwelltype, hhsize, hhinc, totalvehs]
+  ordered_to_adjust_atts: [owndwell, dwelltype, hhsize, hhinc, totalvehs]
+  last_adjustment_order: [owndwell, dwelltype, hhsize, hhinc, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_086_owndwell_dwelltype_hhsize_hhinc_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_086_owndwell_dwelltype_hhsize_hhinc_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, dwelltype, totalvehs, hhsize, hhinc]
+  ordered_to_adjust_atts: [owndwell, dwelltype, totalvehs, hhsize, hhinc]
+  last_adjustment_order: [owndwell, dwelltype, totalvehs, hhsize, hhinc]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_087_owndwell_dwelltype_totalvehs_hhsize_hhinc
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_087_owndwell_dwelltype_totalvehs_hhsize_hhinc
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, dwelltype, totalvehs, hhinc, hhsize]
+  ordered_to_adjust_atts: [owndwell, dwelltype, totalvehs, hhinc, hhsize]
+  last_adjustment_order: [owndwell, dwelltype, totalvehs, hhinc, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_088_owndwell_dwelltype_totalvehs_hhinc_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_088_owndwell_dwelltype_totalvehs_hhinc_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, dwelltype, hhinc, hhsize, totalvehs]
+  ordered_to_adjust_atts: [owndwell, dwelltype, hhinc, hhsize, totalvehs]
+  last_adjustment_order: [owndwell, dwelltype, hhinc, hhsize, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_089_owndwell_dwelltype_hhinc_hhsize_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_089_owndwell_dwelltype_hhinc_hhsize_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, dwelltype, hhinc, totalvehs, hhsize]
+  ordered_to_adjust_atts: [owndwell, dwelltype, hhinc, totalvehs, hhsize]
+  last_adjustment_order: [owndwell, dwelltype, hhinc, totalvehs, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_090_owndwell_dwelltype_hhinc_totalvehs_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_090_owndwell_dwelltype_hhinc_totalvehs_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, hhinc, hhsize, totalvehs, dwelltype]
+  ordered_to_adjust_atts: [owndwell, hhinc, hhsize, totalvehs, dwelltype]
+  last_adjustment_order: [owndwell, hhinc, hhsize, totalvehs, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_091_owndwell_hhinc_hhsize_totalvehs_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_091_owndwell_hhinc_hhsize_totalvehs_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, hhinc, hhsize, dwelltype, totalvehs]
+  ordered_to_adjust_atts: [owndwell, hhinc, hhsize, dwelltype, totalvehs]
+  last_adjustment_order: [owndwell, hhinc, hhsize, dwelltype, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_092_owndwell_hhinc_hhsize_dwelltype_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_092_owndwell_hhinc_hhsize_dwelltype_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, hhinc, totalvehs, hhsize, dwelltype]
+  ordered_to_adjust_atts: [owndwell, hhinc, totalvehs, hhsize, dwelltype]
+  last_adjustment_order: [owndwell, hhinc, totalvehs, hhsize, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_093_owndwell_hhinc_totalvehs_hhsize_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_093_owndwell_hhinc_totalvehs_hhsize_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, hhinc, totalvehs, dwelltype, hhsize]
+  ordered_to_adjust_atts: [owndwell, hhinc, totalvehs, dwelltype, hhsize]
+  last_adjustment_order: [owndwell, hhinc, totalvehs, dwelltype, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_094_owndwell_hhinc_totalvehs_dwelltype_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_094_owndwell_hhinc_totalvehs_dwelltype_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, hhinc, dwelltype, hhsize, totalvehs]
+  ordered_to_adjust_atts: [owndwell, hhinc, dwelltype, hhsize, totalvehs]
+  last_adjustment_order: [owndwell, hhinc, dwelltype, hhsize, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_095_owndwell_hhinc_dwelltype_hhsize_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_095_owndwell_hhinc_dwelltype_hhsize_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [owndwell, hhinc, dwelltype, totalvehs, hhsize]
+  ordered_to_adjust_atts: [owndwell, hhinc, dwelltype, totalvehs, hhsize]
+  last_adjustment_order: [owndwell, hhinc, dwelltype, totalvehs, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_096_owndwell_hhinc_dwelltype_totalvehs_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_096_owndwell_hhinc_dwelltype_totalvehs_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, hhsize, totalvehs, dwelltype, owndwell]
+  ordered_to_adjust_atts: [hhinc, hhsize, totalvehs, dwelltype, owndwell]
+  last_adjustment_order: [hhinc, hhsize, totalvehs, dwelltype, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_097_hhinc_hhsize_totalvehs_dwelltype_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_097_hhinc_hhsize_totalvehs_dwelltype_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, hhsize, totalvehs, owndwell, dwelltype]
+  ordered_to_adjust_atts: [hhinc, hhsize, totalvehs, owndwell, dwelltype]
+  last_adjustment_order: [hhinc, hhsize, totalvehs, owndwell, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_098_hhinc_hhsize_totalvehs_owndwell_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_098_hhinc_hhsize_totalvehs_owndwell_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, hhsize, dwelltype, totalvehs, owndwell]
+  ordered_to_adjust_atts: [hhinc, hhsize, dwelltype, totalvehs, owndwell]
+  last_adjustment_order: [hhinc, hhsize, dwelltype, totalvehs, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_099_hhinc_hhsize_dwelltype_totalvehs_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_099_hhinc_hhsize_dwelltype_totalvehs_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, hhsize, dwelltype, owndwell, totalvehs]
+  ordered_to_adjust_atts: [hhinc, hhsize, dwelltype, owndwell, totalvehs]
+  last_adjustment_order: [hhinc, hhsize, dwelltype, owndwell, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_100_hhinc_hhsize_dwelltype_owndwell_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_100_hhinc_hhsize_dwelltype_owndwell_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, hhsize, owndwell, totalvehs, dwelltype]
+  ordered_to_adjust_atts: [hhinc, hhsize, owndwell, totalvehs, dwelltype]
+  last_adjustment_order: [hhinc, hhsize, owndwell, totalvehs, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_101_hhinc_hhsize_owndwell_totalvehs_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_101_hhinc_hhsize_owndwell_totalvehs_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, hhsize, owndwell, dwelltype, totalvehs]
+  ordered_to_adjust_atts: [hhinc, hhsize, owndwell, dwelltype, totalvehs]
+  last_adjustment_order: [hhinc, hhsize, owndwell, dwelltype, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_102_hhinc_hhsize_owndwell_dwelltype_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_102_hhinc_hhsize_owndwell_dwelltype_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, totalvehs, hhsize, dwelltype, owndwell]
+  ordered_to_adjust_atts: [hhinc, totalvehs, hhsize, dwelltype, owndwell]
+  last_adjustment_order: [hhinc, totalvehs, hhsize, dwelltype, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_103_hhinc_totalvehs_hhsize_dwelltype_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_103_hhinc_totalvehs_hhsize_dwelltype_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, totalvehs, hhsize, owndwell, dwelltype]
+  ordered_to_adjust_atts: [hhinc, totalvehs, hhsize, owndwell, dwelltype]
+  last_adjustment_order: [hhinc, totalvehs, hhsize, owndwell, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_104_hhinc_totalvehs_hhsize_owndwell_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_104_hhinc_totalvehs_hhsize_owndwell_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, totalvehs, dwelltype, hhsize, owndwell]
+  ordered_to_adjust_atts: [hhinc, totalvehs, dwelltype, hhsize, owndwell]
+  last_adjustment_order: [hhinc, totalvehs, dwelltype, hhsize, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_105_hhinc_totalvehs_dwelltype_hhsize_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_105_hhinc_totalvehs_dwelltype_hhsize_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, totalvehs, dwelltype, owndwell, hhsize]
+  ordered_to_adjust_atts: [hhinc, totalvehs, dwelltype, owndwell, hhsize]
+  last_adjustment_order: [hhinc, totalvehs, dwelltype, owndwell, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_106_hhinc_totalvehs_dwelltype_owndwell_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_106_hhinc_totalvehs_dwelltype_owndwell_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, totalvehs, owndwell, hhsize, dwelltype]
+  ordered_to_adjust_atts: [hhinc, totalvehs, owndwell, hhsize, dwelltype]
+  last_adjustment_order: [hhinc, totalvehs, owndwell, hhsize, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_107_hhinc_totalvehs_owndwell_hhsize_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_107_hhinc_totalvehs_owndwell_hhsize_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, totalvehs, owndwell, dwelltype, hhsize]
+  ordered_to_adjust_atts: [hhinc, totalvehs, owndwell, dwelltype, hhsize]
+  last_adjustment_order: [hhinc, totalvehs, owndwell, dwelltype, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_108_hhinc_totalvehs_owndwell_dwelltype_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_108_hhinc_totalvehs_owndwell_dwelltype_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, dwelltype, hhsize, totalvehs, owndwell]
+  ordered_to_adjust_atts: [hhinc, dwelltype, hhsize, totalvehs, owndwell]
+  last_adjustment_order: [hhinc, dwelltype, hhsize, totalvehs, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_109_hhinc_dwelltype_hhsize_totalvehs_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_109_hhinc_dwelltype_hhsize_totalvehs_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, dwelltype, hhsize, owndwell, totalvehs]
+  ordered_to_adjust_atts: [hhinc, dwelltype, hhsize, owndwell, totalvehs]
+  last_adjustment_order: [hhinc, dwelltype, hhsize, owndwell, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_110_hhinc_dwelltype_hhsize_owndwell_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_110_hhinc_dwelltype_hhsize_owndwell_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, dwelltype, totalvehs, hhsize, owndwell]
+  ordered_to_adjust_atts: [hhinc, dwelltype, totalvehs, hhsize, owndwell]
+  last_adjustment_order: [hhinc, dwelltype, totalvehs, hhsize, owndwell]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_111_hhinc_dwelltype_totalvehs_hhsize_owndwell
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_111_hhinc_dwelltype_totalvehs_hhsize_owndwell
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, dwelltype, totalvehs, owndwell, hhsize]
+  ordered_to_adjust_atts: [hhinc, dwelltype, totalvehs, owndwell, hhsize]
+  last_adjustment_order: [hhinc, dwelltype, totalvehs, owndwell, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_112_hhinc_dwelltype_totalvehs_owndwell_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_112_hhinc_dwelltype_totalvehs_owndwell_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, dwelltype, owndwell, hhsize, totalvehs]
+  ordered_to_adjust_atts: [hhinc, dwelltype, owndwell, hhsize, totalvehs]
+  last_adjustment_order: [hhinc, dwelltype, owndwell, hhsize, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_113_hhinc_dwelltype_owndwell_hhsize_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_113_hhinc_dwelltype_owndwell_hhsize_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, dwelltype, owndwell, totalvehs, hhsize]
+  ordered_to_adjust_atts: [hhinc, dwelltype, owndwell, totalvehs, hhsize]
+  last_adjustment_order: [hhinc, dwelltype, owndwell, totalvehs, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_114_hhinc_dwelltype_owndwell_totalvehs_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_114_hhinc_dwelltype_owndwell_totalvehs_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, owndwell, hhsize, totalvehs, dwelltype]
+  ordered_to_adjust_atts: [hhinc, owndwell, hhsize, totalvehs, dwelltype]
+  last_adjustment_order: [hhinc, owndwell, hhsize, totalvehs, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_115_hhinc_owndwell_hhsize_totalvehs_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_115_hhinc_owndwell_hhsize_totalvehs_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, owndwell, hhsize, dwelltype, totalvehs]
+  ordered_to_adjust_atts: [hhinc, owndwell, hhsize, dwelltype, totalvehs]
+  last_adjustment_order: [hhinc, owndwell, hhsize, dwelltype, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_116_hhinc_owndwell_hhsize_dwelltype_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_116_hhinc_owndwell_hhsize_dwelltype_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, owndwell, totalvehs, hhsize, dwelltype]
+  ordered_to_adjust_atts: [hhinc, owndwell, totalvehs, hhsize, dwelltype]
+  last_adjustment_order: [hhinc, owndwell, totalvehs, hhsize, dwelltype]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_117_hhinc_owndwell_totalvehs_hhsize_dwelltype
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_117_hhinc_owndwell_totalvehs_hhsize_dwelltype
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, owndwell, totalvehs, dwelltype, hhsize]
+  ordered_to_adjust_atts: [hhinc, owndwell, totalvehs, dwelltype, hhsize]
+  last_adjustment_order: [hhinc, owndwell, totalvehs, dwelltype, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_118_hhinc_owndwell_totalvehs_dwelltype_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_118_hhinc_owndwell_totalvehs_dwelltype_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, owndwell, dwelltype, hhsize, totalvehs]
+  ordered_to_adjust_atts: [hhinc, owndwell, dwelltype, hhsize, totalvehs]
+  last_adjustment_order: [hhinc, owndwell, dwelltype, hhsize, totalvehs]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_119_hhinc_owndwell_dwelltype_hhsize_totalvehs
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_119_hhinc_owndwell_dwelltype_hhsize_totalvehs
+  hh_syn_name: household_counts.csv
+  reruns: 1
+
+- method: saa
+  level: hh
+  hh_marg_file: "../processed_data/census_POA_hh_saa.csv"
+  hh_sample_file: "../processed_data/ori_sample_hh.csv"
+  hh_seed_data: "../processed_data/ori_sample_hh.csv"
+  zone_field: zone_id
+  considered_atts: [hhinc, owndwell, dwelltype, totalvehs, hhsize]
+  ordered_to_adjust_atts: [hhinc, owndwell, dwelltype, totalvehs, hhsize]
+  last_adjustment_order: [hhinc, owndwell, dwelltype, totalvehs, hhsize]
+  max_run_time: 1
+  extra_rm_frac: 0
+  randomly_add_last: []
+  output_each_step: false
+  add_name_for_step_output: unrestricted_order_120_hhinc_owndwell_dwelltype_totalvehs_hhsize
+  include_zero_cell_values: false
+  stochastic_mode: count_native_ilp
+  direct_solver_mode: two_stage
+  direct_adjustment_backend: min_cost_flow
+  zero_cell_policy: unrestricted
+  zone_workers: 4
+  pool_count_column: _weight
+  output_format: counts
+  output_name: unrestricted_order_120_hhinc_owndwell_dwelltype_totalvehs_hhsize
+  hh_syn_name: household_counts.csv
+  reruns: 1

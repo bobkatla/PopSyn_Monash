@@ -186,7 +186,8 @@ def run_direct_count_pass(
     first_attribute = order[0]
     if (
         direct_reference_mode == "pool"
-        and zero_cell_policy != "relax_empty_rows_columns"
+        and zero_cell_policy
+        in {"seed_only", "relax_empty_rows_global_columns"}
     ):
         assert count_pool is not None
         _validate_first_attribute_support(

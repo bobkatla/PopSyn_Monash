@@ -17,8 +17,6 @@ ATTRIBUTES = ["hhsize", "totalvehs", "dwelltype", "owndwell", "hhinc"]
 ZONE_FIELD = "zone_id"
 COUNT_FIELD = "count"
 CANONICAL_COLUMNS = [ZONE_FIELD, *ATTRIBUTES, COUNT_FIELD]
-EXPECTED_RUNS = 120
-
 SUMMARY_METRICS = [
     "census_rmse",
     "census_mae",
@@ -43,10 +41,31 @@ def _resolve_config_path(raw_path: str, runs_yml: Path) -> Path:
 
 def load_runs(runs_yml: Path) -> list[dict[str, object]]:
     runs = yaml.safe_load(runs_yml.read_text(encoding="utf-8"))
-    if not isinstance(runs, list) or len(runs) != EXPECTED_RUNS:
-        raise ValueError(f"Expected exactly {EXPECTED_RUNS} runs in {runs_yml}")
+    if not isinstance(runs, list) or not runs:
+        raise ValueError(f"Expected a non-empty run list in {runs_yml}")
 
-    expected_orders = list(permutations(ATTRIBUTES))
+    policies = {run.get("zero_cell_policy") for run in runs if isinstance(run, dict)}
+    if policies == {"relax_empty_rows_columns"}:
+        expected_orders = list(permutations(ATTRIBUTES))
+        name_prefix = "relaxed"
+    elif policies == {"unrestricted"}:
+        expected_orders = list(permutations(ATTRIBUTES))
+        name_prefix = "unrestricted"
+    elif policies == {"seed_only"}:
+        expected_orders = [
+            order for order in permutations(ATTRIBUTES) if order[0] != "hhinc"
+        ]
+        name_prefix = "seed_only"
+    else:
+        raise ValueError(
+            "Runs must use one supported policy: relax_empty_rows_columns, "
+            "unrestricted, or seed_only"
+        )
+    if len(runs) != len(expected_orders):
+        raise ValueError(
+            f"Expected exactly {len(expected_orders)} {name_prefix} runs in {runs_yml}"
+        )
+
     actual_orders: list[tuple[str, ...]] = []
     output_names: list[str] = []
     for index, run in enumerate(runs, start=1):
@@ -55,7 +74,7 @@ def load_runs(runs_yml: Path) -> list[dict[str, object]]:
         order = tuple(run.get("ordered_to_adjust_atts", []))
         actual_orders.append(order)
         output_name = str(run.get("output_name", ""))
-        expected_name = f"relaxed_order_{index:03d}_{'_'.join(order)}"
+        expected_name = f"{name_prefix}_order_{index:03d}_{'_'.join(order)}"
         if output_name != expected_name:
             raise ValueError(
                 f"Run {index} has output_name {output_name!r}; expected {expected_name!r}"
@@ -69,7 +88,7 @@ def load_runs(runs_yml: Path) -> list[dict[str, object]]:
 
     if actual_orders != expected_orders:
         raise ValueError("Runs are not the complete deterministic permutation sequence")
-    if len(set(output_names)) != EXPECTED_RUNS:
+    if len(set(output_names)) != len(expected_orders):
         raise ValueError("Output names are not unique")
     return runs
 
@@ -261,7 +280,7 @@ def load_runtimes(path: Path, output_names: Iterable[str]) -> dict[str, float]:
     ]
     counts = selected["run_name"].value_counts()
     invalid = [name for name in names if counts.get(name, 0) != 1]
-    if invalid or len(selected) != EXPECTED_RUNS:
+    if invalid or len(selected) != len(names):
         raise ValueError(
             "run_times.csv must contain exactly one rerun-0 record for every order; "
             f"invalid={invalid[:5]}"
@@ -278,10 +297,8 @@ def build_position_effects(summary: pd.DataFrame) -> pd.DataFrame:
         position_column = f"{attribute}_position"
         for position in range(1, len(ATTRIBUTES) + 1):
             group = summary[summary[position_column] == position]
-            if len(group) != 24:
-                raise ValueError(
-                    f"Expected 24 runs for {attribute} at position {position}"
-                )
+            if group.empty:
+                continue
             row: dict[str, float | int | str] = {
                 "attribute": attribute,
                 "position": position,

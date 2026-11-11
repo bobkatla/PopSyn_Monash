@@ -24,6 +24,12 @@ from PopSynthesis.Methods.IPSF.run import _prepare_direct_pool
 
 ROOT = Path(__file__).resolve().parents[4]
 CONFIG_PATH = ROOT / "IO" / "configs" / "direct_count_relaxed_attribute_orders.yml"
+UNRESTRICTED_CONFIG_PATH = (
+    ROOT / "IO" / "configs" / "direct_count_unrestricted_attribute_orders.yml"
+)
+SEED_ONLY_CONFIG_PATH = (
+    ROOT / "IO" / "configs" / "direct_count_seed_only_attribute_orders.yml"
+)
 
 
 class AttributeOrderConfigTests(unittest.TestCase):
@@ -92,6 +98,200 @@ class AttributeOrderConfigTests(unittest.TestCase):
                     run["randomly_add_last"],
                     "pool",
                 )
+
+
+class UnrestrictedAttributeOrderConfigTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.runs = yaml.safe_load(
+            UNRESTRICTED_CONFIG_PATH.read_text(encoding="utf-8")
+        )
+        cls.census = pd.read_csv(
+            ROOT / "IO" / "processed_data" / "census_POA_hh_saa.csv",
+            header=[0, 1],
+        )
+        cls.seed = pd.read_csv(
+            ROOT / "IO" / "processed_data" / "ori_sample_hh.csv"
+        )
+
+    def test_complete_unique_permutation_configuration(self):
+        expected_orders = list(permutations(ATTRIBUTES))
+        actual_orders = [tuple(run["ordered_to_adjust_atts"]) for run in self.runs]
+        self.assertEqual(len(self.runs), 120)
+        self.assertEqual(actual_orders, expected_orders)
+        self.assertEqual(len(set(actual_orders)), 120)
+        self.assertNotIn("Negative income", set(self.seed["hhinc"].astype(str)))
+
+        fixed = {
+            "hh_marg_file": "../processed_data/census_POA_hh_saa.csv",
+            "hh_sample_file": "../processed_data/ori_sample_hh.csv",
+            "hh_seed_data": "../processed_data/ori_sample_hh.csv",
+            "pool_count_column": "_weight",
+            "stochastic_mode": "count_native_ilp",
+            "direct_solver_mode": "two_stage",
+            "direct_adjustment_backend": "min_cost_flow",
+            "zero_cell_policy": "unrestricted",
+            "zone_workers": 4,
+            "max_run_time": 1,
+            "extra_rm_frac": 0,
+            "output_format": "counts",
+            "reruns": 1,
+            "randomly_add_last": [],
+        }
+        names = []
+        for index, (run, order) in enumerate(zip(self.runs, expected_orders), start=1):
+            self.assertEqual(tuple(run["considered_atts"]), order)
+            self.assertEqual(tuple(run["last_adjustment_order"]), order)
+            self.assertEqual(set(order), set(ATTRIBUTES))
+            for key, value in fixed.items():
+                self.assertEqual(run[key], value, f"run {index}: {key}")
+            expected_name = f"unrestricted_order_{index:03d}_{'_'.join(order)}"
+            self.assertEqual(run["output_name"], expected_name)
+            self.assertEqual(run["add_name_for_step_output"], expected_name)
+            names.append(run["output_name"])
+        self.assertEqual(len(set(names)), 120)
+        self.assertEqual(load_runs(UNRESTRICTED_CONFIG_PATH), self.runs)
+
+    def test_all_first_attributes_are_included_and_pass_direct_validation(self):
+        first_attributes = {
+            run["ordered_to_adjust_atts"][0] for run in self.runs
+        }
+        self.assertEqual(first_attributes, set(ATTRIBUTES))
+
+        zone_column = self.census.columns[
+            self.census.columns.get_level_values(0) == "zone_id"
+        ][0]
+        marginal = self.census.set_index(zone_column).iloc[[0]]
+        pool = _prepare_direct_pool(self.seed, ATTRIBUTES, "_weight")
+        for run in self.runs:
+            with self.subTest(run=run["output_name"]):
+                _validate_direct_mode_inputs(
+                    marginal,
+                    pool,
+                    run["considered_atts"],
+                    run["ordered_to_adjust_atts"],
+                    run["last_adjustment_order"],
+                    run["max_run_time"],
+                    run["extra_rm_frac"],
+                    run["include_zero_cell_values"],
+                    run["randomly_add_last"],
+                    "pool",
+                )
+
+
+class SeedOnlyAttributeOrderConfigTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.runs = yaml.safe_load(
+            SEED_ONLY_CONFIG_PATH.read_text(encoding="utf-8")
+        )
+        cls.census = pd.read_csv(
+            ROOT / "IO" / "processed_data" / "census_POA_hh_saa.csv",
+            header=[0, 1],
+        )
+        cls.seed = pd.read_csv(
+            ROOT / "IO" / "processed_data" / "ori_sample_hh.csv"
+        )
+
+    def test_all_and_only_pool_supported_first_attribute_orders(self):
+        expected_orders = [
+            order for order in permutations(ATTRIBUTES) if order[0] != "hhinc"
+        ]
+        actual_orders = [tuple(run["ordered_to_adjust_atts"]) for run in self.runs]
+        self.assertEqual(len(self.runs), 96)
+        self.assertEqual(actual_orders, expected_orders)
+        self.assertEqual(len(set(actual_orders)), 96)
+
+        fixed = {
+            "hh_marg_file": "../processed_data/census_POA_hh_saa.csv",
+            "hh_sample_file": "../processed_data/ori_sample_hh.csv",
+            "hh_seed_data": "../processed_data/ori_sample_hh.csv",
+            "pool_count_column": "_weight",
+            "stochastic_mode": "count_native_ilp",
+            "direct_solver_mode": "two_stage",
+            "direct_adjustment_backend": "min_cost_flow",
+            "zero_cell_policy": "seed_only",
+            "zone_workers": 4,
+            "max_run_time": 1,
+            "extra_rm_frac": 0,
+            "output_format": "counts",
+            "reruns": 1,
+            "randomly_add_last": [],
+        }
+        names = []
+        for index, (run, order) in enumerate(zip(self.runs, expected_orders), start=1):
+            self.assertNotEqual(order[0], "hhinc")
+            self.assertEqual(tuple(run["considered_atts"]), order)
+            self.assertEqual(tuple(run["last_adjustment_order"]), order)
+            self.assertEqual(set(order), set(ATTRIBUTES))
+            for key, value in fixed.items():
+                self.assertEqual(run[key], value, f"run {index}: {key}")
+            expected_name = f"seed_only_order_{index:03d}_{'_'.join(order)}"
+            self.assertEqual(run["output_name"], expected_name)
+            self.assertEqual(run["add_name_for_step_output"], expected_name)
+            names.append(run["output_name"])
+        self.assertEqual(len(set(names)), 96)
+        self.assertEqual(load_runs(SEED_ONLY_CONFIG_PATH), self.runs)
+
+    def test_first_attributes_have_seed_support_and_pass_direct_validation(self):
+        first_attributes = {
+            run["ordered_to_adjust_atts"][0] for run in self.runs
+        }
+        self.assertEqual(
+            first_attributes,
+            {"hhsize", "totalvehs", "dwelltype", "owndwell"},
+        )
+        for attribute in first_attributes:
+            positive_census_states = {
+                str(state)
+                for state in self.census[attribute].columns
+                if self.census[(attribute, state)].sum() > 0
+            }
+            seed_states = set(self.seed[attribute].astype(str))
+            self.assertLessEqual(positive_census_states, seed_states)
+
+        zone_column = self.census.columns[
+            self.census.columns.get_level_values(0) == "zone_id"
+        ][0]
+        marginal = self.census.set_index(zone_column).iloc[[0]]
+        pool = _prepare_direct_pool(self.seed, ATTRIBUTES, "_weight")
+        for run in self.runs:
+            with self.subTest(run=run["output_name"]):
+                _validate_direct_mode_inputs(
+                    marginal,
+                    pool,
+                    run["considered_atts"],
+                    run["ordered_to_adjust_atts"],
+                    run["last_adjustment_order"],
+                    run["max_run_time"],
+                    run["extra_rm_frac"],
+                    run["include_zero_cell_values"],
+                    run["randomly_add_last"],
+                    "pool",
+                )
+
+    def test_position_effects_support_the_filtered_design(self):
+        rows = []
+        for index, run in enumerate(self.runs, start=1):
+            order = run["ordered_to_adjust_atts"]
+            row = {
+                "duplicates_another_order": False,
+                **{
+                    f"{attribute}_position": order.index(attribute) + 1
+                    for attribute in ATTRIBUTES
+                },
+                **{metric: float(index) for metric in SUMMARY_METRICS},
+            }
+            rows.append(row)
+        effects = build_position_effects(pd.DataFrame(rows))
+        self.assertEqual(len(effects), 24)
+        self.assertTrue(
+            effects[
+                (effects["attribute"] == "hhinc")
+                & (effects["position"] == 1)
+            ].empty
+        )
+        self.assertEqual(set(effects["number_of_orders"]), {18, 24})
 
 
 class AttributeOrderComparisonTests(unittest.TestCase):
