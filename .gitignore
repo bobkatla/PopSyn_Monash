@@ -17,4 +17,4 @@ test.csv
 _version.py
 **/test
 *.out
-IO/.DS_Store
+**/IO

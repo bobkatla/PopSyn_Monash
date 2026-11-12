@@ -9,10 +9,7 @@ try:
 except ImportError:  # pragma: no cover - compatibility with older pgmpy
     from pgmpy.models import BayesianNetwork as BayesianNetworkModel
 import numpy as np
-import networkx as nx
-import pylab as plt
 from itertools import chain
-from PopSynthesis.Benchmark.legacy.checker import total_RMSE_flat, update_SRMSE
 
 data_location = "../../../Generator_data/data/data_processed_here/"
 
@@ -82,14 +79,42 @@ def learn_struct_BN_score(
     best_DAG = est.estimate(scoring_method=scoring_method)
     model = BayesianNetworkModel(best_DAG)
     if show_struct:
+        import networkx as nx
+        import matplotlib.pyplot as plt
+
         nx.draw_circular(model, with_labels=True, node_size=2000, font_size=12)
         plt.show()
     return model
 
 
-def learn_para_BN(model, data_df, learn_method=BayesianEstimator, state_names=None):
+def learn_para_BN(
+    model,
+    data_df,
+    learn_method=BayesianEstimator,
+    state_names=None,
+    prior_type="BDeu",
+    equivalent_sample_size=5,
+    pseudo_counts=None,
+    n_jobs=1,
+):
+    """Learn CPDs while retaining the historical defaults.
+
+    ``prior_type`` and related arguments are exposed so production callers can
+    use an explicit Dirichlet prior. Existing callers still receive pgmpy's
+    BDeu prior with equivalent sample size 5.
+    """
     para_learn = learn_method(model=model, data=data_df, state_names=state_names)
-    ls_CPDs = para_learn.get_parameters(weighted="_weight" in data_df)
+    # pgmpy 1.0 converts DAG-like models from their edges inside
+    # BayesianEstimator, which can drop isolated nodes. Restore them before
+    # asking for parameters.
+    para_learn.model.add_nodes_from(model.nodes())
+    ls_CPDs = para_learn.get_parameters(
+        prior_type=prior_type,
+        equivalent_sample_size=equivalent_sample_size,
+        pseudo_counts=pseudo_counts,
+        n_jobs=n_jobs,
+        weighted="_weight" in data_df,
+    )
     model.add_cpds(*ls_CPDs)
     return model
 
@@ -188,6 +213,8 @@ def dirichlet_loop_BN(
     selecting=True,
     select_ite=10,
 ):
+    from PopSynthesis.Benchmark.legacy.checker import total_RMSE_flat
+
     Y1, Y2 = [], []
 
     for _ in range(ite):
@@ -211,6 +238,8 @@ def dirichlet_loop_BN(
             c.normalize()
             model.add_cpds(c)
     if plot:
+        import matplotlib.pyplot as plt
+
         fig, axs = plt.subplots(2)
         X = list(range(1, len(Y1) + 1))
         axs[0].plot(X, Y1)
@@ -222,6 +251,8 @@ def dirichlet_loop_BN(
 
 
 def loop_to_test(con_df, tot_df, ori_data, step=5, plot=False):
+    from PopSynthesis.Benchmark.legacy.checker import total_RMSE_flat, update_SRMSE
+
     N = len(ori_data)
     one_per = int(N / 100)
 
@@ -275,6 +306,8 @@ def loop_to_test(con_df, tot_df, ori_data, step=5, plot=False):
     print("RMSE with Census", Y1)
     print("SRMSE", Y2)
     if plot:
+        import matplotlib.pyplot as plt
+
         fig, axs = plt.subplots(2)
         axs[0].plot(X, Y1, label="RMSE with Census")
         axs[1].plot(X, Y2, label="SRMSE")
