@@ -1,568 +1,647 @@
-import torch
-import torch.nn as nn
-import torch.optim as optim
+"""Weighted conditional WGAN utilities for household population synthesis."""
+
+from __future__ import annotations
+
+from dataclasses import asdict, dataclass
+from hashlib import sha256
+import json
+from pathlib import Path
+import random
+from typing import Any, Mapping, Sequence
+
 import numpy as np
 import pandas as pd
-from torch.utils.data import DataLoader, TensorDataset
-from sklearn.preprocessing import OneHotEncoder
-import matplotlib.pyplot as plt
-from tqdm import tqdm
-import pickle
+import torch
+from torch import nn
+from torch.utils.data import DataLoader, TensorDataset, WeightedRandomSampler
 
-# Set random seeds for reproducibility
-torch.manual_seed(42)
-np.random.seed(42)
-
-class CategoricalWGAN:
-    def __init__(self, categorical_columns, category_dimensions, latent_dim=100, 
-                 hidden_dim=128, device='cuda' if torch.cuda.is_available() else 'cpu'):
-        """
-        Initialize the WGAN model for categorical data.
-        
-        Args:
-            categorical_columns: List of column names for categorical features
-            category_dimensions: List of integers representing the number of categories for each column
-            latent_dim: Dimension of the noise vector
-            hidden_dim: Dimension of hidden layers
-            device: Device to run the model on
-        """
-        self.categorical_columns = categorical_columns
-        self.category_dimensions = category_dimensions
-        self.latent_dim = latent_dim
-        self.hidden_dim = hidden_dim
-        self.device = device
-        
-        # Calculate total output dimension (sum of one-hot encoded dimensions)
-        self.output_dim = sum(category_dimensions)
-        
-        # Generator and Critic
-        self.G = Generator(latent_dim, hidden_dim, self.output_dim, category_dimensions).to(device)
-        self.D = Critic(self.output_dim, hidden_dim).to(device)
-        
-        # Optimizers
-        self.g_optimizer = optim.Adam(self.G.parameters(), lr=0.0001, betas=(0.0, 0.9))
-        self.d_optimizer = optim.Adam(self.D.parameters(), lr=0.0001, betas=(0.0, 0.9))
-        
-        # For storing training history
-        self.g_losses = []
-        self.d_losses = []
-    
-    def preprocess_data(self, data, ensure_negative_income=True):
-        """
-        Preprocess the data by one-hot encoding categorical features.
-        
-        Args:
-            data: Pandas DataFrame containing categorical data
-            ensure_negative_income: Whether to ensure "Negative income" is included in hhinc categories
-        
-        Returns:
-            Preprocessed data as tensors, encoders for each column
-        """
-        encoders = {}
-        encoded_data = []
-        start_idx = 0
-        self.column_indices = {}
-        
-        for i, col in enumerate(self.categorical_columns):
-            # Get unique categories for this column
-            categories = data[col].unique().tolist()
-            
-            # Special handling for hhinc to include "Negative income"
-            if col == "hhinc" and ensure_negative_income and "Negative income" not in categories:
-                categories.append("Negative income")
-            
-            # Create and fit OneHotEncoder
-            # Ensure "Negative income" is always in the categories list
-            if col == "hhinc" and "Negative income" not in categories:
-                categories.append("Negative income")
-
-            encoder = OneHotEncoder(categories=[categories], sparse_output=False, handle_unknown='ignore')  # ✅ Allow unseen categories
-
-            encoder.fit(data[[col]])
-            
-            # Transform the data
-            encoded_col = encoder.transform(data[[col]])
-            encoded_data.append(encoded_col)
-            
-            # Store encoder and indices for later use
-            encoders[col] = encoder
-            end_idx = start_idx + len(categories)
-            self.column_indices[col] = (start_idx, end_idx)
-            start_idx = end_idx
-        
-        # Concatenate all encoded columns
-        all_encoded = np.concatenate(encoded_data, axis=1)
-        
-        # Convert to tensor
-        tensor_data = torch.FloatTensor(all_encoded).to(self.device)
-        
-        return tensor_data, encoders
-    
-    def train(self, dataloader, epochs=100, n_critic=5, lambda_gp=10):
-        """
-        Train the WGAN model.
-        
-        Args:
-            dataloader: DataLoader for batched training data
-            epochs: Number of training epochs
-            n_critic: Number of critic updates per generator update
-            lambda_gp: Coefficient for gradient penalty
-        """
-        for epoch in range(epochs):
-            d_loss_epoch = 0
-            g_loss_epoch = 0
-            
-            for batch_idx, real_data in enumerate(tqdm(dataloader, desc=f"Epoch {epoch+1}/{epochs}")):
-                real_data = real_data[0]  # ✅ Extract the actual tensor from DataLoader list
-                real_data = real_data.to(self.device)  # ✅ Move tensor to the correct device
-                batch_size = real_data.size(0)  # ✅ Now `.size(0)` will work
-
-                real_data = real_data.to(self.device)
-                
-                # ---------------------
-                # Train Discriminator
-                # ---------------------
-                for _ in range(n_critic):
-                    self.d_optimizer.zero_grad()
-                    
-                    # Generate fake data
-                    z = torch.randn(batch_size, self.latent_dim).to(self.device)
-                    fake_data = self.G(z)
-                    
-                    # Compute critic loss with gradient penalty
-                    real_validity = self.D(real_data)
-                    fake_validity = self.D(fake_data.detach())
-                    
-                    # Calculate gradient penalty
-                    gradient_penalty = self.compute_gradient_penalty(real_data, fake_data, lambda_gp)
-                    
-                    # Wasserstein loss
-                    d_loss = -torch.mean(real_validity) + torch.mean(fake_validity) + gradient_penalty
-                    
-                    d_loss.backward()
-                    self.d_optimizer.step()
-                    
-                    d_loss_epoch += d_loss.item()
-                
-                # -----------------
-                # Train Generator
-                # -----------------
-                self.g_optimizer.zero_grad()
-                
-                # Generate fake data
-                z = torch.randn(batch_size, self.latent_dim).to(self.device)
-                fake_data = self.G(z)
-                
-                # Compute generator loss
-                fake_validity = self.D(fake_data)
-                g_loss = -torch.mean(fake_validity)
-                
-                g_loss.backward()
-                self.g_optimizer.step()
-                
-                g_loss_epoch += g_loss.item()
-            
-            # Record losses
-            self.d_losses.append(d_loss_epoch / len(dataloader))
-            self.g_losses.append(g_loss_epoch / len(dataloader))
-            
-            print(f"Epoch {epoch+1}/{epochs} - D Loss: {d_loss_epoch/len(dataloader):.4f}, G Loss: {g_loss_epoch/len(dataloader):.4f}")
-            
-            # Check if rare categories are being generated
-            if (epoch + 1) % 10 == 0:
-                self.check_rare_categories()
-    
-    def compute_gradient_penalty(self, real_data, fake_data, lambda_gp):
-        """
-        Compute gradient penalty for WGAN-GP.
-        
-        Args:
-            real_data: Batch of real data
-            fake_data: Batch of generated data
-            lambda_gp: Coefficient for gradient penalty
-        
-        Returns:
-            Gradient penalty term
-        """
-        batch_size = real_data.size(0)
-        
-        # Interpolate between real and fake data
-        alpha = torch.rand(batch_size, 1).to(self.device)
-        interpolates = alpha * real_data + (1 - alpha) * fake_data
-        interpolates.requires_grad_(True)
-        
-        # Calculate gradients of critic wrt interpolates
-        d_interpolates = self.D(interpolates)
-        fake = torch.ones(batch_size, 1).to(self.device)
-        gradients = torch.autograd.grad(
-            outputs=d_interpolates,
-            inputs=interpolates,
-            grad_outputs=fake,
-            create_graph=True,
-            retain_graph=True,
-            only_inputs=True,
-        )[0]
-        
-        # Calculate gradient penalty
-        gradients = gradients.view(batch_size, -1)
-        gradient_penalty = lambda_gp * ((gradients.norm(2, dim=1) - 1) ** 2).mean()
-        
-        return gradient_penalty
-    
-    def generate_synthetic_data(self, n_samples, encoders):
-        """
-        Generate synthetic data using the trained generator.
-        
-        Args:
-            n_samples: Number of samples to generate
-            encoders: Dictionary of encoders for each column
-        
-        Returns:
-            Pandas DataFrame of generated synthetic data
-        """
-        self.G.eval()
-        
-        # Generate noise
-        z = torch.randn(n_samples, self.latent_dim).to(self.device)
-        
-        # Generate one-hot vectors
-        with torch.no_grad():
-            generated_data = self.G(z).cpu().numpy()
-        
-        # Convert one-hot back to categorical
-        synthetic_data = {}
-        
-        for col in self.categorical_columns:
-            start_idx, end_idx = self.column_indices[col]
-            col_one_hot = generated_data[:, start_idx:end_idx]
-            
-            # Convert to categorial by taking argmax for each row
-            col_indices = np.argmax(col_one_hot, axis=1).reshape(-1, 1)
-            
-            # Use encoder to get categorical values
-            encoder = encoders[col]
-            categories = encoder.categories_[0]
-            col_categories = [categories[idx[0]] for idx in col_indices]
-            
-            synthetic_data[col] = col_categories
-        
-        # Create DataFrame
-        synthetic_df = pd.DataFrame(synthetic_data)
-        
-        return synthetic_df
-    
-    def check_rare_categories(self, n_samples=1000):
-        """
-        Check if rare categories (like "Negative income") are being generated.
-        
-        Args:
-            n_samples: Number of samples to generate for checking
-        """
-        self.G.eval()
-        z = torch.randn(n_samples, self.latent_dim).to(self.device)
-        
-        with torch.no_grad():
-            generated_data = self.G(z).cpu().numpy()
-        
-        # Check if "Negative income" is present in hhinc column if it exists
-        if "hhinc" in self.categorical_columns:
-            col_idx = self.categorical_columns.index("hhinc")
-            start_idx, end_idx = self.column_indices["hhinc"]
-            hhinc_one_hot = generated_data[:, start_idx:end_idx]
-            
-            # Find the index of "Negative income" if it exists
-            # This would be the last category if we added it during preprocessing
-            neg_income_idx = end_idx - start_idx - 1
-            
-            # Count occurrences
-            neg_income_count = np.sum(np.argmax(hhinc_one_hot, axis=1) == neg_income_idx)
-            neg_income_percentage = (neg_income_count / n_samples) * 100
-            
-            print(f"'Negative income' generated frequency: {neg_income_percentage:.2f}%")
-    
-    def plot_losses(self):
-        """Plot the training losses for generator and critic."""
-        plt.figure(figsize=(10, 5))
-        plt.plot(self.g_losses, label='Generator Loss')
-        plt.plot(self.d_losses, label='Critic Loss')
-        plt.xlabel('Epoch')
-        plt.ylabel('Loss')
-        plt.legend()
-        plt.title('WGAN Training Losses')
-        plt.show()
+HOUSEHOLD_ATTRIBUTES = ("dwelltype", "owndwell", "hhinc", "totalvehs", "hhsize")
+CONDITION_ATTRIBUTES = ("hhsize", "hhinc")
+GENERATED_ATTRIBUTES = ("dwelltype", "owndwell", "totalvehs")
 
 
-class Generator(nn.Module):
-    def __init__(self, latent_dim, hidden_dim, output_dim, category_dimensions, temperature=0.5):
-        """
-        Generator network for categorical data.
-        
-        Args:
-            latent_dim: Dimension of the noise vector
-            hidden_dim: Dimension of hidden layers
-            output_dim: Total dimension of output (sum of all one-hot dimensions)
-            category_dimensions: List of integers representing the number of categories for each column
-            temperature: Temperature parameter for Gumbel-Softmax
-        """
-        super(Generator, self).__init__()
-        
-        self.latent_dim = latent_dim
-        self.output_dim = output_dim
-        self.category_dimensions = category_dimensions
-        self.temperature = temperature
-        
-        # Fully connected layers
-        self.fc1 = nn.Linear(latent_dim, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, hidden_dim * 2)
-        self.fc3 = nn.Linear(hidden_dim * 2, output_dim)
-        
-        # Activation functions
-        self.leaky_relu = nn.LeakyReLU(0.2)
-        self.relu = nn.ReLU()
-        
-        # Store indices for each categorical feature in the output vector
-        self.category_indices = []
-        start_idx = 0
-        for dim in category_dimensions:
-            end_idx = start_idx + dim
-            self.category_indices.append((start_idx, end_idx))
-            start_idx = end_idx
-    
-    def forward(self, z):
-        """
-        Forward pass through the generator.
-        
-        Args:
-            z: Random noise vector (batch_size, latent_dim)
-        
-        Returns:
-            Generated one-hot encoded categorical data
-        """
-        # Fully connected layers
-        x = self.relu(self.fc1(z))
-        x = self.relu(self.fc2(x))
-        x = self.fc3(x)
-        
-        # Apply Gumbel-Softmax to each categorical feature separately
-        output_parts = []
-        
-        for start_idx, end_idx in self.category_indices:
-            logits = x[:, start_idx:end_idx]
-            categorical_probs = self.gumbel_softmax(logits, self.temperature)
-            output_parts.append(categorical_probs)
-        
-        # Concatenate all categorical outputs
-        output = torch.cat(output_parts, dim=1)
-        
-        return output
-    
-    def gumbel_softmax(self, logits, temperature, hard=True):
-        """
-        Gumbel-Softmax trick for differentiable categorical sampling.
-        
-        Args:
-            logits: Unnormalized log probabilities
-            temperature: Temperature parameter
-            hard: If True, the output is one-hot, otherwise it's a probability distribution
-        
-        Returns:
-            Sampled categorical variable (one-hot encoded if hard=True)
-        """
-        # Sample from Gumbel distribution
-        gumbels = -torch.empty_like(logits).exponential_().log()
-        gumbels = (logits + gumbels) / temperature
-        
-        # Softmax
-        y_soft = gumbels.softmax(dim=1)
-        
-        if hard:
-            # Straight-through estimator
-            index = y_soft.max(dim=1, keepdim=True)[1]
-            y_hard = torch.zeros_like(logits).scatter_(1, index, 1.0)
-            return y_hard - y_soft.detach() + y_soft
-        else:
-            return y_soft
+@dataclass(frozen=True)
+class WGANConfig:
+    latent_dim: int = 64
+    hidden_dim: int = 128
+    batch_size: int = 512
+    epochs: int = 100
+    n_critic: int = 5
+    lambda_gp: float = 10.0
+    learning_rate: float = 1e-4
+    temperature_start: float = 1.0
+    temperature_end: float = 0.2
+    max_grad_norm: float = 10.0
+    seed: int = 42
+
+    def __post_init__(self) -> None:
+        for name in ("latent_dim", "hidden_dim", "batch_size", "epochs", "n_critic"):
+            value = getattr(self, name)
+            if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+                raise ValueError(f"{name} must be a positive integer")
+        if not np.isfinite(self.lambda_gp) or self.lambda_gp < 0:
+            raise ValueError("lambda_gp must be finite and nonnegative")
+        if not np.isfinite(self.learning_rate) or self.learning_rate <= 0:
+            raise ValueError("learning_rate must be finite and positive")
+        if (
+            not np.isfinite(self.temperature_start)
+            or not np.isfinite(self.temperature_end)
+            or self.temperature_start <= 0
+            or self.temperature_end <= 0
+        ):
+            raise ValueError("temperatures must be finite and positive")
+        if not np.isfinite(self.max_grad_norm) or self.max_grad_norm <= 0:
+            raise ValueError("max_grad_norm must be finite and positive")
 
 
-class Critic(nn.Module):
-    def __init__(self, input_dim, hidden_dim):
-        """
-        Critic network for WGAN.
-        
-        Args:
-            input_dim: Dimension of input data (sum of all one-hot dimensions)
-            hidden_dim: Dimension of hidden layers
-        """
-        super(Critic, self).__init__()
-        
-        # Fully connected layers
-        self.fc1 = nn.Linear(input_dim, hidden_dim * 2)
-        self.fc2 = nn.Linear(hidden_dim * 2, hidden_dim)
-        self.fc3 = nn.Linear(hidden_dim, 1)
-        
-        # Activation function
-        self.leaky_relu = nn.LeakyReLU(0.2)
-    
-    def forward(self, x):
-        """
-        Forward pass through the critic.
-        
-        Args:
-            x: Input data (batch_size, input_dim)
-        
-        Returns:
-            Wasserstein estimate (scalar)
-        """
-        x = self.leaky_relu(self.fc1(x))
-        x = self.leaky_relu(self.fc2(x))
-        x = self.fc3(x)
-        
-        return x
+@dataclass(frozen=True)
+class PreparedHouseholdData:
+    frame: pd.DataFrame
+    state_names: dict[str, list[str]]
+    income_given_hhsize: dict[str, dict[str, float]]
+    negative_income_probability: float
+    diagnostics: dict[str, Any]
 
 
-# Function to analyze seed data and extract categorical columns and dimensions
-def analyze_seed_data(seed_data):
+@dataclass(frozen=True)
+class WGANTrainingResult:
+    model: "ConditionalHouseholdWGAN"
+    state_names: dict[str, list[str]]
+    income_given_hhsize: dict[str, dict[str, float]]
+    diagnostics: dict[str, Any]
+
+
+def select_device(device: str | torch.device | None = None) -> torch.device:
+    if device is not None:
+        return torch.device(device)
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        return torch.device("mps")
+    return torch.device("cpu")
+
+
+def file_sha256(path: Path | str) -> str:
+    digest = sha256()
+    with Path(path).open("rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _seed_everything(seed: int) -> None:
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
+
+def _weights(values: pd.Series, name: str) -> pd.Series:
+    result = pd.to_numeric(values, errors="raise").astype(float)
+    if result.isna().any() or not np.isfinite(result.to_numpy()).all():
+        raise ValueError(f"{name} must be finite")
+    if (result <= 0).any():
+        raise ValueError(f"{name} must be positive")
+    return result
+
+
+def _census_probability(census: pd.DataFrame, attribute: str, state: str) -> float:
+    if not isinstance(census.columns, pd.MultiIndex) or census.columns.nlevels != 2:
+        raise ValueError("Census columns must be a two-level MultiIndex")
+    columns = [column for column in census.columns if column[0] == attribute]
+    if not columns:
+        raise ValueError(f"Census is missing attribute {attribute!r}")
+    values = census[columns].apply(pd.to_numeric, errors="raise")
+    array = values.to_numpy(dtype=float)
+    if not np.isfinite(array).all() or (array < 0).any() or array.sum() <= 0:
+        raise ValueError(f"Census values for {attribute!r} must be finite and nonnegative")
+    state_columns = [column for column in columns if str(column[1]) == state]
+    if not state_columns:
+        raise ValueError(f"Census is missing {attribute!r} state {state!r}")
+    return float(values[state_columns].to_numpy(dtype=float).sum() / array.sum())
+
+
+def _conditional_table(
+    frame: pd.DataFrame,
+    weight_column: str,
+    state_names: Mapping[str, Sequence[str]],
+) -> dict[str, dict[str, float]]:
+    grouped = frame.groupby(["hhsize", "hhinc"], observed=False)[weight_column].sum()
+    result = {}
+    for hhsize in state_names["hhsize"]:
+        probabilities = np.array(
+            [float(grouped.get((hhsize, income), 0.0)) for income in state_names["hhinc"]]
+        )
+        if probabilities.sum() <= 0:
+            raise ValueError(f"No weighted records for hhsize={hhsize!r}")
+        probabilities /= probabilities.sum()
+        result[hhsize] = dict(zip(state_names["hhinc"], probabilities.tolist()))
+    return result
+
+
+def prepare_household_training_data(
+    seed: pd.DataFrame,
+    census: pd.DataFrame,
+    attributes: Sequence[str] = HOUSEHOLD_ATTRIBUTES,
+    weight_column: str = "_weight",
+    negative_income_probability: float | None = None,
+    nil_income_state: str = "Nil income",
+    negative_income_state: str = "Negative income",
+) -> PreparedHouseholdData:
+    """Add weighted Negative-income copies of Nil-income donors per hhsize.
+
+    Each household-size stratum keeps its original total weight. Existing
+    records get ``1-p`` of the mass and relabelled donors get ``p``.
     """
-    Analyze seed data to extract categorical columns and dimensions.
-    
-    Args:
-        seed_data: DataFrame containing the seed data
-    
-    Returns:
-        List of categorical columns and list of category dimensions
-    """
-    # Identify categorical columns
-    categorical_columns = seed_data.select_dtypes(include=['object', 'category']).columns.tolist()
-    
-    # Calculate category dimensions for each column
-    category_dimensions = []
-    for col in categorical_columns:
-        unique_values = seed_data[col].unique()
-        # Add extra dimension for "Negative income" if it's hhinc column and doesn't contain it already
-        if col == "hhinc" and "Negative income" not in unique_values:
-            category_dimensions.append(len(unique_values) + 1)
-        else:
-            category_dimensions.append(len(unique_values))
-    
-    return categorical_columns, category_dimensions
 
+    attributes = list(dict.fromkeys(attributes))
+    missing = (set(attributes) | {weight_column}) - set(seed.columns)
+    if missing:
+        raise ValueError(f"Seed is missing columns: {sorted(missing)}")
+    required_attributes = set(HOUSEHOLD_ATTRIBUTES) - set(attributes)
+    if required_attributes:
+        raise ValueError(f"attributes are missing: {sorted(required_attributes)}")
+    probability = (
+        _census_probability(census, "hhinc", negative_income_state)
+        if negative_income_probability is None
+        else float(negative_income_probability)
+    )
+    if not np.isfinite(probability) or not 0 < probability < 1:
+        raise ValueError("negative_income_probability must be between zero and one")
 
-# Main function to train the model using seed data and generate n agents
-def train_popsyn(seed_data, batch_size=64, epochs=100, n_critic=5, lambda_gp=10):
-    """
-    Train WGAN using seed data and generate n synthetic agents.
-    
-    Args:
-        seed_data: DataFrame containing seed data for training
-        n_agents: Number of synthetic agents to generate
-        batch_size: Batch size for training
-        epochs: Number of training epochs
-        n_critic: Number of critic updates per generator update
-        lambda_gp: Coefficient for gradient penalty
-    
-    Returns:
-        DataFrame containing synthetic population data
-    """
-    # Analyze seed data to get categorical columns and dimensions
-    categorical_columns, category_dimensions = analyze_seed_data(seed_data)
-    print(f"Seed data has {len(seed_data)} samples and {len(categorical_columns)} categorical features.")
-    
-    # Initialize WGAN model
-    wgan = CategoricalWGAN(categorical_columns, category_dimensions)
-    
-    # Preprocess seed data
-    tensor_data, encoders = wgan.preprocess_data(seed_data)
-    
-    # Create DataLoader
-    dataset = TensorDataset(tensor_data)
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-    
-    # Train the model
-    print("Starting training...")
-    wgan.train(dataloader, epochs=epochs, n_critic=n_critic, lambda_gp=lambda_gp)
+    original = seed[attributes + [weight_column]].copy()
+    original[attributes] = original[attributes].astype(str)
+    original[weight_column] = _weights(original[weight_column], weight_column)
+    if original["hhinc"].eq(negative_income_state).any():
+        raise ValueError("Seed already contains Negative income")
 
-    return wgan, encoders, categorical_columns
-    
-
-def generate_population(wgan, encoders, categorical_columns, n_agents):
-    # Generate synthetic data
-    print(f"Generating {n_agents} synthetic agents...")
-    synthetic_population = wgan.generate_synthetic_data(n_agents, encoders)
-    
-    # Verify that rare categories are present
-    if 'hhinc' in categorical_columns:
-        neg_income_count = (synthetic_population['hhinc'] == 'Negative income').sum()
-        print(f"'Negative income' appears in {neg_income_count} agents ({neg_income_count/n_agents*100:.2f}%)")
-    
-    return synthetic_population
-
-
-def save_wgan(wgan, encoders, categorical_columns, filepath="wgan_model.pkl"):
-    """
-    Save the trained WGAN model along with encoders and metadata.
-    
-    Args:
-        wgan: Trained CategoricalWGAN model
-        encoders: Dictionary of fitted OneHotEncoders
-        categorical_columns: List of categorical column names
-        filepath: Filepath for saving the model
-    """
-    save_dict = {
-        "model": wgan,
-        "categorical_columns": categorical_columns,
-        "encoders": encoders
+    total_weight = float(original[weight_column].sum())
+    pieces, strata = [], []
+    for hhsize, group in original.groupby("hhsize", sort=True, observed=False):
+        group = group.copy()
+        group_total = float(group[weight_column].sum())
+        donors = group.loc[group["hhinc"].eq(nil_income_state)].copy()
+        donor_total = float(donors[weight_column].sum())
+        if donor_total <= 0:
+            raise ValueError(
+                f"Cannot create Negative-income donors for hhsize={hhsize!r}: "
+                f"no {nil_income_state!r} records"
+            )
+        group[weight_column] *= 1.0 - probability
+        donors["hhinc"] = negative_income_state
+        donors[weight_column] *= probability * group_total / donor_total
+        pieces.extend([group, donors])
+        strata.append(
+            {
+                "hhsize": str(hhsize),
+                "original_weight": group_total,
+                "negative_weight": float(donors[weight_column].sum()),
+                "donor_rows": len(donors),
+            }
+        )
+    augmented = pd.concat(pieces, ignore_index=True)
+    if not np.isclose(augmented[weight_column].sum(), total_weight):
+        raise AssertionError("Donor augmentation changed total seed weight")
+    state_names = {
+        attribute: sorted(augmented[attribute].unique().tolist()) for attribute in attributes
     }
+    conditional = _conditional_table(augmented, weight_column, state_names)
+    for hhsize, probabilities in conditional.items():
+        if not np.isclose(probabilities[negative_income_state], probability):
+            raise AssertionError(f"Incorrect Negative-income mass for hhsize={hhsize!r}")
+    diagnostics = {
+        "assumption": "Negative income uses Nil-income donors within each hhsize",
+        "negative_income_probability": probability,
+        "original_rows": len(original),
+        "augmented_rows": len(augmented),
+        "total_weight": total_weight,
+        "strata": strata,
+    }
+    return PreparedHouseholdData(
+        augmented, state_names, conditional, probability, diagnostics
+    )
 
-    with open(filepath, "wb") as f:
-        pickle.dump(save_dict, f)
 
-    print(f"Model saved to {filepath}")
+class _Generator(nn.Module):
+    def __init__(self, latent_dim: int, condition_dim: int, hidden_dim: int, dimensions: Sequence[int]):
+        super().__init__()
+        self.dimensions = list(dimensions)
+        self.network = nn.Sequential(
+            nn.Linear(latent_dim + condition_dim, hidden_dim), nn.LeakyReLU(0.2),
+            nn.Linear(hidden_dim, hidden_dim * 2), nn.LeakyReLU(0.2),
+            nn.Linear(hidden_dim * 2, sum(dimensions)),
+        )
+
+    def forward(self, noise: torch.Tensor, condition: torch.Tensor, temperature: float) -> torch.Tensor:
+        logits, parts, start = self.network(torch.cat([noise, condition], dim=1)), [], 0
+        for dimension in self.dimensions:
+            parts.append(_stable_gumbel_softmax(
+                logits[:, start:start + dimension], temperature=temperature
+            ))
+            start += dimension
+        return torch.cat(parts, dim=1)
 
 
-def load_wgan_simple(filepath="wgan_model.pkl"):
+def _stable_gumbel_softmax(logits: torch.Tensor, temperature: float) -> torch.Tensor:
+    """Straight-through Gumbel-Softmax without log(0) samples.
+
+    ``torch.nn.functional.gumbel_softmax`` samples an exponential variate and
+    takes its logarithm. A rare zero-valued draw can therefore introduce an
+    infinity and poison every subsequent optimizer step. Clamped uniform noise
+    avoids that failure while preserving the Gumbel distribution numerically.
     """
-    Load the entire CategoricalWGAN object.
-    """
-    with open(filepath, "rb") as f:
-        wgan_dict = pickle.load(f)
-    print(f"Model loaded from {filepath}")
-    return wgan_dict["model"], wgan_dict["encoders"], wgan_dict["categorical_columns"]
+
+    epsilon = torch.finfo(logits.dtype).eps
+    uniform = torch.rand_like(logits).clamp(min=epsilon, max=1.0 - epsilon)
+    gumbel = -torch.log(-torch.log(uniform))
+    soft = torch.softmax((logits + gumbel) / temperature, dim=1)
+    indices = soft.argmax(dim=1, keepdim=True)
+    hard = torch.zeros_like(soft).scatter_(1, indices, 1.0)
+    return hard - soft.detach() + soft
 
 
+def _assert_finite_module(module: nn.Module, name: str) -> None:
+    for parameter_name, parameter in module.named_parameters():
+        if not torch.isfinite(parameter).all():
+            raise FloatingPointError(
+                f"{name} parameter {parameter_name!r} contains NaN or infinity"
+            )
 
-# Example usage
-if __name__ == "__main__":
 
-    seed_data = pd.read_csv(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\GAN\data\hh_sample_ipu.csv")
-    seed_data = seed_data.drop(columns=["serialno", "sample_geog"])
+def _step_with_finite_gradients(
+    loss: torch.Tensor,
+    module: nn.Module,
+    optimizer: torch.optim.Optimizer,
+    max_grad_norm: float,
+    context: str,
+) -> float:
+    if not torch.isfinite(loss):
+        raise FloatingPointError(f"Non-finite {context} loss")
+    loss.backward()
+    try:
+        nn.utils.clip_grad_norm_(
+            module.parameters(), max_norm=max_grad_norm, error_if_nonfinite=True
+        )
+    except RuntimeError as error:
+        raise FloatingPointError(f"Non-finite {context} gradient") from error
+    optimizer.step()
+    _assert_finite_module(module, context)
+    return float(loss.detach().cpu())
 
-    # marginals = pd.read_csv(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\GAN\data\hh_marginals_ipu.csv", header=[0,1])
-    # marginals = marginals.set_index(marginals.columns[0])
-    # marginals = marginals.drop(columns=marginals.columns[0])
-    # totals = marginals.sum(axis=1)/5 #n_atts = 5
-    
-    # Generate synthetic population
-    # wgan, encoders, categorical_columns = train_popsyn(seed_data, epochs=50)
-    wgan, encoders, categorical_columns = load_wgan_simple()
-    # Preprocess seed data
-    # synthetic_population = generate_population(wgan, encoders, categorical_columns, 10000000)
-    have_negative_income = False
-    while not have_negative_income:
-        synthetic_population = generate_population(wgan, encoders, categorical_columns, 10000)
-        if "Negative income" in synthetic_population["hhinc"].values:
-            have_negative_income = True
-            print("Negative income present in synthetic population")
-            print(synthetic_population[synthetic_population["hhinc"]=="Negative income"])
-    # save_wgan(wgan, encoders, categorical_columns)
 
-    # store_pop = []
-    # for zone, tot in zip(totals.index, totals):
-    #     syn_pop = generate_population(wgan, encoders, categorical_columns, int(tot))
-    #     syn_pop["zone_id"] = zone
-    #     store_pop.append(syn_pop)
-    # synthetic_population = pd.concat(store_pop)
+class _Critic(nn.Module):
+    def __init__(self, data_dim: int, condition_dim: int, hidden_dim: int):
+        super().__init__()
+        self.network = nn.Sequential(
+            nn.Linear(data_dim + condition_dim, hidden_dim * 2), nn.LeakyReLU(0.2),
+            nn.Linear(hidden_dim * 2, hidden_dim), nn.LeakyReLU(0.2),
+            nn.Linear(hidden_dim, 1),
+        )
 
-    # synthetic_population.to_csv(r"C:\Users\dlaa0001\Documents\PhD\PopSyn_Monash\PopSynthesis\Methods\GAN\output\wgan_pool.csv", index=False)
+    def forward(self, data: torch.Tensor, condition: torch.Tensor) -> torch.Tensor:
+        return self.network(torch.cat([data, condition], dim=1))
 
-    # Plot training losses
-    # wgan.plot_losses()
+
+class ConditionalHouseholdWGAN:
+    """Categorical WGAN-GP conditioned on household size and income."""
+
+    def __init__(
+        self,
+        state_names: Mapping[str, Sequence[object]],
+        income_given_hhsize: Mapping[str, Mapping[str, float]],
+        config: WGANConfig | None = None,
+        device: str | torch.device | None = None,
+    ):
+        self.state_names = {key: [str(value) for value in values] for key, values in state_names.items()}
+        missing = set(HOUSEHOLD_ATTRIBUTES) - set(self.state_names)
+        if missing:
+            raise ValueError(f"State schema is missing attributes: {sorted(missing)}")
+        self.income_given_hhsize = {
+            str(size): {str(income): float(value) for income, value in probabilities.items()}
+            for size, probabilities in income_given_hhsize.items()
+        }
+        self.config, self.device = config or WGANConfig(), select_device(device)
+        self._indices = {
+            attribute: {state: index for index, state in enumerate(self.state_names[attribute])}
+            for attribute in HOUSEHOLD_ATTRIBUTES
+        }
+        dimensions = [len(self.state_names[a]) for a in GENERATED_ATTRIBUTES]
+        condition_dim = sum(len(self.state_names[a]) for a in CONDITION_ATTRIBUTES)
+        self.generator = _Generator(
+            self.config.latent_dim, condition_dim, self.config.hidden_dim, dimensions
+        ).to(self.device)
+        self.critic = _Critic(sum(dimensions), condition_dim, self.config.hidden_dim).to(self.device)
+        self.g_losses: list[float] = []
+        self.d_losses: list[float] = []
+
+    def _encode(self, frame: pd.DataFrame, attributes: Sequence[str]) -> torch.Tensor:
+        pieces = []
+        for attribute in attributes:
+            values = frame[attribute].astype(str)
+            unknown = set(values.unique()) - set(self._indices[attribute])
+            if unknown:
+                raise ValueError(f"Unknown {attribute!r} states: {sorted(unknown)}")
+            indices = torch.tensor([self._indices[attribute][v] for v in values])
+            pieces.append(nn.functional.one_hot(indices, len(self.state_names[attribute])).float())
+        return torch.cat(pieces, dim=1)
+
+    def _decode(self, encoded: torch.Tensor) -> pd.DataFrame:
+        result, start = {}, 0
+        encoded = encoded.detach().cpu()
+        for attribute in GENERATED_ATTRIBUTES:
+            states = self.state_names[attribute]
+            indices = encoded[:, start:start + len(states)].argmax(dim=1).tolist()
+            result[attribute] = [states[index] for index in indices]
+            start += len(states)
+        return pd.DataFrame(result)
+
+    def fit(self, prepared: PreparedHouseholdData, weight_column: str = "_weight") -> dict[str, Any]:
+        frame = prepared.frame.reset_index(drop=True)
+        real = self._encode(frame, GENERATED_ATTRIBUTES)
+        conditions = self._encode(frame, CONDITION_ATTRIBUTES)
+        weights = _weights(frame[weight_column], weight_column)
+        keys = frame[list(CONDITION_ATTRIBUTES)].astype(str).agg("\x1f".join, axis=1)
+        sampling_weights = torch.tensor((weights / weights.groupby(keys).transform("sum")).to_numpy())
+        sampler = WeightedRandomSampler(
+            sampling_weights.double(), len(frame), replacement=True,
+            generator=torch.Generator().manual_seed(self.config.seed),
+        )
+        loader = DataLoader(
+            TensorDataset(real, conditions), batch_size=self.config.batch_size, sampler=sampler
+        )
+        _seed_everything(self.config.seed)
+        g_optimizer = torch.optim.Adam(
+            self.generator.parameters(), lr=self.config.learning_rate, betas=(0.0, 0.9)
+        )
+        d_optimizer = torch.optim.Adam(
+            self.critic.parameters(), lr=self.config.learning_rate, betas=(0.0, 0.9)
+        )
+        self.g_losses.clear(); self.d_losses.clear()
+        for epoch in range(self.config.epochs):
+            fraction = epoch / max(self.config.epochs - 1, 1)
+            temperature = self.config.temperature_start * (
+                self.config.temperature_end / self.config.temperature_start
+            ) ** fraction
+            d_total = g_total = 0.0
+            batches = 0
+            self.generator.train(); self.critic.train()
+            for batch_index, (real_batch, condition_batch) in enumerate(loader):
+                real_batch, condition_batch = real_batch.to(self.device), condition_batch.to(self.device)
+                for _ in range(self.config.n_critic):
+                    d_optimizer.zero_grad(set_to_none=True)
+                    noise = torch.randn(len(real_batch), self.config.latent_dim, device=self.device)
+                    fake = self.generator(noise, condition_batch, temperature)
+                    loss = (
+                        -self.critic(real_batch, condition_batch).mean()
+                        + self.critic(fake.detach(), condition_batch).mean()
+                        + self.config.lambda_gp * self._gradient_penalty(real_batch, fake.detach(), condition_batch)
+                    )
+                    try:
+                        d_total += _step_with_finite_gradients(
+                            loss,
+                            self.critic,
+                            d_optimizer,
+                            self.config.max_grad_norm,
+                            "critic",
+                        )
+                    except FloatingPointError as error:
+                        raise FloatingPointError(
+                            f"WGAN training failed at epoch {epoch + 1}, "
+                            f"batch {batch_index + 1}: {error}"
+                        ) from error
+                g_optimizer.zero_grad(set_to_none=True)
+                noise = torch.randn(len(real_batch), self.config.latent_dim, device=self.device)
+                fake = self.generator(noise, condition_batch, temperature)
+                g_loss = -self.critic(fake, condition_batch).mean()
+                try:
+                    g_total += _step_with_finite_gradients(
+                        g_loss,
+                        self.generator,
+                        g_optimizer,
+                        self.config.max_grad_norm,
+                        "generator",
+                    )
+                except FloatingPointError as error:
+                    raise FloatingPointError(
+                        f"WGAN training failed at epoch {epoch + 1}, "
+                        f"batch {batch_index + 1}: {error}"
+                    ) from error
+                batches += 1
+            self.d_losses.append(d_total / max(batches * self.config.n_critic, 1))
+            self.g_losses.append(g_total / max(batches, 1))
+        return {
+            "device": str(self.device), "epochs": self.config.epochs,
+            "batches_per_epoch": len(loader), "generator_losses": self.g_losses,
+            "critic_losses": self.d_losses,
+        }
+
+    def _gradient_penalty(self, real: torch.Tensor, fake: torch.Tensor, condition: torch.Tensor) -> torch.Tensor:
+        alpha = torch.rand(len(real), 1, device=self.device)
+        interpolated = (alpha * real + (1 - alpha) * fake).requires_grad_(True)
+        score = self.critic(interpolated, condition)
+        gradient = torch.autograd.grad(
+            score, interpolated, torch.ones_like(score), create_graph=True,
+            retain_graph=True, only_inputs=True,
+        )[0]
+        return ((gradient.reshape(len(real), -1).norm(2, dim=1) - 1) ** 2).mean()
+
+    def sample_conditions(self, conditions: pd.DataFrame, chunk_size: int = 100_000, seed: int = 42) -> pd.DataFrame:
+        if not isinstance(chunk_size, int) or isinstance(chunk_size, bool) or chunk_size <= 0:
+            raise ValueError("chunk_size must be a positive integer")
+        missing = set(CONDITION_ATTRIBUTES) - set(conditions.columns)
+        if missing:
+            raise ValueError(f"Conditions are missing columns: {sorted(missing)}")
+        _assert_finite_module(self.generator, "generator")
+        conditions = conditions[list(CONDITION_ATTRIBUTES)].astype(str).reset_index(drop=True)
+        encoded = self._encode(conditions, CONDITION_ATTRIBUTES)
+        was_training = self.generator.training
+        self.generator.eval(); _seed_everything(seed)
+        pieces = []
+        try:
+            with torch.no_grad():
+                for start in range(0, len(conditions), chunk_size):
+                    end = min(start + chunk_size, len(conditions))
+                    condition = encoded[start:end].to(self.device)
+                    noise = torch.randn(end - start, self.config.latent_dim, device=self.device)
+                    generated = self.generator(noise, condition, self.config.temperature_end)
+                    if not torch.isfinite(generated).all():
+                        raise FloatingPointError("Generator produced NaN or infinity")
+                    decoded = self._decode(generated)
+                    decoded["hhinc"] = conditions.iloc[start:end]["hhinc"].to_numpy()
+                    decoded["hhsize"] = conditions.iloc[start:end]["hhsize"].to_numpy()
+                    pieces.append(decoded[list(HOUSEHOLD_ATTRIBUTES)])
+        finally:
+            self.generator.train(was_training)
+        return pd.concat(pieces, ignore_index=True) if pieces else pd.DataFrame(columns=HOUSEHOLD_ATTRIBUTES)
+
+
+def train_household_wgan(
+    prepared: PreparedHouseholdData,
+    config: WGANConfig | None = None,
+    device: str | torch.device | None = None,
+    weight_column: str = "_weight",
+) -> WGANTrainingResult:
+    model = ConditionalHouseholdWGAN(
+        prepared.state_names, prepared.income_given_hhsize, config, device
+    )
+    training = model.fit(prepared, weight_column)
+    diagnostics = {"preparation": prepared.diagnostics, "training": training}
+    return WGANTrainingResult(
+        model, prepared.state_names, prepared.income_given_hhsize, diagnostics
+    )
+
+
+def _targets(model: ConditionalHouseholdWGAN, targets: Mapping[object, int]) -> dict[str, int]:
+    result = {}
+    for state, count in targets.items():
+        if not isinstance(count, (int, np.integer)) or isinstance(count, bool) or count < 0:
+            raise ValueError("Target counts must be nonnegative integers")
+        result[str(state)] = int(count)
+    unknown = set(result) - set(model.state_names["hhsize"])
+    if unknown:
+        raise ValueError(f"Model does not support hhsize states: {sorted(unknown)}")
+    if sum(result.values()) <= 0:
+        raise ValueError("At least one target count must be positive")
+    return result
+
+
+def sample_exact_marginal(
+    model: ConditionalHouseholdWGAN,
+    attribute: str,
+    targets: Mapping[object, int],
+    seed: int = 42,
+    chunk_size: int = 100_000,
+) -> pd.DataFrame:
+    if attribute != "hhsize":
+        raise ValueError("Conditional WGAN exact sampling supports only 'hhsize'")
+    targets, rng, pieces = _targets(model, targets), np.random.default_rng(seed), []
+    income_states = model.state_names["hhinc"]
+    for hhsize, count in targets.items():
+        if count == 0:
+            continue
+        probabilities = model.income_given_hhsize.get(hhsize)
+        if probabilities is None:
+            raise ValueError(f"No income distribution for hhsize={hhsize!r}")
+        values = np.array([probabilities.get(state, 0) for state in income_states])
+        if not np.isclose(values.sum(), 1):
+            raise ValueError(f"Income probabilities for hhsize={hhsize!r} do not sum to one")
+        pieces.append(pd.DataFrame({
+            "hhsize": np.repeat(hhsize, count),
+            "hhinc": rng.choice(income_states, count, p=values),
+        }))
+    conditions = pd.concat(pieces, ignore_index=True)
+    conditions = conditions.iloc[rng.permutation(len(conditions))].reset_index(drop=True)
+    sampled = model.sample_conditions(conditions, chunk_size, seed)
+    actual = sampled[attribute].value_counts().to_dict()
+    expected = {state: count for state, count in targets.items() if count}
+    if actual != expected:
+        raise AssertionError(f"Sampled marginal {actual} does not match targets {expected}")
+    return sampled
+
+
+def sample_zonal_exact_marginal(
+    model: ConditionalHouseholdWGAN,
+    attribute: str,
+    zone_targets: pd.DataFrame,
+    zone_field: str = "zone_id",
+    seed: int = 42,
+    chunk_size: int = 100_000,
+) -> pd.DataFrame:
+    if attribute != "hhsize":
+        raise ValueError("Conditional WGAN zonal sampling supports only 'hhsize'")
+    if zone_targets.empty or not zone_targets.index.is_unique:
+        raise ValueError("zone_targets must be nonempty with a unique index")
+    targets = zone_targets.copy(); targets.columns = targets.columns.map(str)
+    for column in targets:
+        values = pd.to_numeric(targets[column], errors="raise")
+        if values.isna().any() or not np.isfinite(values.to_numpy()).all():
+            raise ValueError("Zone target counts must be finite")
+        if (values < 0).any() or not np.equal(values, np.floor(values)).all():
+            raise ValueError("Zone target counts must be nonnegative integers")
+        targets[column] = values.astype("int64")
+    unknown = set(targets.columns) - set(model.state_names["hhsize"])
+    if unknown:
+        raise ValueError(f"Model does not support hhsize states: {sorted(unknown)}")
+    aggregate = {state: int(value) for state, value in targets.sum().items()}
+    sampled = sample_exact_marginal(model, attribute, aggregate, seed, chunk_size)
+    state_samples = {state: sampled[sampled[attribute].eq(state)].reset_index(drop=True) for state in targets.columns}
+    offsets, pieces = {state: 0 for state in targets.columns}, []
+    for zone, row in targets.iterrows():
+        for state, value in row.items():
+            count = int(value)
+            if not count:
+                continue
+            start, end = offsets[state], offsets[state] + count
+            piece = state_samples[state].iloc[start:end].copy()
+            if len(piece) != count:
+                raise AssertionError(f"Insufficient records for hhsize={state!r}")
+            piece.insert(0, zone_field, zone); pieces.append(piece); offsets[state] = end
+    result = pd.concat(pieces, ignore_index=True)
+    actual = result.groupby([zone_field, attribute]).size().unstack(fill_value=0).reindex(
+        index=targets.index, columns=targets.columns, fill_value=0
+    ).astype("int64")
+    actual.index.name, actual.columns.name = targets.index.name, targets.columns.name
+    if not actual.equals(targets):
+        raise AssertionError("Zonal household-size marginals do not match targets")
+    return result
+
+
+def save_wgan_artifact(
+    model: ConditionalHouseholdWGAN,
+    metadata: Mapping[str, Any],
+    model_path: Path | str,
+) -> tuple[Path, Path]:
+    model_path = Path(model_path)
+    if model_path.suffix.lower() != ".pt":
+        raise ValueError("model_path must use the .pt suffix")
+    _assert_finite_module(model.generator, "generator")
+    _assert_finite_module(model.critic, "critic")
+    if not np.isfinite(model.g_losses).all() or not np.isfinite(model.d_losses).all():
+        raise FloatingPointError("Refusing to save an artifact with non-finite losses")
+    model_path.parent.mkdir(parents=True, exist_ok=True)
+    metadata_path = model_path.with_suffix(".metadata.json")
+    torch.save({"generator": model.generator.state_dict(), "critic": model.critic.state_dict()}, model_path)
+    artifact = dict(metadata)
+    artifact.update({
+        "format_version": 1, "state_names": model.state_names,
+        "income_given_hhsize": model.income_given_hhsize,
+        "config": asdict(model.config), "generator_losses": model.g_losses,
+        "critic_losses": model.d_losses,
+    })
+    metadata_path.write_text(
+        json.dumps(artifact, indent=2, sort_keys=True, default=_json_default) + "\n",
+        encoding="utf-8",
+    )
+    return model_path, metadata_path
+
+
+def load_wgan_artifact(
+    model_path: Path | str,
+    device: str | torch.device | None = None,
+) -> tuple[ConditionalHouseholdWGAN, dict[str, Any]]:
+    model_path = Path(model_path); metadata_path = model_path.with_suffix(".metadata.json")
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    if metadata.get("format_version") != 1:
+        raise ValueError("Unsupported WGAN artifact format")
+    model = ConditionalHouseholdWGAN(
+        metadata["state_names"], metadata["income_given_hhsize"],
+        WGANConfig(**metadata["config"]), device,
+    )
+    state = torch.load(model_path, map_location=model.device, weights_only=True)
+    model.generator.load_state_dict(state["generator"]); model.critic.load_state_dict(state["critic"])
+    model.g_losses = [float(value) for value in metadata.get("generator_losses", [])]
+    model.d_losses = [float(value) for value in metadata.get("critic_losses", [])]
+    _assert_finite_module(model.generator, "generator")
+    _assert_finite_module(model.critic, "critic")
+    if not np.isfinite(model.g_losses).all() or not np.isfinite(model.d_losses).all():
+        raise FloatingPointError("WGAN artifact contains non-finite losses")
+    return model, metadata
+
+
+def _json_default(value: Any) -> Any:
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, Path):
+        return str(value)
+    raise TypeError(f"Cannot serialize {type(value).__name__}")
