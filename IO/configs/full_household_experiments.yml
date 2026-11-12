@@ -1,0 +1,157 @@
+schema_version: 1
+name: full_household_method_comparison
+base_seed: 42
+
+# Every relative path is resolved from this YAML file's directory.
+inputs:
+  census:
+    path: ../processed_data/census_POA_hh_saa.csv
+  original_seed:
+    path: ../processed_data/ori_sample_hh.csv
+    weight_column: _weight
+  # This existing two-million-record condensed BN pool is consumed directly.
+  # The experiment runner never regenerates it.
+  bn_pool:
+    path: ../processed_data/HH_pool_condensed.csv
+    weight_column: count
+
+zone_field: zone_id
+attributes: [hhsize, totalvehs, dwelltype, owndwell, hhinc]
+
+output:
+  root: ../output/full_household_experiments
+  format: counts
+  raw_rows: false
+  resume: skip_completed       # accepted: error, skip_completed
+  continue_on_error: false
+
+runs:
+  - &saa_original
+    id: saa_original_unrestricted
+    enabled: true
+    method: saa
+    input: original_seed
+    repeats: 1
+    settings: &saa_settings
+      stochastic_mode: count_native_ilp
+      direct_solver_mode: two_stage
+      direct_adjustment_backend: min_cost_flow
+      output_format: counts
+      include_zero_cell_values: false
+      zero_cell_policy: unrestricted
+      ordered_to_adjust_atts: [hhsize, dwelltype, owndwell, hhinc, totalvehs]
+      last_adjustment_order: [hhsize, dwelltype, owndwell, hhinc, totalvehs]
+      max_run_time: 1
+      extra_rm_frac: 0
+      randomly_add_last: []
+      output_each_step: false
+      zone_workers: 6
+
+  - <<: *saa_original
+    id: saa_original_seed_only
+    settings:
+      <<: *saa_settings
+      zero_cell_policy: seed_only
+
+  - <<: *saa_original
+    id: saa_original_relax_empty_rows_columns
+    settings:
+      <<: *saa_settings
+      zero_cell_policy: relax_empty_rows_columns
+
+  - <<: *saa_original
+    id: saa_seed_free_all_zero
+    input: null
+    settings:
+      <<: *saa_settings
+      direct_reference_mode: all_zero
+      zero_cell_policy: unrestricted
+
+  - <<: *saa_original
+    id: saa_bn_pool_seed_only
+    input: bn_pool
+    settings:
+      <<: *saa_settings
+      zero_cell_policy: seed_only
+
+  - id: ipf_original_weighted_seed
+    enabled: true
+    method: ipf
+    input: original_seed
+    repeats: 10
+    settings:
+      convergence_rate: 1.0e-5
+      max_iterations: 500
+      zone_workers: 6
+      save_fractional_weights: true
+      state_folds:
+        - attribute: hhinc
+          source: Negative income
+          destination: Nil income
+
+  - id: ipf_bn_pool
+    enabled: true
+    method: ipf
+    input: bn_pool
+    repeats: 10
+    settings:
+      convergence_rate: 1.0e-5
+      max_iterations: 500
+      zone_workers: 6
+      save_fractional_weights: true
+      state_folds: []           # BN pool supports Negative income; never fold it.
+
+  - id: bn_exact_hhsize
+    enabled: true
+    method: bn
+    training_input: original_seed
+    repeats: 10
+    # accepted: reuse, train_once_sample_many, train_per_repeat
+    lifecycle: train_once_sample_many
+    model:
+      model_path: ../models/hh_bn/household_bn.xml       # used by lifecycle: reuse
+      output_path: ../output/full_household_experiments/bn_exact_hhsize/model/household_bn.xml
+    training:
+      mode: seed                  # accepted: seed, census_prior
+      include_negative_income: true
+      unseen_negative_income_probability: 1.0e-5
+      prior_strength: null        # census_prior default: total census households
+      scoring_method: bic-d
+      n_jobs: 1
+    sampling:
+      method: auto                # auto, conditional, root, rejection
+      zone_workers: 6
+      device: cpu                 # six isolated sampling workers load on CPU
+    output:
+      raw_rows: false
+
+  - id: wgan_exact_hhsize
+    enabled: true
+    method: wgan
+    training_input: original_seed
+    repeats: 10
+    # Train one new WGAN, save it, then sample it ten times independently.
+    lifecycle: train_once_sample_many
+    model:
+      model_path: ../models/hh_wgan/household_wgan.pt   # used by lifecycle: reuse
+      output_path: ../output/full_household_experiments/wgan_exact_hhsize/model/household_wgan.pt
+    training:
+      device: null                # null auto-selects CUDA, MPS, or CPU
+      epochs: 100
+      batch_size: 512
+      latent_dim: 64
+      hidden_dim: 128
+      n_critic: 5
+      lambda_gp: 10.0
+      learning_rate: 1.0e-4
+      temperature_start: 1.0
+      temperature_end: 0.2
+      max_grad_norm: 10.0
+      # null derives the Negative-income probability from the census.
+      negative_income_probability: null
+    sampling:
+      chunk_size: 100000
+      zone_workers: 6
+      device: cpu                 # avoids sharing CUDA/MPS state across processes
+    output:
+      raw_rows: false

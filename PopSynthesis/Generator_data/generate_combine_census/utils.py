@@ -46,7 +46,17 @@ def process_from_census_data(geo_lev="POA"):
     return final_df
 
 
-def TRS(initial_weights: list[float], know_tot: int = None):
+def TRS(
+    initial_weights: list[float],
+    know_tot: int = None,
+    rng: np.random.Generator | None = None,
+):
+    """Truncate, replicate, and sample weights to an exact integer total.
+
+    ``rng`` makes stochastic integerisation local and reproducible.  Omitting it
+    preserves the historical behaviour, including callers that seed
+    ``numpy.random`` globally.
+    """
     # Desired total constraint
     desired_total = know_tot if know_tot else sum(initial_weights)
 
@@ -68,7 +78,8 @@ def TRS(initial_weights: list[float], know_tot: int = None):
             if np.sum(fractional_parts) != 0
             else fractional_parts
         )
-        num_replications = np.random.multinomial(int(discrepancy), replication_probs)
+        multinomial = np.random.multinomial if rng is None else rng.multinomial
+        num_replications = multinomial(int(discrepancy), replication_probs)
         truncated_weights += num_replications
 
     # Step 4: Sample individuals if there is an excess
@@ -84,7 +95,8 @@ def TRS(initial_weights: list[float], know_tot: int = None):
         )
 
         # Randomly sample individuals to reduce excess
-        num_samples = np.random.multinomial(abs(discrepancy), sampling_probs)
+        multinomial = np.random.multinomial if rng is None else rng.multinomial
+        num_samples = multinomial(abs(discrepancy), sampling_probs)
         truncated_weights[excess_indices] -= num_samples
 
     # Step 5: Your final truncated and rounded integer weights

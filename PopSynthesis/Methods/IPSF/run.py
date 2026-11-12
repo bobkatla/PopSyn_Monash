@@ -5,9 +5,11 @@ from decimal import Decimal
 import hashlib
 import json
 from math import isfinite
+import os
 from pathlib import Path
 import shutil
 from tempfile import NamedTemporaryFile
+import time
 from typing import List, Literal, Optional, Tuple
 
 import pandas as pd
@@ -45,7 +47,8 @@ def _run_direct_zone_worker(
     zone: object,
     zone_marginal: pd.DataFrame,
     artifact_path: Path,
-) -> tuple[int, str]:
+) -> tuple[int, str, int, float]:
+    started = time.perf_counter()
     if _DIRECT_WORKER_KWARGS is None:
         raise RuntimeError("Direct-count worker was not initialized")
     kwargs = dict(_DIRECT_WORKER_KWARGS)
@@ -55,7 +58,7 @@ def _run_direct_zone_worker(
         kwargs["direct_diagnostics_output"] = True
     result, _ = saa_run(zone_marginal, _DIRECT_WORKER_POOL, **kwargs)
     _write_csv_atomically(result, artifact_path)
-    return zone_number, str(zone)
+    return zone_number, str(zone), os.getpid(), time.perf_counter() - started
 
 
 def _zone_diagnostic_dir(artifact_path: Path) -> Path:
@@ -185,6 +188,20 @@ def _prepare_zone_artifact_directory(
     if manifest_path.exists():
         existing = json.loads(manifest_path.read_text(encoding="utf-8"))
         if existing != manifest:
+            # A validation failure can leave only the checkpoint manifest. It
+            # is safe to replace that empty shell when corrected settings are
+            # used; completed zone artifacts remain strictly protected.
+            has_zone_artifacts = any(artifact_dir.glob("zone_*.csv"))
+            has_diagnostics = any(
+                path.is_file()
+                for path in (artifact_dir / "diagnostics").glob("**/*")
+            )
+            if not has_zone_artifacts and not has_diagnostics:
+                _write_text_atomically(
+                    json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+                    manifest_path,
+                )
+                return
             raise ValueError(
                 f"Zone checkpoints in {artifact_dir} were created with different "
                 "inputs or settings; use a new output directory."
@@ -414,6 +431,20 @@ def run_saa(
         ]
         total_zones = len(marg)
         missing_tasks = []
+        combined_meta_dir = (
+            meta_output_dir
+            if meta_output_dir is not None
+            else output_file.parent / "meta"
+        )
+        zone_timing_path = combined_meta_dir / "zone_runtimes.csv"
+        zone_timings: list[dict[str, object]] = (
+            pd.read_csv(zone_timing_path).to_dict("records")
+            if zone_timing_path.exists()
+            else []
+        )
+        timed_zone_numbers = {
+            int(record["zone_number"]) for record in zone_timings
+        }
         completed = 0
         for zone_number, zone in enumerate(marg.index, start=1):
             artifact_path = artifact_paths[zone_number - 1]
@@ -431,6 +462,16 @@ def run_saa(
                 _validate_zone_artifact(artifact_path, zone, expected_columns)
                 if diagnostics_required:
                     _validate_zone_diagnostics(diagnostic_dir, zone)
+                if zone_number not in timed_zone_numbers:
+                    zone_timings.append(
+                        {
+                            "zone_number": zone_number,
+                            "zone": str(zone),
+                            "worker_pid": None,
+                            "runtime_seconds": None,
+                            "resumed_checkpoint": True,
+                        }
+                    )
                 completed += 1
             else:
                 missing_tasks.append(
@@ -441,6 +482,7 @@ def run_saa(
             cache: dict = {}
             try:
                 for zone_number, zone, zone_marginal, artifact_path in missing_tasks:
+                    zone_started = time.perf_counter()
                     print(
                         f"\rProcessing zone {zone} [{zone_number}/{total_zones}]",
                         end="",
@@ -457,6 +499,21 @@ def run_saa(
                         zone_marginal, condensed_pool, **zone_kwargs
                     )
                     _write_csv_atomically(zone_result, artifact_path)
+                    zone_timings.append(
+                        {
+                            "zone_number": zone_number,
+                            "zone": str(zone),
+                            "worker_pid": os.getpid(),
+                            "runtime_seconds": time.perf_counter() - zone_started,
+                            "resumed_checkpoint": False,
+                        }
+                    )
+                    _write_text_atomically(
+                        pd.DataFrame(zone_timings)
+                        .sort_values("zone_number")
+                        .to_csv(index=False),
+                        zone_timing_path,
+                    )
                     completed += 1
             finally:
                 print()
@@ -483,7 +540,22 @@ def run_saa(
                         )
                         done, _ = wait(active, return_when=FIRST_COMPLETED)
                         for future in done:
-                            future.result()
+                            zone_number, zone, worker_pid, runtime_seconds = future.result()
+                            zone_timings.append(
+                                {
+                                    "zone_number": zone_number,
+                                    "zone": zone,
+                                    "worker_pid": worker_pid,
+                                    "runtime_seconds": runtime_seconds,
+                                    "resumed_checkpoint": False,
+                                }
+                            )
+                            _write_text_atomically(
+                                pd.DataFrame(zone_timings)
+                                .sort_values("zone_number")
+                                .to_csv(index=False),
+                                zone_timing_path,
+                            )
                             active.pop(future)
                             completed += 1
                             try:
@@ -497,12 +569,12 @@ def run_saa(
                 finally:
                     print()
         _combine_zone_artifacts_atomically(artifact_paths, output_file)
+        zone_timing_frame = pd.DataFrame(zone_timings).sort_values("zone_number")
+        _write_text_atomically(
+            zone_timing_frame.to_csv(index=False),
+            combined_meta_dir / "zone_runtimes.csv",
+        )
         if diagnostics_required:
-            combined_meta_dir = (
-                meta_output_dir
-                if meta_output_dir is not None
-                else output_file.parent / "meta"
-            )
             for file_name in [
                 "direct_count_adjustments.csv",
                 "direct_count_loopbacks.csv",

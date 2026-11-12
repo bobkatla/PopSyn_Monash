@@ -18,3 +18,10 @@ _version.py
 **/test
 *.out
 **/IO
+
+# Keep the production experiment definition versioned while data and outputs stay ignored.
+!IO/
+IO/*
+!IO/configs/
+IO/configs/*
+!IO/configs/full_household_experiments.yml
