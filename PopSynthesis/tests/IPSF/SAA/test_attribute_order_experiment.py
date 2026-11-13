@@ -30,6 +30,12 @@ UNRESTRICTED_CONFIG_PATH = (
 SEED_ONLY_CONFIG_PATH = (
     ROOT / "IO" / "configs" / "direct_count_seed_only_attribute_orders.yml"
 )
+BN_POOL_SEED_ONLY_CONFIG_PATH = (
+    ROOT
+    / "IO"
+    / "configs"
+    / "direct_count_bn_pool_seed_only_attribute_orders.yml"
+)
 
 
 class AttributeOrderConfigTests(unittest.TestCase):
@@ -292,6 +298,83 @@ class SeedOnlyAttributeOrderConfigTests(unittest.TestCase):
             ].empty
         )
         self.assertEqual(set(effects["number_of_orders"]), {18, 24})
+
+
+class BNPoolSeedOnlyAttributeOrderConfigTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.runs = yaml.safe_load(
+            BN_POOL_SEED_ONLY_CONFIG_PATH.read_text(encoding="utf-8")
+        )
+        cls.census = pd.read_csv(
+            ROOT / "IO" / "processed_data" / "census_POA_hh_saa.csv",
+            header=[0, 1],
+        )
+        cls.pool = pd.read_csv(
+            ROOT / "IO" / "processed_data" / "HH_pool_condensed.csv"
+        )
+
+    def test_complete_bn_pool_permutation_configuration(self):
+        expected_orders = list(permutations(ATTRIBUTES))
+        actual_orders = [tuple(run["ordered_to_adjust_atts"]) for run in self.runs]
+        self.assertEqual(len(self.runs), 120)
+        self.assertEqual(actual_orders, expected_orders)
+        self.assertEqual(len(set(actual_orders)), 120)
+
+        names = []
+        for index, (run, order) in enumerate(zip(self.runs, expected_orders), start=1):
+            self.assertEqual(
+                run["hh_sample_file"],
+                "../processed_data/HH_pool_condensed.csv",
+            )
+            self.assertEqual(run["hh_seed_data"], run["hh_sample_file"])
+            self.assertEqual(run["pool_count_column"], "count")
+            self.assertEqual(run["zero_cell_policy"], "seed_only")
+            self.assertEqual(run["direct_reference_mode"], "pool")
+            self.assertEqual(run["zone_workers"], 6)
+            self.assertEqual(run["reruns"], 1)
+            self.assertEqual(tuple(run["considered_atts"]), order)
+            self.assertEqual(tuple(run["last_adjustment_order"]), order)
+            expected_name = (
+                f"bn_pool_seed_only_order_{index:03d}_{'_'.join(order)}"
+            )
+            self.assertEqual(run["output_name"], expected_name)
+            self.assertEqual(run["add_name_for_step_output"], expected_name)
+            names.append(run["output_name"])
+        self.assertEqual(len(set(names)), 120)
+        self.assertEqual(load_runs(BN_POOL_SEED_ONLY_CONFIG_PATH), self.runs)
+
+    def test_bn_pool_supports_every_positive_census_state(self):
+        self.assertTrue((self.pool["count"] > 0).all())
+        self.assertEqual(int(self.pool["count"].sum()), 2_000_000)
+        for attribute in ATTRIBUTES:
+            positive_census_states = {
+                str(state)
+                for state in self.census[attribute].columns
+                if self.census[(attribute, state)].sum() > 0
+            }
+            pool_states = set(self.pool[attribute].astype(str))
+            self.assertLessEqual(positive_census_states, pool_states)
+
+        zone_column = self.census.columns[
+            self.census.columns.get_level_values(0) == "zone_id"
+        ][0]
+        marginal = self.census.set_index(zone_column).iloc[[0]]
+        pool = _prepare_direct_pool(self.pool, ATTRIBUTES, "count")
+        for run in self.runs:
+            with self.subTest(run=run["output_name"]):
+                _validate_direct_mode_inputs(
+                    marginal,
+                    pool,
+                    run["considered_atts"],
+                    run["ordered_to_adjust_atts"],
+                    run["last_adjustment_order"],
+                    run["max_run_time"],
+                    run["extra_rm_frac"],
+                    run["include_zero_cell_values"],
+                    run["randomly_add_last"],
+                    "pool",
+                )
 
 
 class AttributeOrderComparisonTests(unittest.TestCase):

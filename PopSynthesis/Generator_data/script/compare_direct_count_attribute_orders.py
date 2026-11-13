@@ -52,10 +52,20 @@ def load_runs(runs_yml: Path) -> list[dict[str, object]]:
         expected_orders = list(permutations(ATTRIBUTES))
         name_prefix = "unrestricted"
     elif policies == {"seed_only"}:
-        expected_orders = [
-            order for order in permutations(ATTRIBUTES) if order[0] != "hhinc"
-        ]
-        name_prefix = "seed_only"
+        uses_bn_pool = all(
+            run.get("pool_count_column") == "count"
+            and Path(str(run.get("hh_sample_file", ""))).name
+            == "HH_pool_condensed.csv"
+            for run in runs
+        )
+        if uses_bn_pool:
+            expected_orders = list(permutations(ATTRIBUTES))
+            name_prefix = "bn_pool_seed_only"
+        else:
+            expected_orders = [
+                order for order in permutations(ATTRIBUTES) if order[0] != "hhinc"
+            ]
+            name_prefix = "seed_only"
     else:
         raise ValueError(
             "Runs must use one supported policy: relax_empty_rows_columns, "
